@@ -1,0 +1,124 @@
+html {
+    scroll-behavior: smooth;
+}
+
+body {
+    background-color: black;
+    color: white;
+    font-family: 'Avenir', sans-serif;
+    margin: 0;
+    padding: 0;
+    overflow: auto;
+}
+
+.header {
+    text-align: center;
+    position: relative;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start; /* Change this to flex-start */
+    align-items: center;
+    padding-top: 20px; /* Add some top padding */
+}
+
+.header h1 {
+    margin: 0;
+    font-size: 3.25em;
+    font-weight: 300;
+    letter-spacing: -0.01em;
+    line-height: 1.05;
+}
+
+.header h2 {
+    margin: 0;
+    font-size: 0.95em;
+    font-weight: 300;
+    letter-spacing: 0.04em;
+    color: rgba(255, 255, 255, 0.6);
+    padding-top: 0.75rem;
+}
+
+#main-image {
+    max-width: 100%;
+    height: auto;
+    margin: 1.5rem auto 0;
+    display: block;
+    object-fit: cover;
+    max-height: clamp(320px, 56vh, 500px);
+}
+
+#about-compact {
+    max-width: 920px;
+    margin: 1.25rem auto 0;
+    padding: 0 1.5rem;
+    font-size: 0.88em;
+    line-height: 1.55;
+    letter-spacing: 0.005em;
+    text-align: center;
+    color: #cfcfcf;
+}
+
+.scroll-cue {
+    position: absolute;
+    bottom: 42px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+    color: rgba(255, 255, 255, 0.55);
+    transition: color 0.25s ease;
+}
+
+.scroll-cue:hover {
+    color: #ffffff;
+}
+
+.scroll-label {
+    font-size: 0.7rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    font-weight: 400;
+    line-height: 1;
+}
+
+.scroll-cue svg {
+    display: block;
+}
+
+a{
+    text-decoration: none;
+    color:white;
+}
+
+.gallery {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    padding: 50px 0;
+}
+
+.row {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.row img {
+    margin: 0 10px;
+    width: calc((100% - 40px) / 3);
+    height: auto;
+    object-fit: cover;
+    max-height: 300px;
+}
+
+.about-section {
+    margin: 0 auto;
+    max-width: 900px;
+    padding: 40px;
+    color: white;
+    font-size: 1.2em;
+    line-height: 1.6;
+}
