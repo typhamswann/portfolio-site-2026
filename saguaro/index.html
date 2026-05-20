@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Saguaro Phenology — Ty Pham-Swann</title>
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+    <header class="hero">
+        <p class="eyebrow">Computer Vision · Climate Research · 2022 – 2024</p>
+        <h1>Saguaro Phenology</h1>
+        <p class="tagline">Building a seven-year, model-labeled dataset of bloom cycles in the Sonoran Desert in collaboration with biologists Saguaro National Park.</p>
+
+        <div class="stage">
+            <div class="stage-frame">
+                <img id="stage-img" alt="Aerial photo of a saguaro cactus crown">
+                <svg id="stage-svg" preserveAspectRatio="none" viewBox="0 0 640 640"></svg>
+            </div>
+            <div class="legend">
+                <span class="chip" data-cls="bud"><i></i>Bud</span>
+                <span class="chip" data-cls="flower"><i></i>Flower</span>
+                <span class="chip" data-cls="green_fruit"><i></i>Green fruit</span>
+                <span class="chip" data-cls="red_fruit"><i></i>Red fruit</span>
+            </div>
+        </div>
+
+        <a href="#about" class="scroll-cue" aria-label="Scroll to about">
+            <span class="scroll-label">About the project</span>
+            <svg width="22" height="10" viewBox="0 0 22 10" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="1,1 11,9 21,1"></polyline>
+            </svg>
+        </a>
+    </header>
+
+    <main>
+        <section id="about" class="prose">
+            <h2>The project</h2>
+            <p>
+                The saguaro cactus (<em>Carnegiea gigantea</em>) is a keystone of the Sonoran Desert ecosystem, and the way it buds, flowers, and fruits each spring is one of the clearest signals biologists have for tracking how the region is responding to a warming climate. For seven reproductive seasons, biologists at Saguaro National Park photographed the crowns of the same 55 cacti almost every morning — but the resulting archive of roughly 63,000 images had to be counted by hand, which is the bottleneck I set out to break.
+            </p>
+            <p>
+                I led a small team to hand-label thousands of those photos and trained a YOLO-family object detector to recognize four phenological stages: bud, flower, green fruit, and red fruit. The final model labels the entire archive automatically, producing a daily, individual-level dataset of saguaro phenology spanning seven years — fine-grained enough to support climate-impact analysis that wasn't tractable before.
+            </p>
+        </section>
+
+        <section class="stats">
+            <div class="stat">
+                <div class="stat-num">55</div>
+                <div class="stat-label">Saguaros tracked daily</div>
+            </div>
+            <div class="stat">
+                <div class="stat-num">7</div>
+                <div class="stat-label">Reproductive seasons (2017–2023)</div>
+            </div>
+            <div class="stat">
+                <div class="stat-num">~63k</div>
+                <div class="stat-label">Crown photographs</div>
+            </div>
+            <div class="stat">
+                <div class="stat-num">5,000+</div>
+                <div class="stat-label">Hand-drawn bounding boxes</div>
+            </div>
+        </section>
+
+        <section class="prose">
+            <h2>Training the model</h2>
+            <p>
+                After comparing two-stage detectors and several YOLO variants, I settled on a fine-tuned <strong>YOLOv8-Large</strong>. The choice was driven by an empirical constraint: the original photographs are 4000×3000, and at the standard 640×640 input size the model lost the small visual details that separate a bud from a young green fruit. Larger inputs (1707×1280) preserved that detail but blew up memory usage, ruling out the heavier two-stage detectors. YOLOv8-Large hit the sweet spot — large enough to be accurate, small enough to train at a reasonable batch size on the hardware available.
+            </p>
+            <p>
+                Earlier iterations of the project (built during a deep learning class) used YOLOv5 and a much smaller labeled set. After the class, I expanded the annotation pass, retrained on the larger corpus, and pushed accuracy substantially higher.
+            </p>
+
+            <div class="metrics">
+                <div class="metric">
+                    <div class="metric-val">0.7769</div>
+                    <div class="metric-label">mean Average Precision (mAP)</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-val">0.7638</div>
+                    <div class="metric-label">F1 score</div>
+                </div>
+                <div class="metric">
+                    <div class="metric-val">0.77</div>
+                    <div class="metric-label">Optimal confidence threshold</div>
+                </div>
+            </div>
+            <p class="caption">
+                Model performs strongest on flowers (the most visually distinct class) and weakest on red fruit — the same class human labelers also struggled with most.
+            </p>
+        </section>
+
+        <section class="prose">
+            <h2>What the model revealed</h2>
+            <p>
+                Once the model was trained, I ran it across the full archive — roughly 63,000 photos across 23 individual saguaros and seven years. That produced a per-day, per-cactus record of bud, flower, and fruit counts dense enough to ask questions that manual counting couldn't reach. Two patterns stood out.
+            </p>
+            <p>
+                <strong>The model recovered the textbook phenological cascade.</strong> Averaging across cacti and years, buds peak in early-to-mid May, flowers follow a couple of weeks later, green fruit takes over in early June, and red ripe fruit closes out the season in late June and early July — a clean wave of overlapping stages that's hard to see in any single photo but emerges immediately in aggregate.
+            </p>
+
+            <figure class="chart" id="chart-cascade" aria-label="Phenology cascade chart">
+                <div class="chart-canvas"></div>
+                <figcaption>Seven-year, 23-cactus average. Each curve is a rolling mean of model-predicted counts per cactus per day.</figcaption>
+            </figure>
+
+            <p>
+                <strong>The dataset also caught a dramatic two-year climate swing.</strong> 2022 was an exceptionally poor year across every phenological stage — total reproductive output per cactus collapsed to roughly a fifth of the 2017–2021 average. The following year more than compensated: 2023 produced more buds, flowers, and fruit than any prior year in the record. The kind of swing that biologists have hypothesized as a saguaro response to monsoon variability shows up vividly once the dataset is dense enough to draw the curves.
+            </p>
+
+            <figure class="chart" id="chart-drought" aria-label="2022 vs 2023 reproductive output">
+                <div class="chart-canvas"></div>
+                <figcaption>Total reproductive structures (buds + flowers + green fruit + red fruit) per cactus per day. Shaded band is the 2017–2021 mean.</figcaption>
+            </figure>
+
+            <p>
+                The pattern isn't an artifact of one or two cacti — it holds across all four phenological classes individually.
+            </p>
+
+            <figure class="chart" id="chart-grid" aria-label="Year-over-year curves by class">
+                <div class="chart-canvas grid-of-four"></div>
+                <figcaption>Each panel shows the season curve for one phenological class, one line per year. 2022 and 2023 highlighted.</figcaption>
+            </figure>
+        </section>
+
+        <section class="prose">
+            <h2>Infrastructure & team</h2>
+            <p>
+                Beyond the model itself, getting from raw images to a usable dataset took a real pipeline. I built the annotation workflow (CVAT and Roboflow), wrote the preprocessing and inference scripts, organized the multi-year image archive, and recruited and led a small team of annotators — defining the label schema, writing the labeling guide, and reviewing their work to keep ground truth consistent across thousands of boxes. The infrastructure was designed so that adding new seasons or new classes (e.g. saguaro arms) is a matter of additional labels rather than rebuilding the system.
+            </p>
+        </section>
+
+        <section class="gallery">
+            <h2>More examples</h2>
+            <p class="gallery-intro">A handful of held-out test images with ground-truth annotations overlaid.</p>
+            <div class="gallery-grid">
+                <figure class="gallery-card" data-key="gallery-1">
+                    <div class="card-frame">
+                        <img alt="Saguaro crown with red and green fruit">
+                        <svg preserveAspectRatio="none" viewBox="0 0 640 640"></svg>
+                    </div>
+                    <figcaption>Late-season ripening: green fruit transitioning to red.</figcaption>
+                </figure>
+                <figure class="gallery-card" data-key="gallery-2">
+                    <div class="card-frame">
+                        <img alt="Saguaro crown with dense green fruit">
+                        <svg preserveAspectRatio="none" viewBox="0 0 640 640"></svg>
+                    </div>
+                    <figcaption>Dense green fruit set, with a single red fruit emerging.</figcaption>
+                </figure>
+                <figure class="gallery-card" data-key="gallery-3">
+                    <div class="card-frame">
+                        <img alt="Saguaro crown with buds, a flower, and green fruit">
+                        <svg preserveAspectRatio="none" viewBox="0 0 640 640"></svg>
+                    </div>
+                    <figcaption>All three early stages on a single crown.</figcaption>
+                </figure>
+            </div>
+        </section>
+
+        <section class="links">
+            <a class="link-card" href="https://github.com/typhamswann/Saguaro-Object-Detection" target="_blank" rel="noopener">
+                <span class="link-eyebrow">Code</span>
+                <span class="link-title">GitHub repository</span>
+                <span class="link-arrow">↗</span>
+            </a>
+            <a class="link-card" href="https://app.roboflow.com/sagcactusdetection/cactus-detection-ynlrz/models/cactus-detection-ynlrz/6" target="_blank" rel="noopener">
+                <span class="link-eyebrow">Model</span>
+                <span class="link-title">Roboflow deployment</span>
+                <span class="link-arrow">↗</span>
+            </a>
+        </section>
+    </main>
+
+    <footer>
+        <p>Ty Pham-Swann · in collaboration with Saguaro National Park and Jake Wilner and Matt Prenovitz</p>
+    </footer>
+
+    <script src="script.js"></script>
+    <script src="charts.js"></script>
+</body>
+</html>
