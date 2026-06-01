@@ -1,0 +1,319 @@
+{
+  "rollouts": [
+    {
+      "task_id": "cand_0000_national_easy_01",
+      "city": "cand_0000_national",
+      "difficulty": "easy",
+      "start_lat": 29.749288488236086,
+      "start_lng": -95.36846280097961,
+      "goal_lat": 29.749716969447924,
+      "goal_lng": -95.36936402320862,
+      "optimal_steps": 16,
+      "optimal_distance_m": 99.19526629103113,
+      "steps": [
+        {
+          "n": 0,
+          "view": "pano",
+          "action": "init",
+          "pano_id": "w1049324609_i2",
+          "dist_to_goal_m": 99.2,
+          "image": "cand_0000_national_easy_01_step_00_pano.jpg"
+        },
+        {
+          "n": 1,
+          "view": "pano",
+          "action": "move_cursor(direction_deg=270, distance_px=140)",
+          "pano_id": "w1049324609_i2",
+          "dist_to_goal_m": 99.2,
+          "image": "cand_0000_national_easy_01_step_01_pano.jpg"
+        },
+        {
+          "n": 2,
+          "view": "pano",
+          "action": "mouse_down()",
+          "pano_id": "w1049324609_i2",
+          "dist_to_goal_m": 99.2,
+          "image": "cand_0000_national_easy_01_step_02_pano.jpg"
+        },
+        {
+          "n": 3,
+          "view": "pano",
+          "action": "mouse_up()",
+          "pano_id": "w1049324609_i4",
+          "dist_to_goal_m": 101.7,
+          "image": "cand_0000_national_easy_01_step_03_pano.jpg"
+        },
+        {
+          "n": 4,
+          "view": "pano",
+          "action": "move_cursor(direction_deg=270, distance_px=80)",
+          "pano_id": "w1049324609_i4",
+          "dist_to_goal_m": 101.7,
+          "image": "cand_0000_national_easy_01_step_04_pano.jpg"
+        },
+        {
+          "n": 5,
+          "view": "pano",
+          "action": "mouse_down()",
+          "pano_id": "w1049324609_i4",
+          "dist_to_goal_m": 101.7,
+          "image": "cand_0000_national_easy_01_step_05_pano.jpg"
+        },
+        {
+          "n": 6,
+          "view": "pano",
+          "action": "mouse_up()",
+          "pano_id": "w1049324609_i5",
+          "dist_to_goal_m": 104.2,
+          "image": "cand_0000_national_easy_01_step_06_pano.jpg"
+        },
+        {
+          "n": 7,
+          "view": "pano",
+          "action": "move_cursor(direction_deg=270, distance_px=80)",
+          "pano_id": "w1049324609_i5",
+          "dist_to_goal_m": 104.2,
+          "image": "cand_0000_national_easy_01_step_07_pano.jpg"
+        },
+        {
+          "n": 8,
+          "view": "pano",
+          "action": "mouse_down()",
+          "pano_id": "w1049324609_i5",
+          "dist_to_goal_m": 104.2,
+          "image": "cand_0000_national_easy_01_step_08_pano.jpg"
+        },
+        {
+          "n": 9,
+          "view": "pano",
+          "action": "mouse_up()",
+          "pano_id": "w1049324609_i6",
+          "dist_to_goal_m": 107.2,
+          "image": "cand_0000_national_easy_01_step_09_pano.jpg"
+        },
+        {
+          "n": 10,
+          "view": "pano",
+          "action": "submit_guess()",
+          "pano_id": "w1049324609_i6",
+          "dist_to_goal_m": 107.2,
+          "image": "cand_0000_national_easy_01_step_10_pano.jpg"
+        }
+      ],
+      "runner": "Human (Ty)",
+      "label_color": "#65d697",
+      "reached_goal": false,
+      "final_dist_m": 107.2
+    },
+    {
+      "task_id": "cand_0009_national2_easy_01",
+      "city": "cand_0009_national2",
+      "difficulty": "easy",
+      "start_lat": 33.909166129149924,
+      "start_lng": -118.22750329971313,
+      "goal_lat": 33.907972970285115,
+      "goal_lng": -118.22688639163971,
+      "optimal_steps": 19,
+      "optimal_distance_m": 144.37202787631801,
+      "steps": [
+        {
+          "n": 0,
+          "view": "pano",
+          "action": "init",
+          "pano_id": "w608182870_i11",
+          "dist_to_goal_m": 144.4,
+          "image": "cand_0009_national2_easy_01_step_00_pano.jpg"
+        },
+        {
+          "n": 1,
+          "view": "pano",
+          "action": "move_cursor(direction_deg=270, distance_px=140)",
+          "pano_id": "w608182870_i11",
+          "dist_to_goal_m": 144.4,
+          "image": "cand_0009_national2_easy_01_step_01_pano.jpg"
+        },
+        {
+          "n": 2,
+          "view": "pano",
+          "action": "mouse_down()",
+          "pano_id": "w608182870_i11",
+          "dist_to_goal_m": 144.4,
+          "image": "cand_0009_national2_easy_01_step_02_pano.jpg"
+        },
+        {
+          "n": 3,
+          "view": "pano",
+          "action": "mouse_up()",
+          "pano_id": "w608182870_i13",
+          "dist_to_goal_m": 165.7,
+          "image": "cand_0009_national2_easy_01_step_03_pano.jpg"
+        },
+        {
+          "n": 4,
+          "view": "pano",
+          "action": "move_cursor(direction_deg=270, distance_px=80)",
+          "pano_id": "w608182870_i13",
+          "dist_to_goal_m": 165.7,
+          "image": "cand_0009_national2_easy_01_step_04_pano.jpg"
+        },
+        {
+          "n": 5,
+          "view": "pano",
+          "action": "mouse_down()",
+          "pano_id": "w608182870_i13",
+          "dist_to_goal_m": 165.7,
+          "image": "cand_0009_national2_easy_01_step_05_pano.jpg"
+        },
+        {
+          "n": 6,
+          "view": "pano",
+          "action": "mouse_up()",
+          "pano_id": "w608182870_i15",
+          "dist_to_goal_m": 169.5,
+          "image": "cand_0009_national2_easy_01_step_06_pano.jpg"
+        },
+        {
+          "n": 7,
+          "view": "pano",
+          "action": "move_cursor(direction_deg=270, distance_px=80)",
+          "pano_id": "w608182870_i15",
+          "dist_to_goal_m": 169.5,
+          "image": "cand_0009_national2_easy_01_step_07_pano.jpg"
+        },
+        {
+          "n": 8,
+          "view": "pano",
+          "action": "mouse_down()",
+          "pano_id": "w608182870_i15",
+          "dist_to_goal_m": 169.5,
+          "image": "cand_0009_national2_easy_01_step_08_pano.jpg"
+        },
+        {
+          "n": 9,
+          "view": "pano",
+          "action": "mouse_up()",
+          "pano_id": "w608182870_i15",
+          "dist_to_goal_m": 169.5,
+          "image": "cand_0009_national2_easy_01_step_09_pano.jpg"
+        },
+        {
+          "n": 10,
+          "view": "pano",
+          "action": "submit_guess()",
+          "pano_id": "w608182870_i15",
+          "dist_to_goal_m": 169.5,
+          "image": "cand_0009_national2_easy_01_step_10_pano.jpg"
+        }
+      ],
+      "runner": "Qwen3-VL-8B (RL'd)",
+      "label_color": "#c084fc",
+      "reached_goal": false,
+      "final_dist_m": 169.5
+    },
+    {
+      "task_id": "cand_0001_national_hard_01",
+      "city": "cand_0001_national",
+      "difficulty": "hard",
+      "start_lat": 40.748142922614576,
+      "start_lng": -74.02649581432343,
+      "goal_lat": 40.75050813364642,
+      "goal_lng": -74.03267562389374,
+      "optimal_steps": 92,
+      "optimal_distance_m": 583.239545317366,
+      "steps": [
+        {
+          "n": 0,
+          "view": "pano",
+          "action": "init",
+          "pano_id": "w1057788574_i3",
+          "dist_to_goal_m": 583.2,
+          "image": "cand_0001_national_hard_01_step_00_pano.jpg"
+        },
+        {
+          "n": 1,
+          "view": "pano",
+          "action": "move_cursor(direction_deg=270, distance_px=140)",
+          "pano_id": "w1057788574_i3",
+          "dist_to_goal_m": 583.2,
+          "image": "cand_0001_national_hard_01_step_01_pano.jpg"
+        },
+        {
+          "n": 2,
+          "view": "pano",
+          "action": "mouse_down()",
+          "pano_id": "w1057788574_i3",
+          "dist_to_goal_m": 583.2,
+          "image": "cand_0001_national_hard_01_step_02_pano.jpg"
+        },
+        {
+          "n": 3,
+          "view": "pano",
+          "action": "mouse_up()",
+          "pano_id": "w1057788574_i2",
+          "dist_to_goal_m": 581.4,
+          "image": "cand_0001_national_hard_01_step_03_pano.jpg"
+        },
+        {
+          "n": 4,
+          "view": "pano",
+          "action": "move_cursor(direction_deg=270, distance_px=80)",
+          "pano_id": "w1057788574_i2",
+          "dist_to_goal_m": 581.4,
+          "image": "cand_0001_national_hard_01_step_04_pano.jpg"
+        },
+        {
+          "n": 5,
+          "view": "pano",
+          "action": "mouse_down()",
+          "pano_id": "w1057788574_i2",
+          "dist_to_goal_m": 581.4,
+          "image": "cand_0001_national_hard_01_step_05_pano.jpg"
+        },
+        {
+          "n": 6,
+          "view": "pano",
+          "action": "mouse_up()",
+          "pano_id": "w1057788574_i1",
+          "dist_to_goal_m": 579.6,
+          "image": "cand_0001_national_hard_01_step_06_pano.jpg"
+        },
+        {
+          "n": 7,
+          "view": "pano",
+          "action": "move_cursor(direction_deg=270, distance_px=80)",
+          "pano_id": "w1057788574_i1",
+          "dist_to_goal_m": 579.6,
+          "image": "cand_0001_national_hard_01_step_07_pano.jpg"
+        },
+        {
+          "n": 8,
+          "view": "pano",
+          "action": "mouse_down()",
+          "pano_id": "w1057788574_i1",
+          "dist_to_goal_m": 579.6,
+          "image": "cand_0001_national_hard_01_step_08_pano.jpg"
+        },
+        {
+          "n": 9,
+          "view": "pano",
+          "action": "mouse_up()",
+          "pano_id": "w1057788574_i0",
+          "dist_to_goal_m": 577.4,
+          "image": "cand_0001_national_hard_01_step_09_pano.jpg"
+        },
+        {
+          "n": 10,
+          "view": "pano",
+          "action": "submit_guess()",
+          "pano_id": "w1057788574_i0",
+          "dist_to_goal_m": 577.4,
+          "image": "cand_0001_national_hard_01_step_10_pano.jpg"
+        }
+      ],
+      "runner": "Qwen3-VL-8B (base)",
+      "label_color": "#facc15",
+      "reached_goal": false,
+      "final_dist_m": 577.4
+    }
+  ]
+}

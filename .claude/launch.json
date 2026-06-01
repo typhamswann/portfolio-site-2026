@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "wb-portfolio",
+      "runtimeExecutable": "python3",
+      "runtimeArgs": ["-m", "http.server", "5070", "--bind", "127.0.0.1"],
+      "port": 5070
+    }
+  ]
+}

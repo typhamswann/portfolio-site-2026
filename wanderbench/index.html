@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wanderbench — Ty Pham-Swann</title>
+    <meta name="description" content="An open spatial-navigation benchmark + RL environment for vision-language models, built on 503,935 real Mapillary panoramas.">
+    <link rel="stylesheet" type="text/css" href="styles.css">
+</head>
+<body>
+    <header class="hero">
+        <p class="eyebrow">RL · VLM · Benchmark · 2026</p>
+        <h1>Wanderbench</h1>
+        <p class="tagline">An open spatial-navigation benchmark and RL training environment for vision-language models — 6,620 real-world Street View tasks across 1,122 US cities, with a single dense reward measuring fraction of the optimal walkable path closed.</p>
+
+        <div class="player-stage">
+            <div class="player-frame">
+                <img id="stage-img" alt="wanderbench task viewport">
+                <div id="stage-overlay" class="stage-overlay"></div>
+            </div>
+            <div class="player-controls">
+                <button id="btn-prev" aria-label="Previous step">‹ Prev</button>
+                <button id="btn-play" class="play" aria-label="Play / Pause">▶ Play</button>
+                <button id="btn-next" aria-label="Next step">Next ›</button>
+                <input type="range" id="scrubber" class="scrubber" min="0" max="10" value="0" step="1" aria-label="Scrub through steps">
+                <span id="step-count" class="step-count">0 / 10</span>
+            </div>
+            <div class="player-meta">
+                <select id="rollout-select" aria-label="Select rollout"></select>
+                <span id="runner-chip" class="chip"></span>
+                <span id="diff-chip" class="chip"></span>
+                <span id="dist-chip" class="chip subtle"></span>
+            </div>
+        </div>
+
+        <a href="#about" class="scroll-cue" aria-label="Scroll to about">
+            <span class="scroll-label">About the benchmark</span>
+            <svg width="22" height="10" viewBox="0 0 22 10" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="1,1 11,9 21,1"></polyline>
+            </svg>
+        </a>
+    </header>
+
+    <main>
+        <section id="about" class="prose">
+            <h2>The project</h2>
+            <p>
+                Modern vision-language models are remarkably good at <em>describing</em> physical scenes. Show them a static photo and ask &quot;where am I?&quot; and they&apos;ll often nail the country, city, sometimes the block. But the moment they have to <em>act</em> in physical space &mdash; &quot;your goal is three blocks west, get there&quot; &mdash; performance collapses. Spatial reasoning under sequential decision-making is the hole.
+            </p>
+            <p>
+                Wanderbench is a benchmark designed to surface that gap. Each task drops the agent into a real Mapillary panorama somewhere in the United States, hands it a goal latitude/longitude, and gives it the same primitives a human player would have in Street View: click on a road point to walk there, drag the pano to look around, scroll to zoom, open a map to orient, submit a guess when you&apos;ve arrived.
+            </p>
+            <p>
+                The corpus is <strong>6,620 tasks across 1,122 US cities</strong>, stratified across easy / medium / hard difficulty bands. The reward is dense and continuous &mdash; fraction of the optimal walkable path closed &mdash; making the env equally usable for benchmarking (small reproducible subset) and for RL training (full corpus).
+            </p>
+        </section>
+
+        <section class="stats">
+            <div class="stat">
+                <div class="stat-num">6,620</div>
+                <div class="stat-label">Tasks across 1,122 US cities</div>
+            </div>
+            <div class="stat">
+                <div class="stat-num">504k</div>
+                <div class="stat-label">Hosted panoramas (1.36 TB)</div>
+            </div>
+            <div class="stat">
+                <div class="stat-num">3</div>
+                <div class="stat-label">Difficulty bands, balanced</div>
+            </div>
+            <div class="stat">
+                <div class="stat-num">6</div>
+                <div class="stat-label">Mouse / keyboard primitives</div>
+            </div>
+        </section>
+
+        <section class="prose">
+            <h2>The environment</h2>
+            <p>
+                An agent sees a 1024 × 768 viewport rendered live from a Mapillary spherical panorama. A compass dial pins the camera&apos;s heading. A HUD line reports the current pano id, distance to goal, and last action. Pressing <code>m</code> swaps to an interactive OpenStreetMap view with start &amp; goal pins, the explorable bbox, and the agent&apos;s current location.
+            </p>
+            <p>The action space is six primitives, intentionally human-shaped:</p>
+            <table class="data">
+                <thead>
+                    <tr><th>tool</th><th>effect</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td><code>move_cursor</code></td><td>Move the on-screen cursor by a (direction, distance) vector.</td></tr>
+                    <tr><td><code>mouse_down</code> / <code>mouse_up</code></td><td>Click (no cursor movement between press &amp; release) or drag.</td></tr>
+                    <tr><td><code>open_map</code> / <code>close_map</code></td><td>Toggle between street view and overhead map.</td></tr>
+                    <tr><td><code>scroll_wheel</code></td><td>Zoom (FOV in pano; tile zoom in map).</td></tr>
+                    <tr><td><code>submit_guess</code></td><td>Declare arrival. Ends the episode and scores final position vs goal.</td></tr>
+                </tbody>
+            </table>
+            <p>
+                Click semantics are deliberately faithful to Street View: a click on the street ahead teleports to that road point; a click on a building or the sky is a no-op. This forces the model to <em>look</em> at the image rather than blindly emit coordinates.
+            </p>
+        </section>
+
+        <section class="prose">
+            <h2>Reward design</h2>
+            <p>A single terminal reward in [0, 1]:</p>
+            <pre><code>reward = clip(1 − final_path_dist_m / initial_path_dist_m, 0, 1)</code></pre>
+            <p>
+                Both distances are computed by Dijkstra through the world graph &mdash; edges weighted by haversine between adjacent pano camera positions &mdash; plus a last-mile haversine from the goal-nearest waypoint to the exact goal coordinate. The result is dense, monotone, and resistant to a pathology in geo-navigation rewards: an agent on the wrong side of a freeway is 30 m haversine from the goal but 2 km away by walkable path, and the gradient should reflect that.
+            </p>
+            <p>
+                The first version of the reward mixed three terms &mdash; discrete <code>reached_goal</code>, continuous haversine progress, step-count efficiency. The path-based reward subsumes all three: at the goal it&apos;s 1.0; halfway along the optimal route it&apos;s 0.5; an agent who wandered is clipped to 0. Step efficiency falls out of <code>prime-rl</code>&apos;s built-in turn-based length penalty.
+            </p>
+        </section>
+
+        <section class="prose">
+            <h2>Baseline benchmarks</h2>
+            <p>
+                The benchmark slice is 60 stratified tasks &mdash; 20 easy + 20 medium + 20 hard, coast-to-coast geographic spread. Each model gets 200 turns, 32 K context, sliding-window image history of 4 to keep the prompt bounded.
+            </p>
+            <table class="data">
+                <thead>
+                    <tr><th>model</th><th>success rate</th><th>mean path-progress</th><th>median turns</th><th>cost</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Human (Ty)</td><td><em>tbd</em></td><td><em>tbd</em></td><td><em>tbd</em></td><td>&mdash;</td></tr>
+                    <tr><td>Claude Opus 4.7</td><td><em>tbd</em></td><td><em>tbd</em></td><td><em>tbd</em></td><td><em>tbd</em></td></tr>
+                    <tr><td>GPT-5.5</td><td><em>tbd</em></td><td><em>tbd</em></td><td><em>tbd</em></td><td><em>tbd</em></td></tr>
+                    <tr><td>Qwen3-VL-8B-Instruct (base)</td><td>0 / 10 (0%)</td><td>0.001</td><td>200 (max)</td><td>~$5</td></tr>
+                    <tr><td>Qwen3-VL-30B-A3B-Instruct</td><td><em>tbd</em></td><td><em>tbd</em></td><td><em>tbd</em></td><td><em>tbd</em></td></tr>
+                    <tr><td>InternVL3-8B</td><td><em>tbd</em></td><td><em>tbd</em></td><td><em>tbd</em></td><td><em>tbd</em></td></tr>
+                    <tr><td>MiniCPM-o-4.5</td><td><em>tbd</em></td><td><em>tbd</em></td><td><em>tbd</em></td><td><em>tbd</em></td></tr>
+                </tbody>
+            </table>
+            <p class="caption">
+                Numbers will land here as the full sweep completes. Qwen3-VL-8B base is the only column verified end-to-end so far.
+            </p>
+        </section>
+
+        <section class="prose">
+            <h2>RL training</h2>
+            <p>
+                The training corpus is the full 5,958-task training split, served by the same env package. Training stack: <code>prime-rl</code>, single-node 8 × H100, LoRA rank 16 on the language-model blocks of Qwen3-VL-8B (vision encoder frozen &mdash; a constraint enforced by the trainer config validator), GRPO advantage with group size 8.
+            </p>
+            <p>Key training-side decisions:</p>
+            <ul>
+                <li><strong>Sliding image-history window of 4.</strong> Each pano viewport is ~700 image tokens. With unbounded history, the prompt exceeds 32K context around turn 37. Keeping only the last 4 image observations pushes the budget past 200 turns at the cost of a small chunk of long-range visual recall.</li>
+                <li><strong>Length penalty via <code>orchestrator.length_penalty type = &quot;turns&quot;</code>.</strong> Replaces the hand-rolled step-efficiency term I had in the first reward draft.</li>
+                <li><strong>Online difficulty filtering.</strong> Groups where every rollout got 0 reward are dropped before training. Effectively doubles compute efficiency in early training.</li>
+            </ul>
+        </section>
+
+        <section class="prose">
+            <h2>Results</h2>
+            <p><em>Filled in once the full post-RL eval lands. Below is a sketch of the comparison plot.</em></p>
+            <figure class="placeholder-figure">
+                <span>Pre / post-RL success rate by difficulty band — coming once the training run completes</span>
+            </figure>
+            <p>
+                The headline question I want the figure to answer: <strong>does RL on the path-distance reward actually teach the model to navigate, or just teach it to game the reward (e.g. always click on the road point closest to the bottom-center pixel)?</strong> The answer hinges on how the curve looks at the medium / hard difficulty bands &mdash; easy tasks are short enough that &quot;always click forward&quot; is a viable degenerate policy.
+            </p>
+        </section>
+
+        <section class="prose">
+            <h2>Notes &amp; choices I&apos;d revisit</h2>
+            <ul>
+                <li><strong>Real images, not synthetic.</strong> Mapillary panoramas have real-world artifacts &mdash; lens flares, motion blur, weather, signage in 50 languages &mdash; that synthetic environments smooth over. If a model can&apos;t read a STOP sign at JPEG-82 quality, that&apos;s a benchmark-worthy result.</li>
+                <li><strong>Mouse-shaped action space.</strong> Asking the model to emit pixel-space click coordinates (not graph indices) forces it to actually look at the image. A model that hallucinates lat/lng is detectable.</li>
+                <li><strong>Pano coverage drops abruptly at the US border.</strong> A few of the medium / hard tasks happen to clip a coastline or a county line where Mapillary coverage thins. Filtering by coverage density before sampling tasks would tighten the variance.</li>
+                <li><strong>The compass currently shows true bearing.</strong> A more interesting variant would hide the compass &mdash; pure visual navigation, no metadata crutches.</li>
+                <li><strong>Multi-step credit assignment is still GRPO-only.</strong> Per-turn shaping via a process reward model is the natural next experiment.</li>
+            </ul>
+        </section>
+
+        <section class="links">
+            <a class="link-card" href="https://github.com/typhamswann/wanderbench-benchmark">
+                <span class="link-eyebrow">Github · benchmark</span>
+                <span class="link-title">wanderbench-benchmark</span>
+                <span class="link-arrow">→</span>
+            </a>
+            <a class="link-card" href="https://github.com/typhamswann/wanderbench-train">
+                <span class="link-eyebrow">Github · training</span>
+                <span class="link-title">wanderbench-train</span>
+                <span class="link-arrow">→</span>
+            </a>
+        </section>
+
+        <footer class="page-footer">
+            <p>© 2026 Ty Pham-Swann · MIT-licensed.</p>
+        </footer>
+    </main>
+
+    <script src="script.js"></script>
+</body>
+</html>
