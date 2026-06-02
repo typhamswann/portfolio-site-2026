@@ -11,7 +11,7 @@
     <header class="hero">
         <p class="eyebrow">RL · VLM · Benchmark · 2026</p>
         <h1>Wanderbench</h1>
-        <p class="tagline">An open spatial-navigation benchmark and RL training environment for vision-language models — 6,547 real-world Street View tasks across 1,122 US cities, with a single dense reward measuring fraction of the optimal walkable path closed.</p>
+        <p class="tagline">An open spatial-navigation benchmark and RL training environment for vision-language models — 6,324 real-world Street View tasks across 1,122 US cities, with a single dense reward measuring fraction of the optimal walkable path closed.</p>
 
         <div class="player-stage">
             <div class="player-frame">
@@ -51,13 +51,13 @@
                 Wanderbench is a benchmark designed to surface that gap. Each task drops the agent into a real Mapillary panorama somewhere in the United States, hands it a goal latitude/longitude, and gives it the same primitives a human player would have in Street View: click on a road point to walk there, drag the pano to look around, scroll to zoom, open a map to orient, submit a guess when you&apos;ve arrived.
             </p>
             <p>
-                The corpus is <strong>6,547 tasks across 1,122 US cities</strong>, stratified across easy / medium / hard difficulty bands. The reward is dense and continuous &mdash; fraction of the optimal walkable path closed &mdash; making the env equally usable for benchmarking (small reproducible subset) and for RL training (full corpus).
+                The corpus is <strong>6,324 tasks across 1,122 US cities</strong>, stratified across easy / medium / hard difficulty bands. The reward is dense and continuous &mdash; fraction of the optimal walkable path closed &mdash; making the env equally usable for benchmarking (small reproducible subset) and for RL training (full corpus).
             </p>
         </section>
 
         <section class="stats">
             <div class="stat">
-                <div class="stat-num">6,547</div>
+                <div class="stat-num">6,324</div>
                 <div class="stat-label">Tasks across 1,122 US cities</div>
             </div>
             <div class="stat">
@@ -112,7 +112,7 @@
         <section class="prose">
             <h2>Baseline benchmarks</h2>
             <p>
-                The benchmark slice is 59 stratified tasks &mdash; 20 easy + 20 medium + 19 hard, coast-to-coast geographic spread. Each model gets 200 turns, 32 K context, sliding-window image history of 4 to keep the prompt bounded.
+                The benchmark slice is 57 stratified tasks &mdash; 20 easy + 20 medium + 17 hard, coast-to-coast geographic spread. Each model gets 200 turns, 32 K context, sliding-window image history of 4 to keep the prompt bounded.
             </p>
             <table class="data">
                 <thead>
