@@ -120,7 +120,6 @@
         white-space: nowrap;
       }
       .chart-val .unit { color: #7a7a7a; }
-      .chart-val .cost { color: #6f6f6f; font-size: 0.72rem; margin-left: 6px; }
       /* dashed reference line (human pace on the efficiency chart) */
       .chart-ref {
         position: absolute;
@@ -210,7 +209,7 @@
                 Ten-task validation subset of the 59-task public benchmark, default-mode, v0.4 haversine scoring (closer to goal = higher). Each model received the same observation channel: a 1024 × 768 viewport image, one-line HUD, sliding-window image history of 4. Per-task turn budget = 3 &times; the human tester&apos;s turn count on that task.
             </p>
             <figure id="chart-pp" class="chart" aria-label="Mean path-progress by model"></figure>
-            <p class="caption">Mean path-progress across the 10-task subset (1.0 = arrived at the goal). Bars show the human ceiling, the three frontier agent harnesses, and the open-model field. Cost shown on hover / in the label.</p>
+            <p class="caption">Mean path-progress across the 10-task subset (1.0 = arrived at the goal). Bars show the human ceiling, the three frontier agent harnesses, and the open-model field.</p>
         </section>
 
         <section class="prose">
@@ -367,15 +366,15 @@ docker build -t wanderbench-base:1.0 base/
       };
 
       var PP = [
-        { name:'Human (Ty)',        sub:'first try',   v:0.996, c:C.human,  cost:'' },
-        { name:'Claude Opus 4.8',   sub:'Claude Code', v:0.692, c:C.claude, cost:'subscription' },
-        { name:'GPT-5.5',           sub:'Codex CLI',   v:0.557, c:C.gpt,    cost:'subscription' },
-        { name:'Gemini 3.5 Flash',  sub:'',            v:0.317, c:C.gemini, cost:'$17.15' },
-        { name:'Qwen 3.7 Plus',     sub:'',            v:0.184, c:C.open,   cost:'$4.68' },
-        { name:'Qwen 3.5-397B-A17B',sub:'',            v:0.138, c:C.open,   cost:'$6.23' },
-        { name:'GLM-5V Turbo',      sub:'',            v:0.109, c:C.open,   cost:'$14.16' },
-        { name:'Kimi K2.6',         sub:'',            v:0.088, c:C.open,   cost:'$8.30' },
-        { name:'Gemma 4 26B-A4B',   sub:'',            v:0.000, c:C.open,   cost:'$0.00' },
+        { name:'Human (Ty)',        sub:'first try',   v:0.996, c:C.human  },
+        { name:'Claude Opus 4.8',   sub:'Claude Code', v:0.692, c:C.claude },
+        { name:'GPT-5.5',           sub:'Codex CLI',   v:0.557, c:C.gpt    },
+        { name:'Gemini 3.5 Flash',  sub:'',            v:0.317, c:C.gemini },
+        { name:'Qwen 3.7 Plus',     sub:'',            v:0.184, c:C.open   },
+        { name:'Qwen 3.5-397B-A17B',sub:'',            v:0.138, c:C.open   },
+        { name:'GLM-5V Turbo',      sub:'',            v:0.109, c:C.open   },
+        { name:'Kimi K2.6',         sub:'',            v:0.088, c:C.open   },
+        { name:'Gemma 4 26B-A4B',   sub:'',            v:0.000, c:C.open   },
       ];
 
       var TURNS = [
@@ -397,15 +396,14 @@ docker build -t wanderbench-base:1.0 base/
                (d.sub ? '<span class="sub">' + esc(d.sub) + '</span>' : '') + '</div>';
       }
 
-      // Path-progress chart: domain 0..1, value label = pp (+ cost).
+      // Path-progress chart: domain 0..1, value label = pp.
       function renderPP(el){
         var max = 1.0, html = '';
         PP.forEach(function(d){
           var w = (d.v / max * 100).toFixed(1) + '%';
           html += '<div class="chart-row">' + nameCell(d) +
             '<div class="chart-track"><div class="chart-fill" style="--w:' + w + ';background:' + d.c + '"></div></div>' +
-            '<div class="chart-val">' + d.v.toFixed(3) +
-              (d.cost ? '<span class="cost">' + esc(d.cost) + '</span>' : '') + '</div>' +
+            '<div class="chart-val">' + d.v.toFixed(3) + '</div>' +
             '</div>';
         });
         html += '<div class="chart-row" style="height:auto"><div></div>' +
