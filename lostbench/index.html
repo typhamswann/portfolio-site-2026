@@ -428,11 +428,11 @@ docker build -t wanderbench-base:1.0 base/
         return '';  // open-model field: name only
       }
 
-      function nameCell(d){
+      function nameCell(d, showSub){
         var logo = logoFor(d.name);
         return '<div class="chart-name">' +
           '<span class="chart-nametext">' + esc(d.name) +
-            (d.sub ? '<span class="sub">' + esc(d.sub) + '</span>' : '') + '</span>' +
+            (showSub && d.sub ? '<span class="sub">' + esc(d.sub) + '</span>' : '') + '</span>' +
           (logo ? '<span class="chart-logo">' + logo + '</span>' : '') +
           '</div>';
       }
@@ -442,7 +442,7 @@ docker build -t wanderbench-base:1.0 base/
         var max = 1.0, html = '';
         PP.forEach(function(d){
           var w = (d.v / max * 100).toFixed(1) + '%';
-          html += '<div class="chart-row">' + nameCell(d) +
+          html += '<div class="chart-row">' + nameCell(d, false) +
             '<div class="chart-track"><div class="chart-fill" style="--w:' + w + ';background:' + d.c + '"></div></div>' +
             '<div class="chart-val">' + d.v.toFixed(3) + '</div>' +
             '</div>';
@@ -461,7 +461,7 @@ docker build -t wanderbench-base:1.0 base/
           var ref = (d.name.indexOf('Human') === 0)
             ? '<div class="chart-ref" style="left:' + refPct.toFixed(1) + '%"><span class="chart-ref-label">human pace</span></div>'
             : '<div class="chart-ref" style="left:' + refPct.toFixed(1) + '%"></div>';
-          html += '<div class="chart-row">' + nameCell(d) +
+          html += '<div class="chart-row">' + nameCell(d, true) +
             '<div class="chart-track">' + ref +
               '<div class="chart-fill" style="--w:' + w + ';background:' + d.c + '"></div></div>' +
             '<div class="chart-val">' + d.v.toFixed(2) + '<span class="unit">&times;</span></div>' +
