@@ -14,6 +14,13 @@
         <p class="tagline">Measuring frontier models on long-horizon spatial reasoning tasks.</p>
 
         <div class="player-stage">
+            <div id="runner-badge" class="runner-badge">
+                <span id="runner-icon" class="runner-icon" aria-hidden="true"></span>
+                <span class="runner-text">
+                    <span id="runner-name" class="runner-name"></span>
+                    <span id="runner-task" class="runner-task"></span>
+                </span>
+            </div>
             <div class="player-frame">
                 <img id="stage-img" alt="lostbench task viewport">
                 <div id="stage-overlay" class="stage-overlay"></div>
@@ -27,14 +34,13 @@
             </div>
             <div class="player-meta">
                 <select id="rollout-select" aria-label="Select rollout"></select>
-                <span id="runner-chip" class="chip"></span>
                 <span id="diff-chip" class="chip"></span>
                 <span id="dist-chip" class="chip subtle"></span>
             </div>
         </div>
 
         <div class="cta-row">
-            <a class="cta primary" href="https://github.com/typhamswann/wanderbench-benchmark">Run the Public Benchmark</a>
+            <a class="cta primary" href="https://github.com/typhamswann/lostbench">Run the Public Benchmark</a>
             <a class="cta" href="#play">Play the Benchmark</a>
             <a class="cta" href="#intro">Read the Blog</a>
         </div>
@@ -48,7 +54,7 @@
         <section id="intro" class="prose">
             <h2>Introduction</h2>
             <p>
-                LostBench is built to assess and improve spatial-reasoning capabilities in frontier models by measuring performance on diverse, long-horizon spatial reasoning tasks. Each task has been completed by a human on the first attempt. The benchmark is far from saturated &mdash; the scores below are on the <em>easiest</em> tasks, in the <em>easiest</em> setting, at the <em>shortest</em> horizons. Powering the benchmark are scalable data pipelines that integrate open-source data and allow trivial creation of tasks with orders-of-magnitude longer time horizons. It&apos;s available as a Harbor-compatible repository at <a href="https://github.com/typhamswann/wanderbench-benchmark"><code>typhamswann/wanderbench-benchmark</code></a>.
+                LostBench is built to assess and improve spatial-reasoning capabilities in frontier models by measuring performance on diverse, long-horizon spatial reasoning tasks. Each task has been completed by a human on the first attempt. The benchmark is far from saturated &mdash; the scores below are on the <em>easiest</em> tasks, in the <em>easiest</em> setting, at the <em>shortest</em> horizons. Powering the benchmark are scalable data pipelines that integrate open-source data and allow trivial creation of tasks with orders-of-magnitude longer time horizons. It&apos;s available as a Harbor-compatible repository at <a href="https://github.com/typhamswann/lostbench"><code>typhamswann/lostbench</code></a>.
             </p>
         </section>
 
@@ -104,7 +110,7 @@
                 Higher scores mean the agent guessed when they were closer to the target. This continuous scoring allows greater granularity in assessing model capability than binary success.
             </p>
             <p>
-                Each task has been tested by a real human, who was able to complete each one efficiently on their first attempt. In <strong>48 out of 59 tasks, the human guessed exactly on the endpoint (0.0 meters from target)</strong>, with the overall mean distance from target being <strong>1.50 meters</strong>. For a person, it is trivial to guess the exact location once they can access it.
+                Each task has been tested by a real human, who was able to complete each one efficiently on their first attempt. In <strong>48 out of 58 found sessions, the human guessed exactly on the endpoint (0.0 meters from target)</strong>, with the overall mean distance from target being <strong>1.50 meters</strong>. For a person, it is trivial to guess the exact location once they can access it.
             </p>
 
             <h3>Novel tasks from a custom-built graph</h3>
@@ -121,8 +127,8 @@
             <p>
                 The player above is an autoplay of full human navigation traces on representative tasks &mdash; scrub through any one to watch a person solve it. To <em>play it yourself</em>, clone the public benchmark and launch the local play app:
             </p>
-            <pre><code>git clone https://github.com/typhamswann/wanderbench-benchmark
-cd wanderbench-benchmark
+            <pre><code>git clone https://github.com/typhamswann/lostbench
+cd lostbench
 docker build -t wanderbench-base:1.0 base/
 # then drive any task container via `wb harbor-step` &mdash; see README</code></pre>
             <p>
@@ -210,7 +216,7 @@ docker build -t wanderbench-base:1.0 base/
         </section>
 
         <section class="links">
-            <a class="link-card" href="https://github.com/typhamswann/wanderbench-benchmark">
+            <a class="link-card" href="https://github.com/typhamswann/lostbench">
                 <span class="link-eyebrow">Github · public benchmark</span>
                 <span class="link-title">LostBench</span>
                 <span class="link-arrow">→</span>
