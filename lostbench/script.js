@@ -74,7 +74,7 @@
             const g = r.runner;
             (groups[g] = groups[g] || []).push({i, r});
         });
-        const order = ['Human', 'Claude Opus 4.8', 'GPT-5.5'];
+        const order = ['Claude Opus 4.8', 'GPT-5.5', 'Gemini 3.5 Flash'];
         const ordered = order.filter(k => groups[k]).concat(
             Object.keys(groups).filter(k => !order.includes(k))
         );
