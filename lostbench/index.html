@@ -366,7 +366,7 @@ docker build -t wanderbench-base:1.0 base/
       };
 
       var PP = [
-        { name:'Human (Ty)',        sub:'first try',   v:0.996, c:C.human  },
+        { name:'Human',             sub:'first try',   v:0.996, c:C.human  },
         { name:'Claude Opus 4.8',   sub:'Claude Code', v:0.692, c:C.claude },
         { name:'GPT-5.5',           sub:'Codex CLI',   v:0.557, c:C.gpt    },
         { name:'Gemini 3.5 Flash',  sub:'',            v:0.317, c:C.gemini },
@@ -378,7 +378,7 @@ docker build -t wanderbench-base:1.0 base/
       ];
 
       var TURNS = [
-        { name:'Human (Ty)',        sub:'52 turns',  v:1.00, c:C.human },
+        { name:'Human',             sub:'52 turns',  v:1.00, c:C.human },
         { name:'Claude Opus 4.8',   sub:'94 turns',  v:1.99, c:C.claude },
         { name:'GPT-5.5',           sub:'107 turns', v:2.29, c:C.gpt },
         { name:'Gemini 3.5 Flash',  sub:'148 turns', v:2.76, c:C.gemini },
