@@ -66,6 +66,95 @@
         letter-spacing: 0.02em !important;
         line-height: 1 !important;
       }
+
+      /* ---------- DATA-VIZ CHARTS ---------- */
+      .chart {
+        max-width: 720px;
+        margin: 8px 0 4px;
+        font-family: 'Inter', -apple-system, sans-serif;
+      }
+      .chart-row {
+        display: grid;
+        grid-template-columns: 168px 1fr 150px;
+        align-items: center;
+        column-gap: 14px;
+        height: 38px;
+      }
+      .chart-name {
+        font-size: 0.84rem;
+        font-weight: 400;
+        color: #dcdcdc;
+        text-align: right;
+        line-height: 1.1;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .chart-name .sub {
+        display: block;
+        font-size: 0.62rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: #6f6f6f;
+        margin-top: 1px;
+      }
+      .chart-track {
+        position: relative;
+        height: 20px;
+        background: rgba(255,255,255,0.035);
+        border-radius: 3px;
+        overflow: visible;
+      }
+      .chart-fill {
+        height: 100%;
+        width: 0;
+        border-radius: 3px;
+        transition: width 1.05s cubic-bezier(0.22, 1, 0.36, 1);
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+      }
+      .chart.shown .chart-fill { width: var(--w); }
+      .chart-val {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem;
+        color: #f0f0f0;
+        white-space: nowrap;
+      }
+      .chart-val .unit { color: #7a7a7a; }
+      .chart-val .cost { color: #6f6f6f; font-size: 0.72rem; margin-left: 6px; }
+      /* dashed reference line (human pace on the efficiency chart) */
+      .chart-ref {
+        position: absolute;
+        top: -6px; bottom: -6px;
+        width: 0;
+        border-left: 1px dashed rgba(233, 196, 106, 0.55);
+        z-index: 2;
+      }
+      .chart-ref-label {
+        position: absolute;
+        top: -20px;
+        transform: translateX(-50%);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.62rem;
+        letter-spacing: 0.04em;
+        color: #e9c46a;
+        white-space: nowrap;
+      }
+      .chart-axis {
+        grid-column: 2;
+        display: flex;
+        justify-content: space-between;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.64rem;
+        color: #5c5c5c;
+        margin-top: 6px;
+        border-top: 1px solid #1a1a1a;
+        padding-top: 5px;
+      }
+      @media (max-width: 600px) {
+        .chart-row { grid-template-columns: 104px 1fr 96px; column-gap: 9px; height: 36px; }
+        .chart-name { font-size: 0.74rem; }
+        .chart-val { font-size: 0.7rem; }
+      }
     </style>
 </head>
 <body>
@@ -120,22 +209,8 @@
             <p>
                 Ten-task validation subset of the 59-task public benchmark, default-mode, v0.4 haversine scoring (closer to goal = higher). Each model received the same observation channel: a 1024 × 768 viewport image, one-line HUD, sliding-window image history of 4. Per-task turn budget = 3 &times; the human tester&apos;s turn count on that task.
             </p>
-            <table class="data">
-                <thead>
-                    <tr><th>model</th><th>mean path-progress</th><th>median turns</th><th>cost</th></tr>
-                </thead>
-                <tbody>
-                    <tr><td>Human (Ty)</td><td>0.996</td><td>60</td><td>&mdash;</td></tr>
-                    <tr><td>Claude Opus 4.8 <em>(via Claude Code)</em></td><td>0.692</td><td>93</td><td>subscription</td></tr>
-                    <tr><td>GPT-5.5 <em>(via Codex CLI)</em></td><td>0.557</td><td>135</td><td>subscription</td></tr>
-                    <tr><td>Gemini 3.5 Flash</td><td>0.317</td><td>180</td><td>$17.15</td></tr>
-                    <tr><td>Qwen 3.7 Plus</td><td>0.184</td><td>93</td><td>$4.68</td></tr>
-                    <tr><td>Qwen 3.5-397B-A17B</td><td>0.138</td><td>180</td><td>$6.23</td></tr>
-                    <tr><td>GLM-5V Turbo</td><td>0.109</td><td>180</td><td>$14.16</td></tr>
-                    <tr><td>Kimi K2.6</td><td>0.088</td><td>180</td><td>$8.30</td></tr>
-                    <tr><td>Gemma 4 26B-A4B</td><td>0.000</td><td>180</td><td>$0.00</td></tr>
-                </tbody>
-            </table>
+            <figure id="chart-pp" class="chart" aria-label="Mean path-progress by model"></figure>
+            <p class="caption">Mean path-progress across the 10-task subset (1.0 = arrived at the goal). Bars show the human ceiling, the three frontier agent harnesses, and the open-model field. Cost shown on hover / in the label.</p>
         </section>
 
         <section class="prose">
@@ -231,22 +306,8 @@ docker build -t wanderbench-base:1.0 base/
             </p>
 
             <h3>Turn efficiency</h3>
-            <table class="data">
-                <thead>
-                    <tr><th>model</th><th>avg turns</th><th>turns / human</th></tr>
-                </thead>
-                <tbody>
-                    <tr><td>Human (Ty)</td><td>52</td><td>1.00&times;</td></tr>
-                    <tr><td>Claude Opus 4.8 <em>(via Claude Code)</em></td><td>94</td><td>1.99&times;</td></tr>
-                    <tr><td>GPT-5.5 <em>(via Codex CLI)</em></td><td>107</td><td>2.29&times;</td></tr>
-                    <tr><td>Gemini 3.5 Flash</td><td>148</td><td>2.76&times;</td></tr>
-                    <tr><td>Qwen 3.7 Plus</td><td>121</td><td>2.73&times;</td></tr>
-                    <tr><td>Qwen 3.5-397B-A17B</td><td>151</td><td>2.78&times;</td></tr>
-                    <tr><td>GLM-5V Turbo</td><td>139</td><td>2.74&times;</td></tr>
-                    <tr><td>Kimi K2.6</td><td>153</td><td>2.88&times;</td></tr>
-                    <tr><td>Gemma 4 26B-A4B</td><td>152</td><td>2.93&times;</td></tr>
-                </tbody>
-            </table>
+            <figure id="chart-turns" class="chart" aria-label="Turns taken relative to the human"></figure>
+            <p class="caption">Turns taken per task, as a multiple of the human tester. The dashed line marks human pace (1&times;). Every model spends 2&ndash;3&times; the human's turns; the more accurate the model, the closer it gets.</p>
             <p>
                 Models were subsequently less turn-efficient than the human tester. They were less precise in their navigation of the world and would frequently travel far down the wrong path before correcting. Even though models were allocated a turn budget of three times the turns taken by the human, they were often guessing with their final or one of their final available turns. The more accurate the model, the more turn-efficient it was as well: Claude Code was the most efficient at <strong>1.99&times;</strong> the human&apos;s turn count, compared to the overall agent average of <strong>2.64&times;</strong>.
             </p>
@@ -289,6 +350,105 @@ docker build -t wanderbench-base:1.0 base/
             <p>© 2026 Ty Pham-Swann · MIT-licensed.</p>
         </footer>
     </main>
+
+    <!-- Inline chart renderer (kept inline so it can't be CDN-cache-poisoned). -->
+    <script>
+    (function () {
+      'use strict';
+      // Brand-coded palette. Frontier harnesses get brand colors; the open-model
+      // field shares a muted slate so the three frontier bars + the human ceiling
+      // read as the visual hierarchy.
+      var C = {
+        human:  '#e9c46a',  // warm gold = the ceiling
+        claude: '#cc785c',  // anthropic coral
+        gpt:    '#10a37f',  // openai green
+        gemini: '#4285f4',  // google blue
+        open:   '#646b7a',  // open-model field (muted slate)
+      };
+
+      var PP = [
+        { name:'Human (Ty)',        sub:'first try',   v:0.996, c:C.human,  cost:'' },
+        { name:'Claude Opus 4.8',   sub:'Claude Code', v:0.692, c:C.claude, cost:'subscription' },
+        { name:'GPT-5.5',           sub:'Codex CLI',   v:0.557, c:C.gpt,    cost:'subscription' },
+        { name:'Gemini 3.5 Flash',  sub:'',            v:0.317, c:C.gemini, cost:'$17.15' },
+        { name:'Qwen 3.7 Plus',     sub:'',            v:0.184, c:C.open,   cost:'$4.68' },
+        { name:'Qwen 3.5-397B-A17B',sub:'',            v:0.138, c:C.open,   cost:'$6.23' },
+        { name:'GLM-5V Turbo',      sub:'',            v:0.109, c:C.open,   cost:'$14.16' },
+        { name:'Kimi K2.6',         sub:'',            v:0.088, c:C.open,   cost:'$8.30' },
+        { name:'Gemma 4 26B-A4B',   sub:'',            v:0.000, c:C.open,   cost:'$0.00' },
+      ];
+
+      var TURNS = [
+        { name:'Human (Ty)',        sub:'52 turns',  v:1.00, c:C.human },
+        { name:'Claude Opus 4.8',   sub:'94 turns',  v:1.99, c:C.claude },
+        { name:'GPT-5.5',           sub:'107 turns', v:2.29, c:C.gpt },
+        { name:'Gemini 3.5 Flash',  sub:'148 turns', v:2.76, c:C.gemini },
+        { name:'Qwen 3.7 Plus',     sub:'121 turns', v:2.73, c:C.open },
+        { name:'Qwen 3.5-397B-A17B',sub:'151 turns', v:2.78, c:C.open },
+        { name:'GLM-5V Turbo',      sub:'139 turns', v:2.74, c:C.open },
+        { name:'Kimi K2.6',         sub:'153 turns', v:2.88, c:C.open },
+        { name:'Gemma 4 26B-A4B',   sub:'152 turns', v:2.93, c:C.open },
+      ];
+
+      function esc(s){ var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+      function nameCell(d){
+        return '<div class="chart-name">' + esc(d.name) +
+               (d.sub ? '<span class="sub">' + esc(d.sub) + '</span>' : '') + '</div>';
+      }
+
+      // Path-progress chart: domain 0..1, value label = pp (+ cost).
+      function renderPP(el){
+        var max = 1.0, html = '';
+        PP.forEach(function(d){
+          var w = (d.v / max * 100).toFixed(1) + '%';
+          html += '<div class="chart-row">' + nameCell(d) +
+            '<div class="chart-track"><div class="chart-fill" style="--w:' + w + ';background:' + d.c + '"></div></div>' +
+            '<div class="chart-val">' + d.v.toFixed(3) +
+              (d.cost ? '<span class="cost">' + esc(d.cost) + '</span>' : '') + '</div>' +
+            '</div>';
+        });
+        html += '<div class="chart-row" style="height:auto"><div></div>' +
+                '<div class="chart-axis"><span>0</span><span>0.5</span><span>1.0 · goal</span></div><div></div></div>';
+        el.innerHTML = html;
+      }
+
+      // Turn-efficiency chart: domain 0..3.1x, dashed reference at human 1.0x.
+      function renderTurns(el){
+        var max = 3.1, refPct = (1.0 / max * 100);
+        var html = '';
+        TURNS.forEach(function(d){
+          var w = (d.v / max * 100).toFixed(1) + '%';
+          var ref = (d.name.indexOf('Human') === 0)
+            ? '<div class="chart-ref" style="left:' + refPct.toFixed(1) + '%"><span class="chart-ref-label">human pace</span></div>'
+            : '<div class="chart-ref" style="left:' + refPct.toFixed(1) + '%"></div>';
+          html += '<div class="chart-row">' + nameCell(d) +
+            '<div class="chart-track">' + ref +
+              '<div class="chart-fill" style="--w:' + w + ';background:' + d.c + '"></div></div>' +
+            '<div class="chart-val">' + d.v.toFixed(2) + '<span class="unit">&times;</span></div>' +
+            '</div>';
+        });
+        html += '<div class="chart-row" style="height:auto"><div></div>' +
+                '<div class="chart-axis"><span>0</span><span>1&times;</span><span>2&times;</span><span>3&times;</span></div><div></div></div>';
+        el.innerHTML = html;
+      }
+
+      var pp = document.getElementById('chart-pp');
+      var tn = document.getElementById('chart-turns');
+      if (pp) renderPP(pp);
+      if (tn) renderTurns(tn);
+
+      // Animate bars in when each chart scrolls into view.
+      if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function(entries){
+          entries.forEach(function(e){ if (e.isIntersecting){ e.target.classList.add('shown'); io.unobserve(e.target); } });
+        }, { threshold: 0.25 });
+        [pp, tn].forEach(function(c){ if (c) io.observe(c); });
+      } else {
+        [pp, tn].forEach(function(c){ if (c) c.classList.add('shown'); });
+      }
+    })();
+    </script>
 
     <script src="script.js?v=13"></script>
 </body>
