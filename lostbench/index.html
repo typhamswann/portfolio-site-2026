@@ -10,52 +10,59 @@
          a stale styles.css at the CDN edge. These rules win because they're
          in the same response document as the page itself. -->
     <style>
-      /* Whole badge is one white plate. Black mark + black text sit
-         directly on it — no nested tile, no possibility of an outline
-         ring. The mark in the PNG renders pure black against the white
-         via a contrast filter that maps its dark-grey pixels to #000. */
+      /* DARK badge plate. Model name in white. The logo sits in its own small
+         WHITE square, with the mark sized small inside it so the square reads
+         as a clean white chip (not a dark mark filling the square edge-to-edge). */
       .runner-badge {
         position: absolute !important;
         right: 14px !important;
         bottom: 14px !important;
         display: inline-flex !important;
         align-items: center !important;
-        gap: 7px !important;
-        padding: 5px 10px 5px 6px !important;
+        gap: 8px !important;
+        padding: 5px 11px 5px 5px !important;
+        background: rgba(10,10,10,0.86) !important;
+        border: 0 !important;
+        border-radius: 5px !important;
+        z-index: 5 !important;
+        pointer-events: none !important;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+      }
+      .runner-icon {
+        width: 26px !important;
+        height: 26px !important;
+        flex-shrink: 0 !important;
+        display: block !important;
         background: #ffffff !important;
         border: 0 !important;
         border-radius: 4px !important;
-        z-index: 5 !important;
-        pointer-events: none !important;
-        box-shadow: 0 2px 12px rgba(0,0,0,0.45);
-      }
-      .runner-icon {
-        width: 18px !important;
-        height: 18px !important;
-        flex-shrink: 0 !important;
-        display: inline-flex !important;
-        align-items: center !important;
-        justify-content: center !important;
-        background: transparent !important;
-        border: 0 !important;
-        overflow: visible !important;
+        overflow: hidden !important;
         color: #0a0a0a !important;
       }
+      /* anthropic_chip.png is already a solid-white square with the black mark
+         baked in and padded — so it just fills the chip 100%. No transparency,
+         no filter, nothing that can read as grey. */
       .runner-icon img {
         width: 100% !important;
         height: 100% !important;
-        object-fit: contain !important;
+        object-fit: cover !important;
         display: block !important;
-        /* map the seeklogo PNG's #181818 mark to pure #000 on the white plate */
-        filter: brightness(0) contrast(100%) !important;
+        filter: none !important;
       }
-      .runner-icon svg { width: 100% !important; height: 100% !important; fill: currentColor !important; }
+      /* The human runner still uses an inline SVG, so center + size it. */
+      .runner-icon svg {
+        width: 64% !important;
+        height: 64% !important;
+        margin: 18% !important;
+        fill: currentColor !important;
+      }
       .runner-badge.runner-human .runner-icon { color: #1e8b54 !important; }
       .runner-name {
         font-size: 12.5px !important;
-        font-weight: 600 !important;
-        color: #0a0a0a !important;
-        letter-spacing: 0.01em !important;
+        font-weight: 500 !important;
+        color: #f5f5f5 !important;
+        letter-spacing: 0.02em !important;
         line-height: 1 !important;
       }
     </style>
@@ -282,6 +289,6 @@ docker build -t wanderbench-base:1.0 base/
         </footer>
     </main>
 
-    <script src="script.js?v=9"></script>
+    <script src="script.js?v=10"></script>
 </body>
 </html>
