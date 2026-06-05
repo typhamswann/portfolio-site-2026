@@ -6,6 +6,56 @@
     <title>LostBench — Ty Pham-Swann</title>
     <meta name="description" content="Measuring frontier models on long-horizon spatial reasoning tasks. An open Harbor-compatible benchmark of real Street-View navigation tasks.">
     <link rel="stylesheet" type="text/css" href="styles.css?v=3">
+    <!-- Inline override for the runner badge so it can't be cache-poisoned by
+         a stale styles.css at the CDN edge. These rules win because they're
+         in the same response document as the page itself. -->
+    <style>
+      .runner-badge {
+        position: absolute !important;
+        right: 14px !important;
+        bottom: 14px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        padding: 5px 11px 5px 5px !important;
+        background: rgba(10,10,10,0.86) !important;
+        border: 0 !important;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        z-index: 5 !important;
+        pointer-events: none !important;
+      }
+      .runner-icon {
+        width: 24px !important;
+        height: 24px !important;
+        flex-shrink: 0 !important;
+        display: block !important;
+        background: #ffffff !important;
+        border: 0 !important;
+        border-radius: 3px !important;
+        overflow: hidden !important;
+        color: #0a0a0a !important;
+      }
+      /* PNG fills the tile completely — no white ring from a smaller image
+         inside a larger tile. The Anthropic mark's own built-in padding
+         within its 320×320 source becomes the only visual margin. */
+      .runner-icon img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: contain !important;
+        display: block !important;
+        filter: none !important;
+      }
+      .runner-icon svg { width: 84% !important; height: 84% !important; margin: 8% !important; fill: currentColor !important; }
+      .runner-badge.runner-human .runner-icon { color: #1e8b54 !important; }
+      .runner-name {
+        font-size: 13px !important;
+        font-weight: 500 !important;
+        color: #f5f5f5 !important;
+        letter-spacing: 0.02em !important;
+        line-height: 1 !important;
+      }
+    </style>
 </head>
 <body>
     <header class="hero">
@@ -229,6 +279,6 @@ docker build -t wanderbench-base:1.0 base/
         </footer>
     </main>
 
-    <script src="script.js?v=8"></script>
+    <script src="script.js?v=9"></script>
 </body>
 </html>
