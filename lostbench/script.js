@@ -8,19 +8,20 @@
     const STEP_MS = 850;   // per-frame playback speed
 
     // Brand identifiers for benchmark attribution (nominative use).
+    // Claude: four-petal cross asterisk approximating Anthropic's mark.
+    // OpenAI: hexafoil blossom.
+    // Human: solid silhouette.
     const ICONS = {
         claude: '<svg viewBox="0 0 24 24" aria-hidden="true">' +
-                '<path d="M12 1c.7 4.9 1 6.6 1.8 8.2 1.6.8 3.3 1.1 8.2 1.8-4.9.7-6.6 1-8.2 1.8-.8 1.6-1.1 3.3-1.8 8.2-.7-4.9-1-6.6-1.8-8.2C8.6 11.9 6.9 11.6 2 11c4.9-.7 6.6-1 8.2-1.8C11 7.6 11.3 5.9 12 1Z"/></svg>',
+                '<path d="M12 1.5C12.4 5.8 13.2 8.4 14.7 9.8 16.2 11.2 18.7 12 23 12.4 18.7 12.8 16.2 13.6 14.7 15 13.2 16.4 12.4 19 12 23.3 11.6 19 10.8 16.4 9.3 15 7.8 13.6 5.3 12.8 1 12.4 5.3 12 7.8 11.2 9.3 9.8 10.8 8.4 11.6 5.8 12 1.5Z"/></svg>',
         codex:  '<svg viewBox="0 0 24 24" aria-hidden="true">' +
                 '<path d="M22.28 9.82a5.98 5.98 0 0 0-.52-4.9 6.05 6.05 0 0 0-6.51-2.9A6.07 6.07 0 0 0 4.98 4.18a5.98 5.98 0 0 0-4 2.9 6.05 6.05 0 0 0 .74 7.1 5.98 5.98 0 0 0 .52 4.91 6.05 6.05 0 0 0 6.51 2.9 5.98 5.98 0 0 0 4.5 2.01 6.05 6.05 0 0 0 5.78-4.21 5.98 5.98 0 0 0 4-2.9 6.05 6.05 0 0 0-.75-7.07Zm-9.02 12.61a4.48 4.48 0 0 1-2.88-1.04l.14-.08 4.78-2.76a.78.78 0 0 0 .4-.68v-6.74l2.02 1.17a.07.07 0 0 1 .04.05v5.58a4.5 4.5 0 0 1-4.5 4.5ZM3.6 18.3a4.47 4.47 0 0 1-.54-3.01l.14.08 4.79 2.77a.77.77 0 0 0 .78 0l5.84-3.37v2.33a.08.08 0 0 1-.03.06l-4.83 2.79a4.5 4.5 0 0 1-6.14-1.65ZM2.34 7.9a4.49 4.49 0 0 1 2.37-1.98v5.69a.77.77 0 0 0 .39.67l5.81 3.36-2.02 1.17a.08.08 0 0 1-.07 0L4 14.01A4.5 4.5 0 0 1 2.34 7.9Zm16.6 3.85L13.1 8.37l2.02-1.17a.08.08 0 0 1 .07 0l4.83 2.79a4.49 4.49 0 0 1-.68 8.1v-5.67a.79.79 0 0 0-.4-.67ZM20.94 8.7l-.14-.08-4.78-2.79a.78.78 0 0 0-.78 0L9.4 9.23V6.9a.07.07 0 0 1 .03-.06l4.83-2.79a4.5 4.5 0 0 1 6.68 4.66ZM8.3 12.86l-2.02-1.16a.08.08 0 0 1-.04-.06V6.07a4.5 4.5 0 0 1 7.38-3.45l-.14.08L8.7 5.46a.79.79 0 0 0-.39.68Zm1.1-2.37 2.6-1.5 2.61 1.5v3l-2.6 1.5-2.6-1.5Z"/></svg>',
-        human:  '<svg viewBox="0 0 24 24" aria-hidden="true">' +
-                '<circle cx="12" cy="8" r="3.6" fill="currentColor"/>' +
-                '<path d="M4.5 21c0-4.2 3.4-7.6 7.5-7.6s7.5 3.4 7.5 7.6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
+        human:  '<svg viewBox="0 0 24 24" aria-hidden="true" fill="currentColor">' +
+                '<path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8Zm0 2c-4.5 0-8 2.4-8 5.6V21h16v-1.4c0-3.2-3.5-5.6-8-5.6Z"/></svg>',
     };
 
     const els = {
         img:        document.getElementById('stage-img'),
-        overlay:    document.getElementById('stage-overlay'),
         prev:       document.getElementById('btn-prev'),
         play:       document.getElementById('btn-play'),
         next:       document.getElementById('btn-next'),
@@ -31,7 +32,6 @@
         runnerIcon: document.getElementById('runner-icon'),
         runnerName: document.getElementById('runner-name'),
         runnerTask: document.getElementById('runner-task'),
-        diff:       document.getElementById('diff-chip'),
         dist:       document.getElementById('dist-chip'),
     };
 
@@ -144,36 +144,25 @@
         els.scrubber.addEventListener('input', e => { stop(); sIdx = parseInt(e.target.value, 10); render(); });
     }
 
-    function diffColor(d) {
-        return ({ easy: 'var(--c-easy)', medium: 'var(--c-medium)', hard: 'var(--c-hard)' })[d] || 'var(--muted)';
-    }
-
     function render() {
         const r = rollouts[rIdx];
         const step = r.steps[sIdx];
         els.img.src = 'images/' + step.image;
         els.img.alt = `step ${step.n} viewport for ${r.task_id}`;
-        els.overlay.innerHTML =
-            `<strong>${step.view.toUpperCase()}</strong> · step ${step.n} · ` +
-            `<span style="color:#bbb">dist→goal ${step.dist_to_goal_m} m</span><br>` +
-            `<span style="color:#9a9a9a">${escapeHtml(step.action)}</span>`;
         els.scrubber.max = r.steps.length - 1;
         els.scrubber.value = sIdx;
         els.count.textContent = `${sIdx} / ${r.steps.length - 1}`;
         els.select.value = rIdx;
 
-        // Prominent runner badge
+        // Runner header above the frame
         const slug = r.runner_slug || (r.runner.toLowerCase().includes('claude') ? 'claude'
                                        : r.runner.toLowerCase().includes('gpt') || r.runner.toLowerCase().includes('codex') ? 'codex'
                                        : 'human');
         els.runnerWrap.className = 'runner-badge runner-' + slug;
         els.runnerIcon.innerHTML = ICONS[slug] || '';
         els.runnerName.textContent = r.runner;
-        els.runnerTask.textContent = r.task_id + ' · ' + r.difficulty;
+        els.runnerTask.textContent = r.task_id;
 
-        els.diff.textContent = r.difficulty;
-        els.diff.style.background = diffColor(r.difficulty);
-        els.diff.style.color = '#0a0a0a';
         const ppLabel = (r.path_progress != null) ? ` · pp ${r.path_progress.toFixed(2)}` : '';
         els.dist.textContent = `optimal ${Math.round(r.optimal_distance_m)} m · ${r.optimal_steps} hops${ppLabel}`;
     }
