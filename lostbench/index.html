@@ -67,6 +67,39 @@
         line-height: 1 !important;
       }
 
+      /* ---------- PLAY EMBED ---------- */
+      .play-embed {
+        width: 100%;
+        max-width: 1100px;          /* break out of the 720px text column */
+        margin: 10px 0 6px;
+        aspect-ratio: 7 / 5;
+        border: 1px solid var(--rule);
+        border-radius: 6px;
+        overflow: hidden;
+        background: #111;
+      }
+      .play-embed iframe { width: 100%; height: 100%; border: 0; display: block; }
+      @media (max-width: 760px) { .play-embed { aspect-ratio: 3 / 4; } }
+      .play-poster {
+        width: 100%; height: 100%;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 8px; cursor: pointer;
+        background:
+          radial-gradient(120% 120% at 50% 0%, rgba(101,214,151,0.06), transparent 60%),
+          #0d0d0d;
+        border: 0; color: #f5f5f5;
+        font-family: 'Inter', -apple-system, sans-serif;
+        transition: background 0.2s ease;
+      }
+      .play-poster:hover { background: radial-gradient(120% 120% at 50% 0%, rgba(101,214,151,0.10), transparent 60%), #101010; }
+      .play-poster-icon {
+        width: 56px; height: 56px; border-radius: 50%;
+        display: inline-flex; align-items: center; justify-content: center;
+        background: #f5f5f5; color: #0a0a0a; font-size: 1.3rem; padding-left: 4px;
+      }
+      .play-poster-label { font-size: 1.05rem; font-weight: 400; letter-spacing: 0.01em; }
+      .play-poster-sub { font-size: 0.78rem; color: var(--muted); letter-spacing: 0.02em; }
+
       /* ---------- DATA-VIZ CHARTS ---------- */
       .chart {
         max-width: 720px;
@@ -277,15 +310,16 @@
         <section id="play" class="prose">
             <h2>Play the Benchmark</h2>
             <p>
-                The player above is an autoplay of full human navigation traces on representative tasks &mdash; scrub through any one to watch a person solve it. To <em>play it yourself</em>, clone the public benchmark and launch the local play app:
+                Try it yourself. Navigate a live task the same way the models did &mdash; click on the road to walk, drag to look around, open the map to find the goal, and submit when you think you&apos;ve arrived. Switch tasks with the dropdown inside the player.
             </p>
-            <pre><code>git clone https://github.com/typhamswann/lostbench
-cd lostbench
-docker build -t wanderbench-base:1.0 base/
-# then drive any task container via `wb harbor-step` &mdash; see README</code></pre>
-            <p>
-                A hosted in-browser play UI is on the short-list of follow-ups. If you&apos;d like access sooner, drop me a line.
-            </p>
+            <div class="play-embed" id="play-embed" data-src="https://lostbench-play.fly.dev/">
+                <button class="play-poster" id="play-poster" type="button" aria-label="Launch the playable task">
+                    <span class="play-poster-icon">▶</span>
+                    <span class="play-poster-label">Launch the playable task</span>
+                    <span class="play-poster-sub">the live simulator &middot; loads in a few seconds</span>
+                </button>
+            </div>
+            <p class="caption">The full simulator, served live &mdash; panoramas stream from the benchmark&apos;s public store and render server-side. Click to launch (it wakes from idle on first load). You can also <a href="https://lostbench-play.fly.dev/" target="_blank" rel="noopener">open it in a new tab</a>.</p>
         </section>
 
         <section class="prose">
@@ -470,6 +504,20 @@ docker build -t wanderbench-base:1.0 base/
         html += '<div class="chart-row" style="height:auto"><div></div>' +
                 '<div class="chart-axis"><span>0</span><span>1&times;</span><span>2&times;</span><span>3&times;</span></div><div></div></div>';
         el.innerHTML = html;
+      }
+
+      // Click-to-load the play embed (lazy: avoids cold-starting the service
+      // on every page view, and never shows a broken frame on load).
+      var poster = document.getElementById('play-poster');
+      if (poster) {
+        poster.addEventListener('click', function () {
+          var wrap = document.getElementById('play-embed');
+          var src = wrap.getAttribute('data-src');
+          var f = document.createElement('iframe');
+          f.id = 'play-frame'; f.title = 'LostBench — play a task';
+          f.src = src; f.allow = 'fullscreen'; f.setAttribute('loading','lazy');
+          wrap.innerHTML = ''; wrap.appendChild(f);
+        });
       }
 
       var pp = document.getElementById('chart-pp');
