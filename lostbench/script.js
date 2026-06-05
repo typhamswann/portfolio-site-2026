@@ -21,6 +21,7 @@
 
     const els = {
         img:        document.getElementById('stage-img'),
+        overlay:    document.getElementById('stage-overlay'),
         prev:       document.getElementById('btn-prev'),
         play:       document.getElementById('btn-play'),
         next:       document.getElementById('btn-next'),
@@ -147,12 +148,16 @@
         const step = r.steps[sIdx];
         els.img.src = 'images/' + step.image;
         els.img.alt = `step ${step.n} viewport for ${r.task_id}`;
+        els.overlay.innerHTML =
+            `<strong>${step.view.toUpperCase()}</strong> · step ${step.n} · ` +
+            `<span style="color:#bbb">dist→goal ${step.dist_to_goal_m} m</span><br>` +
+            `<span style="color:#9a9a9a">${escapeHtml(step.action)}</span>`;
         els.scrubber.max = r.steps.length - 1;
         els.scrubber.value = sIdx;
         els.count.textContent = `${sIdx} / ${r.steps.length - 1}`;
         els.select.value = rIdx;
 
-        // Runner header above the frame
+        // Runner badge on the frame
         const slug = r.runner_slug || (r.runner.toLowerCase().includes('claude') ? 'claude'
                                        : r.runner.toLowerCase().includes('gpt') || r.runner.toLowerCase().includes('codex') ? 'codex'
                                        : 'human');
