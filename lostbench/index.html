@@ -72,14 +72,14 @@
         width: 100%;
         max-width: 600px;           /* compact, centered in the text column */
         margin: 12px auto 6px;
-        aspect-ratio: 1 / 1;
+        aspect-ratio: 3 / 4;        /* fits the player: view + controls + instructions */
         border: 1px solid var(--rule);
         border-radius: 6px;
         overflow: hidden;
         background: #111;
       }
       .play-embed iframe { width: 100%; height: 100%; border: 0; display: block; }
-      @media (max-width: 600px) { .play-embed { aspect-ratio: 4 / 5; } }
+      @media (max-width: 600px) { .play-embed { aspect-ratio: 2 / 3; } }
       .play-poster {
         width: 100%; height: 100%;
         display: flex; flex-direction: column; align-items: center; justify-content: center;
