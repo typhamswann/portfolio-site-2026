@@ -7,16 +7,15 @@
 
     const STEP_MS = 850;   // per-frame playback speed
 
+    // Brand identifiers for benchmark attribution (nominative use).
     const ICONS = {
-        claude: '<svg viewBox="0 0 32 32" aria-hidden="true">' +
-                '<path d="M16 3l3.4 9.4L29 16l-9.6 3.6L16 29l-3.4-9.4L3 16l9.6-3.6z"/></svg>',
-        codex:  '<svg viewBox="0 0 32 32" aria-hidden="true">' +
-                '<path d="M16 2l1.6 5.7 5.7 1.6-5.7 1.6L16 16l-1.6-5.1-5.7-1.6 5.7-1.6z"/>' +
-                '<path d="M27 9l-1.2 4.1L21.7 14.3l4.1 1.2L27 19.6l1.2-4.1 4.1-1.2-4.1-1.2z" transform="translate(-4 0)"/>' +
-                '<path d="M9 17l1.6 5.7 5.7 1.6-5.7 1.6L9 32l-1.6-7.1-5.7-1.6 5.7-1.6z" transform="translate(2 -3)"/></svg>',
-        human:  '<svg viewBox="0 0 32 32" aria-hidden="true">' +
-                '<circle cx="16" cy="11" r="4.5" fill="currentColor"/>' +
-                '<path d="M6 28c0-5.5 4.5-10 10-10s10 4.5 10 10" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>',
+        claude: '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+                '<path d="M12 1c.7 4.9 1 6.6 1.8 8.2 1.6.8 3.3 1.1 8.2 1.8-4.9.7-6.6 1-8.2 1.8-.8 1.6-1.1 3.3-1.8 8.2-.7-4.9-1-6.6-1.8-8.2C8.6 11.9 6.9 11.6 2 11c4.9-.7 6.6-1 8.2-1.8C11 7.6 11.3 5.9 12 1Z"/></svg>',
+        codex:  '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+                '<path d="M22.28 9.82a5.98 5.98 0 0 0-.52-4.9 6.05 6.05 0 0 0-6.51-2.9A6.07 6.07 0 0 0 4.98 4.18a5.98 5.98 0 0 0-4 2.9 6.05 6.05 0 0 0 .74 7.1 5.98 5.98 0 0 0 .52 4.91 6.05 6.05 0 0 0 6.51 2.9 5.98 5.98 0 0 0 4.5 2.01 6.05 6.05 0 0 0 5.78-4.21 5.98 5.98 0 0 0 4-2.9 6.05 6.05 0 0 0-.75-7.07Zm-9.02 12.61a4.48 4.48 0 0 1-2.88-1.04l.14-.08 4.78-2.76a.78.78 0 0 0 .4-.68v-6.74l2.02 1.17a.07.07 0 0 1 .04.05v5.58a4.5 4.5 0 0 1-4.5 4.5ZM3.6 18.3a4.47 4.47 0 0 1-.54-3.01l.14.08 4.79 2.77a.77.77 0 0 0 .78 0l5.84-3.37v2.33a.08.08 0 0 1-.03.06l-4.83 2.79a4.5 4.5 0 0 1-6.14-1.65ZM2.34 7.9a4.49 4.49 0 0 1 2.37-1.98v5.69a.77.77 0 0 0 .39.67l5.81 3.36-2.02 1.17a.08.08 0 0 1-.07 0L4 14.01A4.5 4.5 0 0 1 2.34 7.9Zm16.6 3.85L13.1 8.37l2.02-1.17a.08.08 0 0 1 .07 0l4.83 2.79a4.49 4.49 0 0 1-.68 8.1v-5.67a.79.79 0 0 0-.4-.67ZM20.94 8.7l-.14-.08-4.78-2.79a.78.78 0 0 0-.78 0L9.4 9.23V6.9a.07.07 0 0 1 .03-.06l4.83-2.79a4.5 4.5 0 0 1 6.68 4.66ZM8.3 12.86l-2.02-1.16a.08.08 0 0 1-.04-.06V6.07a4.5 4.5 0 0 1 7.38-3.45l-.14.08L8.7 5.46a.79.79 0 0 0-.39.68Zm1.1-2.37 2.6-1.5 2.61 1.5v3l-2.6 1.5-2.6-1.5Z"/></svg>',
+        human:  '<svg viewBox="0 0 24 24" aria-hidden="true">' +
+                '<circle cx="12" cy="8" r="3.6" fill="currentColor"/>' +
+                '<path d="M4.5 21c0-4.2 3.4-7.6 7.5-7.6s7.5 3.4 7.5 7.6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>',
     };
 
     const els = {
@@ -45,7 +44,7 @@
     let timer = null;
     let userPicked = false;   // true if user manually picked from dropdown
 
-    fetch('rollouts.json')
+    fetch('rollouts.json', { cache: 'no-store' })
         .then(r => r.json())
         .then(data => {
             rollouts = data.rollouts || [];
