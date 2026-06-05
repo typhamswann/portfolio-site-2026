@@ -70,16 +70,16 @@
       /* ---------- PLAY EMBED ---------- */
       .play-embed {
         width: 100%;
-        max-width: 1100px;          /* break out of the 720px text column */
-        margin: 10px 0 6px;
-        aspect-ratio: 7 / 5;
+        max-width: 600px;           /* compact, centered in the text column */
+        margin: 12px auto 6px;
+        aspect-ratio: 1 / 1;
         border: 1px solid var(--rule);
         border-radius: 6px;
         overflow: hidden;
         background: #111;
       }
       .play-embed iframe { width: 100%; height: 100%; border: 0; display: block; }
-      @media (max-width: 760px) { .play-embed { aspect-ratio: 3 / 4; } }
+      @media (max-width: 600px) { .play-embed { aspect-ratio: 4 / 5; } }
       .play-poster {
         width: 100%; height: 100%;
         display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -312,14 +312,8 @@
             <p>
                 Try it yourself. Navigate a live task the same way the models did &mdash; click on the road to walk, drag to look around, open the map to find the goal, and submit when you think you&apos;ve arrived. Switch tasks with the dropdown inside the player.
             </p>
-            <div class="play-embed" id="play-embed" data-src="https://lostbench-play.onrender.com">
-                <button class="play-poster" id="play-poster" type="button" aria-label="Launch the playable task">
-                    <span class="play-poster-icon">▶</span>
-                    <span class="play-poster-label">Launch the playable task</span>
-                    <span class="play-poster-sub">the live simulator &middot; loads in a few seconds</span>
-                </button>
-            </div>
-            <p class="caption">The full simulator, served live &mdash; panoramas stream from the benchmark&apos;s public store and render server-side. Click to launch (it wakes from idle on first load).</p>
+            <div class="play-embed" id="play-embed" data-src="https://lostbench-play.onrender.com/?embed=1"></div>
+            <p class="caption">The full simulator, served live &mdash; panoramas stream from the benchmark&apos;s public store and render server-side.</p>
         </section>
 
         <section class="prose">
@@ -506,29 +500,30 @@
         el.innerHTML = html;
       }
 
-      // Click-to-load the play embed (lazy: avoids cold-starting the service
-      // on every page view, and never shows a broken frame on load).
-      // data-src is set to the deployed player URL; until that's wired it
-      // stays as the __PLAY_URL__ placeholder and the poster shows a
-      // "coming soon" state instead of loading a dead frame.
-      var poster = document.getElementById('play-poster');
-      if (poster) {
+      // Auto-load the play embed when it scrolls into view (lazy: avoids loading
+      // the simulator for visitors who never reach this section).
+      (function () {
         var wrap = document.getElementById('play-embed');
+        if (!wrap) return;
         var src = wrap.getAttribute('data-src');
-        var ready = /^https?:\/\//.test(src);
-        if (!ready) {
-          wrap.querySelector('.play-poster-label').textContent = 'Playable demo — coming soon';
-          wrap.querySelector('.play-poster-sub').textContent = 'the live simulator is being deployed';
-          poster.style.cursor = 'default';
-        }
-        poster.addEventListener('click', function () {
-          if (!ready) return;
+        if (!/^https?:\/\//.test(src)) return;
+        var loaded = false;
+        function load() {
+          if (loaded) return; loaded = true;
           var f = document.createElement('iframe');
           f.id = 'play-frame'; f.title = 'LostBench — play a task';
-          f.src = src; f.allow = 'fullscreen'; f.setAttribute('loading','lazy');
-          wrap.innerHTML = ''; wrap.appendChild(f);
-        });
-      }
+          f.src = src; f.allow = 'fullscreen'; f.setAttribute('loading', 'lazy');
+          wrap.appendChild(f);
+        }
+        if ('IntersectionObserver' in window) {
+          var io2 = new IntersectionObserver(function (entries) {
+            entries.forEach(function (e) { if (e.isIntersecting) { load(); io2.disconnect(); } });
+          }, { rootMargin: '200px' });
+          io2.observe(wrap);
+        } else {
+          load();
+        }
+      })();
 
       var pp = document.getElementById('chart-pp');
       var tn = document.getElementById('chart-turns');
