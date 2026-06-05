@@ -222,7 +222,51 @@ strong { color: #f5f5f5; font-weight: 500; }
     border: 1px solid var(--rule);
 }
 
-/* ---------- SCROLL CUE ---------- */
+/* ---------- HERO CTA ROW ---------- */
+
+.cta-row {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin-top: 22px;
+}
+
+.cta {
+    display: inline-block;
+    padding: 11px 22px;
+    font-size: 0.78rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--fg);
+    background: transparent;
+    border: 1px solid var(--rule);
+    transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+
+.cta:hover { border-color: #555; text-decoration: none; }
+.cta.primary {
+    background: var(--fg);
+    color: var(--bg);
+    border-color: var(--fg);
+}
+.cta.primary:hover { background: #d4d4d4; border-color: #d4d4d4; }
+
+.contact-note {
+    max-width: 720px;
+    margin: 18px auto 0;
+    color: var(--muted);
+    font-size: 0.85rem;
+    font-weight: 300;
+    line-height: 1.6;
+}
+.contact-note a {
+    color: var(--fg);
+    border-bottom: 1px dotted #555;
+}
+.contact-note a:hover { text-decoration: none; border-bottom-color: var(--fg); }
+
+/* ---------- SCROLL CUE (unused on LostBench, kept for compat) ---------- */
 
 .scroll-cue {
     position: absolute;

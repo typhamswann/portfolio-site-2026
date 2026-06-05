@@ -3,19 +3,19 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Wanderbench — Ty Pham-Swann</title>
-    <meta name="description" content="An open spatial-navigation benchmark + RL environment for vision-language models, built on 503,935 real Mapillary panoramas.">
+    <title>LostBench — Ty Pham-Swann</title>
+    <meta name="description" content="Measuring frontier models on long-horizon spatial reasoning tasks. An open Harbor-compatible benchmark of real Street-View navigation tasks.">
     <link rel="stylesheet" type="text/css" href="styles.css">
 </head>
 <body>
     <header class="hero">
         <p class="eyebrow">RL · VLM · Benchmark · 2026</p>
-        <h1>Wanderbench</h1>
-        <p class="tagline">An open spatial-navigation benchmark and RL training environment for vision-language models — 6,324 real-world Street View tasks across 1,122 US cities, with a single dense reward measuring how much of the start-to-goal distance the agent closed.</p>
+        <h1>LostBench</h1>
+        <p class="tagline">Measuring frontier models on long-horizon spatial reasoning tasks.</p>
 
         <div class="player-stage">
             <div class="player-frame">
-                <img id="stage-img" alt="wanderbench task viewport">
+                <img id="stage-img" alt="lostbench task viewport">
                 <div id="stage-overlay" class="stage-overlay"></div>
             </div>
             <div class="player-controls">
@@ -33,86 +33,29 @@
             </div>
         </div>
 
-        <a href="#about" class="scroll-cue" aria-label="Scroll to about">
-            <span class="scroll-label">About the benchmark</span>
-            <svg width="22" height="10" viewBox="0 0 22 10" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="1,1 11,9 21,1"></polyline>
-            </svg>
-        </a>
+        <div class="cta-row">
+            <a class="cta primary" href="https://github.com/typhamswann/wanderbench-benchmark">Run the Public Benchmark</a>
+            <a class="cta" href="#play">Play the Benchmark</a>
+            <a class="cta" href="#intro">Read the Blog</a>
+        </div>
+
+        <p class="contact-note">
+            Contact <a href="mailto:phamswannty@gmail.com">phamswannty@gmail.com</a> for the full RL environment &mdash; <strong>6,324 real-world Street-View tasks</strong>, many with time horizons and difficulty orders of magnitude beyond the public benchmark.
+        </p>
     </header>
 
     <main>
-        <section id="about" class="prose">
-            <h2>The project</h2>
+        <section id="intro" class="prose">
+            <h2>Introduction</h2>
             <p>
-                Modern vision-language models are remarkably good at <em>describing</em> physical scenes. Show them a static photo and ask &quot;where am I?&quot; and they&apos;ll often nail the country, city, sometimes the block. But the moment they have to <em>act</em> in physical space &mdash; &quot;your goal is three blocks west, get there&quot; &mdash; performance collapses. Spatial reasoning under sequential decision-making is the hole.
-            </p>
-            <p>
-                Wanderbench is a benchmark designed to surface that gap. Each task drops the agent into a real Mapillary panorama somewhere in the United States, hands it a goal latitude/longitude, and gives it the same primitives a human player would have in Street View: click on a road point to walk there, drag the pano to look around, scroll to zoom, open a map to orient, submit a guess when you&apos;ve arrived.
-            </p>
-            <p>
-                The corpus is <strong>6,324 tasks across 1,122 US cities</strong>, stratified across easy / medium / hard difficulty bands. The reward is dense and continuous &mdash; how much of the start-to-goal great-circle distance the agent closed by their final position &mdash; making the env equally usable for benchmarking (small reproducible subset) and for RL training (full corpus).
+                LostBench is built to assess and improve spatial-reasoning capabilities in frontier models by measuring performance on diverse, long-horizon spatial reasoning tasks. Each task has been completed by a human on the first attempt. The benchmark is far from saturated &mdash; the scores below are on the <em>easiest</em> tasks, in the <em>easiest</em> setting, at the <em>shortest</em> horizons. Powering the benchmark are scalable data pipelines that integrate open-source data and allow trivial creation of tasks with orders-of-magnitude longer time horizons. It&apos;s available as a Harbor-compatible repository at <a href="https://github.com/typhamswann/wanderbench-benchmark"><code>typhamswann/wanderbench-benchmark</code></a>.
             </p>
         </section>
 
-        <section class="stats">
-            <div class="stat">
-                <div class="stat-num">6,324</div>
-                <div class="stat-label">Tasks across 1,122 US cities</div>
-            </div>
-            <div class="stat">
-                <div class="stat-num">504k</div>
-                <div class="stat-label">Hosted panoramas (1.36 TB)</div>
-            </div>
-            <div class="stat">
-                <div class="stat-num">3</div>
-                <div class="stat-label">Difficulty bands, balanced</div>
-            </div>
-            <div class="stat">
-                <div class="stat-num">6</div>
-                <div class="stat-label">Mouse / keyboard primitives</div>
-            </div>
-        </section>
-
-        <section class="prose">
-            <h2>The environment</h2>
+        <section id="leaderboard" class="prose">
+            <h2>Leaderboard</h2>
             <p>
-                An agent sees a 1024 × 768 viewport rendered live from a Mapillary spherical panorama. A compass dial pins the camera&apos;s heading. A HUD line reports the current pano id, distance to goal, and last action. Pressing <code>m</code> swaps to an interactive OpenStreetMap view with start &amp; goal pins, the explorable bbox, and the agent&apos;s current location.
-            </p>
-            <p>The action space is six primitives, intentionally human-shaped:</p>
-            <table class="data">
-                <thead>
-                    <tr><th>tool</th><th>effect</th></tr>
-                </thead>
-                <tbody>
-                    <tr><td><code>move_cursor</code></td><td>Move the on-screen cursor by a (direction, distance) vector.</td></tr>
-                    <tr><td><code>mouse_down</code> / <code>mouse_up</code></td><td>Click (no cursor movement between press &amp; release) or drag.</td></tr>
-                    <tr><td><code>open_map</code> / <code>close_map</code></td><td>Toggle between street view and overhead map.</td></tr>
-                    <tr><td><code>scroll_wheel</code></td><td>Zoom (FOV in pano; tile zoom in map).</td></tr>
-                    <tr><td><code>submit_guess</code></td><td>Declare arrival. Ends the episode and scores final position vs goal.</td></tr>
-                </tbody>
-            </table>
-            <p>
-                Click semantics are deliberately faithful to Street View: a click on the street ahead teleports to that road point; a click on a building or the sky is a no-op. This forces the model to <em>look</em> at the image rather than blindly emit coordinates.
-            </p>
-        </section>
-
-        <section class="prose">
-            <h2>Reward design</h2>
-            <p>A single terminal reward in [0, 1]:</p>
-            <pre><code>pp = clip(1 − final_haversine_m / initial_haversine_m, 0, 1)</code></pre>
-            <p>
-                The denominator is the start-to-goal great-circle distance. The numerator is the great-circle distance from the agent&apos;s final pano coordinate to the goal coordinate. At the goal it&apos;s 1.0; halfway it&apos;s 0.5; stuck at start or past the start it&apos;s 0.0 (clipped). The walkability constraint is enforced by the simulator&apos;s <code>step()</code> at action time, not by the scorer &mdash; so the agent can&apos;t reach the goal by going through buildings, but the scorer doesn&apos;t care which road they ended on.
-            </p>
-            <p>
-                The first iteration of the reward mixed three terms &mdash; discrete <code>reached_goal</code>, continuous haversine progress, step-count efficiency. The second iteration switched to Dijkstra walking-distance through the world graph, on the intuition that &quot;wrong side of the freeway&quot; should hurt the score. After the first 60-model-task sweep that gave rise to three documented &quot;scoring cliffs&quot; (agents submitting within 20 m of the goal but scoring 0 because the OSM extract had their road graph-disconnected from the goal road), I reverted to haversine. The argument for haversine is empirical now: it matches what the per-turn HUD shows the agent (<code>dist_to_goal</code>), so the metric the agent optimizes against is the same as the metric it&apos;s scored on.
-            </p>
-        </section>
-
-        <section class="prose">
-            <h2>Baseline benchmarks</h2>
-            <p>
-                The full benchmark slice is 57 stratified tasks &mdash; 20 easy + 20 medium + 17 hard, coast-to-coast geographic spread. The numbers below are from a 10-task validation subset (5 easy + 3 medium + 2 hard, sampled by difficulty) using v0.4 haversine scoring. Each model received the same per-turn observation channel: a 1024 × 768 image, a one-line HUD, sliding-window image history of 4. Per-task turn budget = 3 × the human&apos;s turns on that task (so an agent that needs three times as many tool calls as a human has a chance, but unbounded wandering hits a wall).
+                Ten-task validation subset of the 59-task public benchmark, default-mode, v0.4 haversine scoring (closer to goal = higher). Each model received the same observation channel: a 1024 × 768 viewport image, one-line HUD, sliding-window image history of 4. Per-task turn budget = 3 &times; the human tester&apos;s turn count on that task.
             </p>
             <table class="data">
                 <thead>
@@ -120,8 +63,8 @@
                 </thead>
                 <tbody>
                     <tr><td>Human (Ty)</td><td>0.996</td><td>60</td><td>&mdash;</td></tr>
-                    <tr><td>Claude Code (Opus 4.7 1M)</td><td>0.692</td><td>93</td><td>subscription</td></tr>
-                    <tr><td>Codex CLI (GPT-5)</td><td>0.557</td><td>135</td><td>subscription</td></tr>
+                    <tr><td>Claude Opus 4.8 <em>(via Claude Code)</em></td><td>0.692</td><td>93</td><td>subscription</td></tr>
+                    <tr><td>GPT-5.5 <em>(via Codex CLI)</em></td><td>0.557</td><td>135</td><td>subscription</td></tr>
                     <tr><td>Gemini 3.5 Flash</td><td>0.317</td><td>180</td><td>$17.15</td></tr>
                     <tr><td>Qwen 3.7 Plus</td><td>0.184</td><td>93</td><td>$4.68</td></tr>
                     <tr><td>Qwen 3.5-397B-A17B</td><td>0.138</td><td>180</td><td>$6.23</td></tr>
@@ -130,55 +73,151 @@
                     <tr><td>Gemma 4 26B-A4B</td><td>0.000</td><td>180</td><td>$0.00</td></tr>
                 </tbody>
             </table>
-            <p class="caption">
-                The two top entries are <em>agent harnesses</em> (Claude Code, Codex CLI) wrapping a frontier model and a coding-tuned model respectively &mdash; reasoning loop, multi-step planning, persistent scratchpad &mdash; routed through their subscription quotas at no per-token cost. Below them is a sweep of single-turn-loop chat models driven through OpenRouter with pinned precision (bf16 / fp8, whichever each provider served). The harness gap is meaningful: Claude Code more than doubles the best chat model, and Codex CLI matches Gemini Flash &mdash; on which Gemini Flash spent $17. Gemma 4 26B-A4B is the only literal zero: it could emit clean tool-call JSON but never landed a click on a road point in 10 tasks.
+        </section>
+
+        <section class="prose">
+            <h2>Overview</h2>
+            <p>
+                While frontier LLMs have made significant progress in coding, reasoning, and complex tasks in recent years, visual reasoning capabilities still lack robustness compared to other domains. One especially challenging subset of visual reasoning for current models is spatial reasoning, which typically requires understanding many parts of an image at a given time and maintaining that understanding across multiple scenes or images.
+            </p>
+            <p>
+                People excel at these types of tasks and use interfaces like Street View, Google Maps, and Geoguessr in everyday work quite naturally. The gap is most visible exactly where humans take it for granted.
+            </p>
+            <p>
+                Due to cost constraints, only a small subset of ten tasks has been included in the results above and Claude Opus 4.8 and GPT-5.5 were assessed using the Claude Code and Codex harnesses respectively. To fund a full assessment, access the full RL environment with thousands of long-horizon tasks, or hire me, contact <a href="mailto:phamswannty@gmail.com">phamswannty@gmail.com</a>.
+            </p>
+
+            <h3>Custom interface with controllable primitives</h3>
+            <p>
+                LostBench varies task difficulty in two modes through the exposure of different primitives within the interface. By default, the agent has access to an image snapshot of their viewport (a still in the 360° panorama they are currently located in), an interactive map &mdash; which shows the starting point, endpoint, and their current position and direction &mdash; and a compass. In <strong>strict mode</strong>, the agent receives the same primitives except no compass, and the map lacks direction and location tracking &mdash; requiring higher levels of visual reasoning to use street signs and visual landmarks to orient itself.
+            </p>
+            <p>
+                An agent interacts with the world through tools to move the mouse (indicating an angle and magnitude), click the mouse up or down, and zoom in or out. These tools correspond with zooming and panning on the panoramic world and map, depending on which view is open at any given time. The agent can click a valid location on the road to move to that panorama. When confident they have reached the end position, they submit a guess.
+            </p>
+
+            <h3>Distance-based scoring</h3>
+            <p>
+                The agent can submit exactly one guess per task, which concludes the task. Their score is based on the haversine distance between their location and the endpoint:
+            </p>
+            <pre><code>pp = clip(1 − final_haversine_m / initial_haversine_m, 0, 1)</code></pre>
+            <p>
+                Higher scores mean the agent guessed when they were closer to the target. This continuous scoring allows greater granularity in assessing model capability than binary success.
+            </p>
+            <p>
+                Each task has been tested by a real human, who was able to complete each one efficiently on their first attempt. In <strong>48 out of 59 tasks, the human guessed exactly on the endpoint (0.0 meters from target)</strong>, with the overall mean distance from target being <strong>1.50 meters</strong>. For a person, it is trivial to guess the exact location once they can access it.
+            </p>
+
+            <h3>Novel tasks from a custom-built graph</h3>
+            <p>
+                Each task is 100% distinct. While the panorama and geospatial data used to build the worlds are open source, they are integrated in a way that prevents contamination. Each task world is consistent between runs, but uses data from many different panoramic captures algorithmically bridged to create a continuous and coherent world. Start and end locations are picked based on the desired task difficulty and time horizon, enabling significant scaling and uniqueness even within a single geographic location.
+            </p>
+            <p>
+                Tasks in the public benchmark set span <strong>50 cities across 59 tasks</strong>, ensuring diverse scene characteristics. The private RL environment spans <strong>1,122 cities across 6,324 tasks</strong>, and there is scant overlap between any given pair of tasks within the same city due to the variety of length and size of each task area.
+            </p>
+        </section>
+
+        <section id="play" class="prose">
+            <h2>Play the Benchmark</h2>
+            <p>
+                The player above is an autoplay of full human navigation traces on representative tasks &mdash; scrub through any one to watch a person solve it. To <em>play it yourself</em>, clone the public benchmark and launch the local play app:
+            </p>
+            <pre><code>git clone https://github.com/typhamswann/wanderbench-benchmark
+cd wanderbench-benchmark
+docker build -t wanderbench-base:1.0 base/
+# then drive any task container via `wb harbor-step` &mdash; see README</code></pre>
+            <p>
+                A hosted in-browser play UI is on the short-list of follow-ups. If you&apos;d like access sooner, drop me a line.
             </p>
         </section>
 
         <section class="prose">
-            <h2>RL training</h2>
+            <h2>Methodology</h2>
+
+            <h3>World Development</h3>
             <p>
-                The training corpus is the full 5,958-task training split, served by the same env package. Training stack: <code>prime-rl</code>, single-node 8 × H100, LoRA rank 16 on the language-model blocks of Qwen3-VL-8B (vision encoder frozen &mdash; a constraint enforced by the trainer config validator), GRPO advantage with group size 8.
+                Maps are constructed by carefully stitching together 360° panorama imagery sourced via <a href="https://www.mapillary.com/">Mapillary</a> with geospatial data from OpenStreetMap. Each task has its own playable area which is entirely or almost entirely traversable. A single task is a route from a starting point to an endpoint, with the optimal routes all guaranteed to be traversable.
             </p>
-            <p>Key training-side decisions:</p>
-            <ul>
-                <li><strong>Sliding image-history window of 4.</strong> Each pano viewport is ~700 image tokens. With unbounded history, the prompt exceeds 32K context around turn 37. Keeping only the last 4 image observations pushes the budget past 200 turns at the cost of a small chunk of long-range visual recall.</li>
-                <li><strong>Length penalty via <code>orchestrator.length_penalty type = &quot;turns&quot;</code>.</strong> Replaces the hand-rolled step-efficiency term I had in the first reward draft.</li>
-                <li><strong>Online difficulty filtering.</strong> Groups where every rollout got 0 reward are dropped before training. Effectively doubles compute efficiency in early training.</li>
-            </ul>
+            <p>
+                In selecting map locations, density and continuity were prioritized. All map areas have over 90% surface coverage. Maps with key gaps between panorama locations were filtered out of the benchmark and environment set. Human verification of each map was done to ensure complete traversability.
+            </p>
+
+            <h3>Quality Assurance</h3>
+            <p>
+                Each map within the benchmark set was played once to confirm all tasks are completable. Prior to that, the map-creation process went through numerous tests and iterations to ensure each was fully traversable and that actions produced intuitive results. A number of key issues were identified and fixed.
+            </p>
+            <p>
+                Most notably were issues in traversal. Each map is a graph of discrete data (panoramic images), so ensuring connections spanned the entire map area was a significant challenge that required substantial work on identifying gaps and aligning points properly with road data. Intersections proved another key challenge, with alignment between what is visible within images and the road geography proving difficult. The current logic is still imperfect and somewhat rigid in creating bridges between nodes at intersections, resulting in some clicks that fail to route properly. Each intersection does have at least one valid bridge, though, which the human tester was able to find in practice.
+            </p>
+            <p>
+                The scoring system was also modified during QA: switched from Dijkstra path-distance to haversine distance due to the granularity of the in-game map and instructions provided to the user. When testing, guesses that appeared very close to the goal were scored poorly due to graph structure in a way judged overly penalizing given the task.
+            </p>
+
+            <h3>Harness Selection &amp; Cost Limitations</h3>
+            <p>
+                The benchmark is structured as a Harbor-compatible repository where each model assessed used a simple custom completion loop. The Claude Opus 4.8 and GPT-5.5 runs, however, were conducted via the Claude Code and Codex harnesses. This was driven by cost limitations and likely impacted performance, though their harnesses enabled them no exclusive information access that would contaminate the task.
+            </p>
+            <p>
+                The scores above represent performance on only ten select tasks with difficulty breakdown <strong>5 easy / 3 medium / 2 hard</strong>. This was due to cost constraints; a run on the entire 59 tasks would provide a stronger baseline. Additionally, runs were only conducted in default mode, not strict. Small-scale tests indicate that frontier models remain incapable of completing all but the simplest tasks in strict mode. On all runs, turn budgets were set at <strong>3 &times; the turns the human tester took to complete the task</strong>. Longer exploration would likely have increased performance, but cost constraints again proved a limiting factor.
+            </p>
         </section>
 
         <section class="prose">
             <h2>Results</h2>
-            <p><em>Filled in once the full post-RL eval lands. Below is a sketch of the comparison plot.</em></p>
-            <figure class="placeholder-figure">
-                <span>Pre / post-RL success rate by difficulty band — coming once the training run completes</span>
-            </figure>
             <p>
-                The headline question I want the figure to answer: <strong>does RL on the path-distance reward actually teach the model to navigate, or just teach it to game the reward (e.g. always click on the road point closest to the bottom-center pixel)?</strong> The answer hinges on how the curve looks at the medium / hard difficulty bands &mdash; easy tasks are short enough that &quot;always click forward&quot; is a viable degenerate policy.
+                Claude Opus 4.8 proved to be the most successful by far. As noted above, it was run using the Claude Code harness. In limited tests, all models failed to achieve any successful guesses in strict mode, which prevents use of the compass and hides the agent&apos;s location and direction on the map. Tasks in this setting, which humans are also able to solve in testing, are likely more difficult for frontier agents due to higher visual and spatial reasoning requirements. Agents in strict mode cannot track themselves on the map &mdash; a UI task that&apos;s likely well represented in their training distribution &mdash; and instead must find visual landmarks and street signs to orient.
+            </p>
+
+            <h3>Turn efficiency</h3>
+            <table class="data">
+                <thead>
+                    <tr><th>model</th><th>avg turns</th><th>turns / human</th></tr>
+                </thead>
+                <tbody>
+                    <tr><td>Human (Ty)</td><td>52</td><td>1.00&times;</td></tr>
+                    <tr><td>Claude Opus 4.8 <em>(via Claude Code)</em></td><td>94</td><td>1.99&times;</td></tr>
+                    <tr><td>GPT-5.5 <em>(via Codex CLI)</em></td><td>107</td><td>2.29&times;</td></tr>
+                    <tr><td>Gemini 3.5 Flash</td><td>148</td><td>2.76&times;</td></tr>
+                    <tr><td>Qwen 3.7 Plus</td><td>121</td><td>2.73&times;</td></tr>
+                    <tr><td>Qwen 3.5-397B-A17B</td><td>151</td><td>2.78&times;</td></tr>
+                    <tr><td>GLM-5V Turbo</td><td>139</td><td>2.74&times;</td></tr>
+                    <tr><td>Kimi K2.6</td><td>153</td><td>2.88&times;</td></tr>
+                    <tr><td>Gemma 4 26B-A4B</td><td>152</td><td>2.93&times;</td></tr>
+                </tbody>
+            </table>
+            <p>
+                Models were subsequently less turn-efficient than the human tester. They were less precise in their navigation of the world and would frequently travel far down the wrong path before correcting. Even though models were allocated a turn budget of three times the turns taken by the human, they were often guessing with their final or one of their final available turns. The more accurate the model, the more turn-efficient it was as well: Claude Code was the most efficient at <strong>1.99&times;</strong> the human&apos;s turn count, compared to the overall agent average of <strong>2.64&times;</strong>.
             </p>
         </section>
 
         <section class="prose">
-            <h2>Notes &amp; choices I&apos;d revisit</h2>
-            <ul>
-                <li><strong>Real images, not synthetic.</strong> Mapillary panoramas have real-world artifacts &mdash; lens flares, motion blur, weather, signage in 50 languages &mdash; that synthetic environments smooth over. If a model can&apos;t read a STOP sign at JPEG-82 quality, that&apos;s a benchmark-worthy result.</li>
-                <li><strong>Mouse-shaped action space.</strong> Asking the model to emit pixel-space click coordinates (not graph indices) forces it to actually look at the image. A model that hallucinates lat/lng is detectable.</li>
-                <li><strong>Pano coverage drops abruptly at the US border.</strong> A few of the medium / hard tasks happen to clip a coastline or a county line where Mapillary coverage thins. Filtering by coverage density before sampling tasks would tighten the variance.</li>
-                <li><strong>The compass currently shows true bearing.</strong> A more interesting variant would hide the compass &mdash; pure visual navigation, no metadata crutches.</li>
-                <li><strong>Multi-step credit assignment is still GRPO-only.</strong> Per-turn shaping via a process reward model is the natural next experiment.</li>
-            </ul>
+            <h2>Discussion</h2>
+            <p>
+                Frontier models still have a significant way to go in spatial reasoning, where capabilities lag in comparison to other reasoning domains like coding. Claude Opus 4.8 using the Claude Code harness was the most accurate by far, but still wasn&apos;t perfectly accurate on the easier assessment set, and was meaningfully less efficient than the human tester. Further, isolated tests indicated that all harnesses struggled to complete tasks in strict mode, which requires greater spatial reasoning across longer time horizons.
+            </p>
+            <p>
+                It&apos;s clear the frontier models benefited significantly from more information on the map, which is likely closer aligned with UI visual reasoning tasks they&apos;re familiar with from training. The lags in efficiency and overall performance indicate that models still lack the visual intuition that&apos;s innate in people, and that there is significant progress still to be made in long-horizon visual reasoning.
+            </p>
+        </section>
+
+        <section class="prose">
+            <h2>Future Work</h2>
+            <p>
+                This project was significantly budget-constrained, serving as a barrier to running the full 59 tasks, running the benchmark in strict mode, and running it with higher turn limits (or without any cap). The full RL environment contains many more diverse tasks with higher difficulty and longer time horizons. The data pipeline allows trivially creating tasks with orders-of-magnitude longer time horizons. As frontier models progress, it will be interesting to track their progression on benchmark performance.
+            </p>
+            <p>
+                To fund a full assessment, access the full RL environment with thousands of long-horizon tasks, or hire me, contact <a href="mailto:phamswannty@gmail.com">phamswannty@gmail.com</a>.
+            </p>
         </section>
 
         <section class="links">
             <a class="link-card" href="https://github.com/typhamswann/wanderbench-benchmark">
-                <span class="link-eyebrow">Github · benchmark</span>
-                <span class="link-title">wanderbench-benchmark</span>
+                <span class="link-eyebrow">Github · public benchmark</span>
+                <span class="link-title">LostBench</span>
                 <span class="link-arrow">→</span>
             </a>
-            <a class="link-card" href="https://github.com/typhamswann/wanderbench-train">
-                <span class="link-eyebrow">Github · training</span>
-                <span class="link-title">wanderbench-train</span>
+            <a class="link-card" href="mailto:phamswannty@gmail.com">
+                <span class="link-eyebrow">Contact · full RL environment</span>
+                <span class="link-title">phamswannty@gmail.com</span>
                 <span class="link-arrow">→</span>
             </a>
         </section>
