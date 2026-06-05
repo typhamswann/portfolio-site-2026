@@ -30,7 +30,6 @@
         runnerWrap: document.getElementById('runner-badge'),
         runnerIcon: document.getElementById('runner-icon'),
         runnerName: document.getElementById('runner-name'),
-        runnerTask: document.getElementById('runner-task'),
         dist:       document.getElementById('dist-chip'),
     };
 
@@ -160,7 +159,6 @@
         els.runnerWrap.className = 'runner-badge runner-' + slug;
         els.runnerIcon.innerHTML = ICONS[slug] || '';
         els.runnerName.textContent = r.runner;
-        els.runnerTask.textContent = r.task_id;
 
         const ppLabel = (r.path_progress != null) ? ` · pp ${r.path_progress.toFixed(2)}` : '';
         els.dist.textContent = `optimal ${Math.round(r.optimal_distance_m)} m · ${r.optimal_steps} hops${ppLabel}`;
