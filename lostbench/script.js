@@ -5,7 +5,7 @@
 (function () {
     'use strict';
 
-    const STEP_MS = 850;   // per-frame playback speed
+    const STEP_MS = 450;   // per-frame playback speed (LLM rollouts run long, so move quick)
 
     // Brand identifiers for benchmark attribution (nominative use).
     // Claude: four-petal cross asterisk approximating Anthropic's mark.
