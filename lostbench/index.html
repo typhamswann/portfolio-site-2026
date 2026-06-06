@@ -79,35 +79,29 @@
       .stage-spinner.hidden { display: none; }
       @keyframes lb-hero-spin { to { transform: rotate(360deg); } }
 
-      /* ---------- INTRO CTA CARD ---------- */
+      /* ---------- GET STARTED ---------- */
+      /* Open, spaced layout (no boxed card): a mono section label, the site's
+         standard buttons with the primary leading, then a single hairline
+         separating a quieter contact footnote. Hierarchy comes from spacing. */
       .intro-cta {
         max-width: 720px;
-        margin: 34px 0 12px;
-        padding: 22px 24px 18px;
-        border: 1px solid var(--rule);
-        border-radius: 10px;
-        background:
-          radial-gradient(130% 150% at 0% 0%, rgba(101,214,151,0.08), transparent 55%),
-          var(--bg-2);
+        margin: 46px 0 18px;
       }
       .intro-cta .cta-eyebrow {
-        font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase;
-        color: var(--muted); margin: 0 0 14px;
+        font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+        font-size: 0.7rem; letter-spacing: 0.22em; text-transform: uppercase;
+        color: var(--muted); margin: 0 0 20px;
       }
-      .intro-cta .cta-row {            /* override the hero's centered row */
-        margin: 0; justify-content: flex-start; gap: 10px;
+      .intro-cta .cta-row {            /* override the hero's centered row → left, roomy */
+        display: flex; flex-wrap: wrap; gap: 12px;
+        justify-content: flex-start; margin: 0 0 30px;
       }
-      .intro-cta .cta {                /* lift outline buttons for contrast on the card */
-        background: rgba(255,255,255,0.05);
-        border-color: #383838; border-radius: 6px;
-      }
-      .intro-cta .cta:hover { background: rgba(255,255,255,0.11); border-color: #5a5a5a; }
-      .intro-cta .cta.primary { background: var(--fg); border-color: var(--fg); border-radius: 6px; }
-      .intro-cta .cta.primary:hover { background: #d4d4d4; border-color: #d4d4d4; }
-      .intro-cta .contact-note {
-        margin: 18px 0 0; padding-top: 16px;
+      .intro-cta .contact-note {       /* quieter footnote, set off by one hairline */
+        margin: 0; padding-top: 24px;
         border-top: 1px solid var(--rule); max-width: none;
+        color: var(--muted); font-size: 0.9rem; line-height: 1.7; font-weight: 300;
       }
+      .intro-cta .contact-note strong { color: #d8d8d8; font-weight: 500; }
       @media (max-width: 600px) {
         .intro-cta .cta { flex: 1 1 100%; text-align: center; }
       }
