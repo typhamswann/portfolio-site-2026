@@ -166,23 +166,40 @@
         els.count.textContent = `${sIdx} / ${r.steps.length - 1}`;
         els.select.value = rIdx;
 
-        // Model "thinking" — recovered from the run transcript. Not every run has
-        // it (e.g. Gemini's wasn't recorded), so hide the panel when absent.
-        // Thoughts attach to the steps where the model reasoned; carry the most
-        // recent one forward so scrubbing always shows the active reasoning.
+        // Model "thinking" — recovered from the run transcript, shown as an
+        // ambient in-frame caption (the model name already rides in the badge).
+        // Not every run has it (e.g. Gemini's wasn't recorded), so hide the
+        // caption when absent. Thoughts attach to the steps where the model
+        // reasoned; carry the most recent one forward so scrubbing always shows
+        // the active reasoning. We mutate only the text node when it actually
+        // changes — rebuilding innerHTML every frame would restart the pulse and
+        // re-fire the fade on every 450ms tick.
         if (els.thought) {
             if (r._hasThoughts === undefined)
                 r._hasThoughts = r.steps.some(function (s) { return s.thought; });
             if (!r._hasThoughts) {
                 els.thought.className = 'stage-thought empty';
                 els.thought.innerHTML = '';
+                els.thought._txt = null;
             } else {
                 let th = '';
                 for (let i = sIdx; i >= 0; i--) { if (r.steps[i].thought) { th = r.steps[i].thought; break; } }
                 if (!th) for (let i = 0; i < r.steps.length; i++) { if (r.steps[i].thought) { th = r.steps[i].thought; break; } }
+                if (!els.thought._built) {
+                    els.thought.innerHTML =
+                        '<span class="lbl">thinking</span><span class="txt"></span>';
+                    els.thought._built = true;
+                    els.thought._txt = null;
+                }
                 els.thought.className = 'stage-thought';
-                els.thought.innerHTML =
-                    `<span class="lbl">${escapeHtml(r.runner)} · thinking</span>${escapeHtml(th)}`;
+                if (els.thought._txt !== th) {
+                    els.thought.querySelector('.txt').textContent = th;
+                    els.thought._txt = th;
+                    // retrigger the cross-fade only on a genuine change
+                    els.thought.classList.remove('fade');
+                    void els.thought.offsetWidth;
+                    els.thought.classList.add('fade');
+                }
             }
         }
 

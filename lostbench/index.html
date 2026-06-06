@@ -79,26 +79,57 @@
       .stage-spinner.hidden { display: none; }
       @keyframes lb-hero-spin { to { transform: rotate(360deg); } }
 
-      /* ---------- MODEL THINKING (hero replay) ---------- */
+      /* ---------- MODEL THINKING (hero replay, in-frame caption) ----------
+         An ambient lower-third caption pinned inside the frame, not a boxy
+         panel below it. Quiet glass card, clamped to two lines, expands on
+         hover; a small pulsing dot marks live reasoning. Cross-fades on change
+         so it reads as part of the animation rather than competing with it. */
       .stage-thought {
-        margin: 14px 0 0;
-        padding: 12px 15px;
-        height: 100px;
-        overflow-y: auto;
-        background: rgba(255,255,255,0.025);
-        border: 1px solid var(--rule);
+        position: absolute;
+        /* clear the burned-in compass (top-left) and turn/step HUD (top-right);
+           the calm sky band between them is the only uncluttered zone */
+        top: 12px; left: 13.5%;
+        max-width: 56%;
+        z-index: 4;
+        padding: 7px 12px 8px;
+        background: rgba(10,10,10,0.58);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
         border-left: 2px solid #65d697;
-        border-radius: 6px;
-        font-size: 0.86rem;
-        line-height: 1.55;
-        color: #cfcfcf;
+        border-radius: 5px;
+        color: #e6e6e6;
+        font-size: 12.5px;
+        line-height: 1.5;
+        letter-spacing: 0.01em;
+        pointer-events: auto;
       }
       .stage-thought.empty { display: none; }
       .stage-thought .lbl {
-        display: block;
+        display: flex; align-items: center; gap: 6px;
         font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
-        font-size: 0.6rem; letter-spacing: 0.16em; text-transform: uppercase;
-        color: var(--muted); margin-bottom: 5px;
+        font-size: 0.56rem; letter-spacing: 0.18em; text-transform: uppercase;
+        color: var(--muted); margin-bottom: 4px;
+      }
+      .stage-thought .lbl::before {
+        content: ''; width: 6px; height: 6px; border-radius: 50%;
+        background: #65d697; flex-shrink: 0;
+        animation: lb-think-pulse 1.7s ease-out infinite;
+      }
+      @keyframes lb-think-pulse {
+        0%   { box-shadow: 0 0 0 0 rgba(101,214,151,0.55); }
+        70%  { box-shadow: 0 0 0 6px rgba(101,214,151,0); }
+        100% { box-shadow: 0 0 0 0 rgba(101,214,151,0); }
+      }
+      .stage-thought .txt {
+        display: -webkit-box;
+        -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .stage-thought:hover .txt { -webkit-line-clamp: 12; }
+      .stage-thought.fade .txt { animation: lb-think-fade 0.45s ease; }
+      @keyframes lb-think-fade { from { opacity: 0.12; } to { opacity: 1; } }
+      @media (max-width: 640px) {
+        .stage-thought { left: 13.5%; max-width: 62%; font-size: 11px; padding: 6px 9px 7px; }
       }
 
       /* ---------- GET STARTED ---------- */
@@ -280,6 +311,7 @@
             <div class="player-frame">
                 <div id="stage-spinner" class="stage-spinner" aria-hidden="true"></div>
                 <img id="stage-img" alt="lostbench task viewport">
+                <div id="stage-thought" class="stage-thought empty" aria-live="polite"></div>
                 <div id="stage-overlay" class="stage-overlay"></div>
                 <div id="runner-badge" class="runner-badge">
                     <span id="runner-icon" class="runner-icon" aria-hidden="true"></span>
@@ -297,7 +329,6 @@
                 <select id="rollout-select" aria-label="Select rollout"></select>
                 <span id="dist-chip" class="chip subtle"></span>
             </div>
-            <div id="stage-thought" class="stage-thought empty" aria-live="polite"></div>
         </div>
     </header>
 
@@ -618,6 +649,6 @@
     })();
     </script>
 
-    <script src="script.js?v=15"></script>
+    <script src="script.js?v=16"></script>
 </body>
 </html>
