@@ -1,104 +1,93 @@
 <!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
+<html><head><meta charset="utf-8"><title>wanderbench</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>LostBench — Play</title>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
-  :root { --accent:#65d697; }
-  * { box-sizing:border-box; }
-  html,body { margin:0; height:100%; background:#0a0a0a; color:#eee;
-    font-family:system-ui,-apple-system,sans-serif; overflow:hidden; overscroll-behavior:none; }
-  #stage { position:relative; width:100vw; height:100vh; background:#000; overflow:hidden; }
-  #pano, #map { position:absolute; inset:0; width:100%; height:100%; }
-  #pano { cursor:grab; touch-action:none; display:block; }
-  #pano.grabbing { cursor:grabbing; }
-  #map { display:none; }
-  #map.on { display:block; }
-  /* HUD */
-  .hud { position:absolute; z-index:10; pointer-events:none; }
-  #compass { top:12px; left:12px; width:64px; height:64px; }
-  #hudbar { left:12px; bottom:12px; background:rgba(10,10,10,0.72);
-    padding:7px 11px; border-radius:6px; font:12px/1.4 'JetBrains Mono',monospace;
-    letter-spacing:.02em; color:#e5e5e5; }
-  #hudbar b { color:var(--accent); }
-  #crosshair { left:50%; top:50%; width:18px; height:18px; transform:translate(-50%,-50%);
-    opacity:.8; }
-  #crosshair:before,#crosshair:after { content:''; position:absolute; background:#ff3b3b; }
-  #crosshair:before { left:8px; top:0; width:2px; height:18px; }
-  #crosshair:after { top:8px; left:0; height:2px; width:18px; }
-  /* controls */
-  .controls { position:absolute; z-index:11; left:50%; bottom:14px; transform:translateX(-50%);
-    display:flex; gap:8px; }
-  .btn { pointer-events:auto; padding:9px 14px; border-radius:7px; border:1px solid #3a3a3a;
-    background:rgba(20,20,20,.86); color:#eee; font-size:13px; font-weight:500; cursor:pointer;
-    -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); }
-  .btn:hover { background:rgba(40,40,40,.92); border-color:#5a5a5a; }
-  .btn.primary { background:#c4382f; border-color:#c4382f; color:#fff; font-weight:600; }
-  .btn.primary:hover { background:#d4453b; }
-  .btn.go { background:var(--accent); border-color:var(--accent); color:#0a0a0a; font-weight:600; }
-  /* spinner */
-  #spin { position:absolute; z-index:12; left:50%; top:50%; width:34px; height:34px;
-    margin:-17px 0 0 -17px; border-radius:50%; border:3px solid rgba(0,0,0,.4);
-    border-top-color:var(--accent); box-shadow:0 0 0 1px rgba(255,255,255,.15);
-    animation:spin .7s linear infinite; display:none; }
-  @keyframes spin { to { transform:rotate(360deg);} }
-  /* result */
-  #result { position:absolute; inset:0; z-index:20; display:none; align-items:center;
-    justify-content:center; background:rgba(8,8,8,.82); -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); }
-  #result.on { display:flex; }
-  .card { text-align:center; padding:26px 30px; }
-  .card .t { font-size:13px; letter-spacing:.12em; text-transform:uppercase; color:#9a9a9a; }
-  .card .s { font-size:60px; font-weight:200; line-height:1.04; margin-top:8px; color:var(--accent); }
-  .card .sub { font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:#777; }
-  .card .d { font-size:13px; color:#cfcfcf; margin-top:12px; }
-  .card .btn { margin-top:18px; display:inline-block; }
-  #hint { position:absolute; z-index:10; left:50%; top:14px; transform:translateX(-50%);
-    background:rgba(10,10,10,.7); padding:5px 12px; border-radius:20px; font-size:12px; color:#cfcfcf;
-    pointer-events:none; transition:opacity .5s; }
-  .leaflet-container { background:#111; }
-  .pin { width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 4px rgba(0,0,0,.6);}
-  .me { width:14px;height:14px;border-radius:50%;background:#4aa3ff;border:2px solid #fff;}
-</style>
-</head>
-<body>
-<div id="stage">
-  <canvas id="pano"></canvas>
-  <div id="map"></div>
-  <div id="spin"></div>
-  <canvas id="compass" class="hud" width="128" height="128"></canvas>
-  <div id="crosshair" class="hud"></div>
-  <div id="hudbar" class="hud"></div>
-  <div id="hint">Click the road to walk · drag to look · scroll to zoom</div>
-  <div class="controls">
-    <button class="btn" id="mapBtn" type="button">Open map</button>
-    <button class="btn primary" id="guessBtn" type="button">Submit guess</button>
-    <button class="btn" id="resetBtn" type="button">Reset</button>
+  html, body { overscroll-behavior: contain; }
+  body { background: #111; color: #eee; font-family: system-ui, sans-serif; margin: 0; padding: 12px; }
+  .row { display: flex; gap: 16px; align-items: flex-start; flex-wrap: wrap; }
+  .view-col { flex: 1 1 460px; min-width: 0; max-width: 1024px; }
+  .panel { background: #222; padding: 12px; border-radius: 6px; flex: 1 1 240px; min-width: 220px; }
+  #view-wrap { position: relative; width: 100%; max-width: 1024px; aspect-ratio: 4 / 3;
+    overflow: hidden; border-radius: 4px; background: #000; }
+  #view-wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  #pano { cursor: crosshair; touch-action: none; user-select: none; }
+  #pano.dragging { cursor: grabbing; }
+  #overlay { pointer-events: none; }
+  #mapc { display: none; cursor: grab; }
+  #mapc.dragging { cursor: grabbing; }
+  .ctrl-bar { display: flex; gap: 8px; margin-top: 8px; }
+  .ctrl { flex: 1; padding: 8px 10px; background: #2a2a2a; color: #eee;
+    border: 1px solid #444; border-radius: 4px; font-size: 13px; cursor: pointer; font-family: inherit; }
+  .ctrl:hover { background: #353535; }
+  .result-overlay { display: none; position: absolute; inset: 0; z-index: 5;
+    background: rgba(10,10,10,0.80); -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+    align-items: center; justify-content: center; }
+  .result-overlay.show { display: flex; }
+  .result-card { text-align: center; color: #f5f5f5; font-family: system-ui, sans-serif; padding: 24px 28px; }
+  .result-title { font-size: 13px; letter-spacing: 0.10em; text-transform: uppercase; color: #9a9a9a; }
+  .result-score { font-size: 58px; font-weight: 200; line-height: 1.05; margin-top: 8px; color: #65d697; }
+  .result-sub { font-size: 11px; color: #777; letter-spacing: 0.10em; text-transform: uppercase; margin-top: 2px; }
+  .result-detail { font-size: 13px; color: #cfcfcf; margin-top: 12px; }
+  .result-btn { margin-top: 20px; padding: 10px 24px; background: #65d697; color: #0a0a0a;
+    border: 0; border-radius: 5px; font-size: 14px; font-weight: 600; cursor: pointer; }
+  .result-btn:hover { background: #79e0a6; }
+  h2 { margin: 4px 0 8px; font-size: 14px; color: #888; font-weight: normal; text-transform: uppercase; letter-spacing: 0.06em; }
+  #busy { display: none; position: absolute; top: 50%; left: 50%; z-index: 4;
+    width: 32px; height: 32px; margin: -16px 0 0 -16px; border-radius: 50%;
+    border: 3px solid rgba(0,0,0,0.35); border-top-color: #65d697;
+    box-shadow: 0 0 0 1px rgba(255,255,255,0.15); animation: lb-spin 0.7s linear infinite; }
+  @keyframes lb-spin { to { transform: rotate(360deg); } }
+  body.embed { padding: 8px; }
+  body.embed .panel { background: transparent; padding: 0; min-width: 0; flex-basis: 100%; }
+  body.embed .panel h2 { display: none !important; }
+  body.embed #task-picker { margin: 8px 0; }
+  body.embed #submit-guess-btn { margin-top: 0; }
+</style></head>
+<body class="embed">
+<div class="row">
+  <div class="view-col">
+    <div id="view-wrap">
+      <canvas id="pano"></canvas>
+      <canvas id="mapc"></canvas>
+      <canvas id="overlay"></canvas>
+      <div id="busy"></div>
+      <div id="result" class="result-overlay">
+        <div class="result-card">
+          <div class="result-title" id="result-title">Arrived</div>
+          <div class="result-score" id="result-score">0.00</div>
+          <div class="result-sub">score &middot; 0&ndash;1</div>
+          <div class="result-detail" id="result-detail"></div>
+          <button id="result-restart" class="result-btn" type="button">Play again</button>
+        </div>
+      </div>
+    </div>
+    <div class="ctrl-bar">
+      <button id="map-btn" class="ctrl" type="button">Open map</button>
+      <button id="reset-btn" class="ctrl" type="button">Reset</button>
+    </div>
   </div>
-  <div id="result"><div class="card">
-    <div class="t" id="rTitle">Arrived</div>
-    <div class="s" id="rScore">0.00</div>
-    <div class="sub">score · 0–1</div>
-    <div class="d" id="rDetail"></div>
-    <button class="btn go" id="againBtn" type="button">Play again</button>
-  </div></div>
+  <div class="panel" style="min-width:260px">
+    <h2>Task</h2>
+    <select id="task-picker" style="width:100%;padding:6px;background:#111;color:#eee;
+            border:1px solid #444;border-radius:4px;margin-bottom:10px;font-family:monospace"></select>
+    <button id="submit-guess-btn" style="margin-top:14px;padding:10px 16px;
+            background:#c91e1e;color:#fff;border:0;border-radius:4px;
+            font-size:14px;font-weight:bold;cursor:pointer;width:100%">
+      Submit guess (I'm here)
+    </button>
+  </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 "use strict";
-// ---- where the panos live (same-origin by default; set to the panos host in prod) ----
-const PANOS_BASE = (window.LB_PANOS_BASE || "panos");  // e.g. "https://user.github.io/lostbench-panos/panos"
-
-// ---- constants ported from the sim ----
+const PANOS_BASE = (window.LB_PANOS_BASE || "panos");
+const VIEW_W=1024, VIEW_H=768;                 // virtual coord system (matches server overlays)
 const MIN_FOV=30, MAX_FOV=110, DEFAULT_FOV=80;
-const CAMERA_HEIGHT_M=2.5, MAX_CLICK_DISTANCE_M=120, MAX_CLICK_HOPS=15;
-const MIN_PITCH_FOR_DISTANCE_DEG=0.3, CLICK_PX_THRESHOLD=8;
+const CAMERA_HEIGHT_M=2.5, MAX_CLICK_DISTANCE_M=120, MIN_PITCH_FOR_DISTANCE_DEG=0.3, CLICK_PX_THRESHOLD=8;
 const R=6371000, D2R=Math.PI/180, R2D=180/Math.PI;
+const _font=px=>`${px}px system-ui,-apple-system,sans-serif`;
 
-// ---- geo helpers (ported) ----
 function haversine(la1,lo1,la2,lo2){const p1=la1*D2R,p2=la2*D2R,dp=(la2-la1)*D2R,dl=(lo2-lo1)*D2R;
   const a=Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;return 2*R*Math.asin(Math.sqrt(a));}
 function bearing(la1,lo1,la2,lo2){const p1=la1*D2R,p2=la2*D2R,dl=(lo2-lo1)*D2R;
@@ -109,209 +98,209 @@ function moveAlong(la,lo,brg,dist){const b=brg*D2R,p1=la*D2R,l1=lo*D2R,dr=dist/R
   const l2=l1+Math.atan2(Math.sin(b)*Math.sin(dr)*Math.cos(p1),Math.cos(dr)-Math.sin(p1)*Math.sin(p2));
   return [p2*R2D,l2*R2D];}
 function angDiff(a,b){return (a-b+540)%360-180;}
+function ll2px(lat,lng,z){const n=2**z;const x=(lng+180)/360*n*256;
+  const sl=Math.sin(lat*D2R);const y=(0.5-Math.log((1+sl)/(1-sl))/(4*Math.PI))*n*256;return[x,y];}
+function px2ll(x,y,z){const n=2**z;const lng=x/(256*n)*360-180;
+  const lat=Math.atan(Math.sinh(Math.PI*(1-2*y/(256*n))))*R2D;return[lat,lng];}
 
-// ---- state ----
-let G=null, nodes={}, cur=null, yaw=0, pitch=0, fov=DEFAULT_FOV, initialDist=1, steps=0, submitted=false;
+let G=null, nodes={}, cur=null, yaw=0, pitch=0, fov=DEFAULT_FOV, steps=0, turns=0, submitted=false;
+let view="pano", mapZoom=16, mapLat=0, mapLng=0;
 const $=id=>document.getElementById(id);
-const stage=$("stage");
+const wrap=$("view-wrap");
 
-// ---- three.js ----
+/* ---------------- three.js pano ---------------- */
 let renderer, scene, camera, sphereMat, texLoader;
+let YAW_OFFSET=90;
 function initGL(){
   renderer=new THREE.WebGLRenderer({canvas:$("pano"),antialias:true});
   renderer.setPixelRatio(Math.min(devicePixelRatio,2));
   scene=new THREE.Scene();
-  camera=new THREE.PerspectiveCamera(70,1,0.1,1000);
-  const geo=new THREE.SphereGeometry(500,64,48);
-  geo.scale(-1,1,1); // view from inside, non-mirrored (text reads correctly)
+  camera=new THREE.PerspectiveCamera(70,4/3,0.1,1000);
+  const geo=new THREE.SphereGeometry(500,64,48); geo.scale(-1,1,1);
   sphereMat=new THREE.MeshBasicMaterial({color:0x808080});
   scene.add(new THREE.Mesh(geo,sphereMat));
   texLoader=new THREE.TextureLoader(); texLoader.crossOrigin="anonymous";
-  resize(); window.addEventListener("resize",resize);
-  renderLoop();
+  sizeCanvases(); window.addEventListener("resize",sizeCanvases);
+  (function loop(){ camera.rotation.order="YXZ"; camera.rotation.y=(yaw+YAW_OFFSET)*D2R; camera.rotation.x=pitch*D2R;
+    renderer.render(scene,camera); drawOverlay(); requestAnimationFrame(loop); })();
 }
-function resize(){
-  const w=stage.clientWidth,h=stage.clientHeight;
-  renderer.setSize(w,h,false);
-  camera.aspect=w/h;
-  // keep horizontal FOV = fov (server convention); derive vertical fov for three.js
-  const hfovR=fov*D2R; const vfovR=2*Math.atan(Math.tan(hfovR/2)/camera.aspect);
-  camera.fov=vfovR*R2D; camera.updateProjectionMatrix();
+function sizeCanvases(){
+  const w=wrap.clientWidth,h=wrap.clientHeight,dpr=Math.min(devicePixelRatio,2);
+  renderer.setSize(w,h,false); camera.aspect=w/h;
+  const hf=fov*D2R; camera.fov=2*Math.atan(Math.tan(hf/2)/camera.aspect)*R2D; camera.updateProjectionMatrix();
+  for(const id of ["overlay","mapc"]){ const c=$(id); c.width=Math.round(w*dpr); c.height=Math.round(h*dpr); }
+  if(view==="map") drawMap();
 }
-let YAW_OFFSET=90;  // rendering calibration (with geo x-flip): yaw=0 shows equirect center, +yaw turns right
-function applyCam(){
-  const off=(window.YOFF!==undefined?window.YOFF:YAW_OFFSET);
-  camera.rotation.order="YXZ";
-  camera.rotation.y=(yaw+off)*D2R;
-  camera.rotation.x=pitch*D2R;
-}
-function renderLoop(){ applyCam(); renderer.render(scene,camera); requestAnimationFrame(renderLoop); }
-
-// ---- pano loading ----
-function panoUrl(img){ const s=(""+(parseInt(img,10)%100)).padStart(2,"0"); return `${PANOS_BASE}/${s}/${img}.jpg`; }
-function loadPano(node, done){
-  $("spin").style.display="block";
-  texLoader.load(panoUrl(node.img), tex=>{
-    if(THREE.SRGBColorSpace!==undefined) tex.colorSpace=THREE.SRGBColorSpace;
+function panoUrl(img){const s=(""+(parseInt(img,10)%100)).padStart(2,"0");return `${PANOS_BASE}/${s}/${img}.jpg`;}
+function loadPano(node){ $("busy").style.display="block";
+  texLoader.load(panoUrl(node.img), tex=>{ if(THREE.SRGBColorSpace!==undefined) tex.colorSpace=THREE.SRGBColorSpace;
     const old=sphereMat.map; sphereMat.map=tex; sphereMat.color.set(0xffffff); sphereMat.needsUpdate=true;
-    if(old) old.dispose();
-    $("spin").style.display="none"; if(done)done();
-  }, undefined, ()=>{ $("spin").style.display="none"; });
-}
-
-// ---- worldHeading ----
+    if(old) old.dispose(); $("busy").style.display="none"; }, undefined, ()=>{$("busy").style.display="none";}); }
 function worldHeading(){ return ((cur.ca||0)+yaw+360)%360; }
 
-// ---- click → walk (ported _click_walk) ----
-function screenRelAngle(sx){ const w=stage.clientWidth; const focal=(w/2)/Math.tan((fov/2)*D2R);
-  return Math.atan2(sx-w/2, focal)*R2D; }
-function clickWalk(sx,sy){
-  const h=stage.clientHeight;
-  // vertical: server uses dy from horizon (center) with linear vfov approx, ignoring pitch
-  const vfov=fov*h/stage.clientWidth;
-  const dyFrac=(sy-h/2)/h;
-  const pitchBelow=dyFrac*vfov;
-  if(pitchBelow<MIN_PITCH_FOR_DISTANCE_DEG) return; // sky / above horizon
-  const dist=Math.min(CAMERA_HEIGHT_M/Math.tan(pitchBelow*D2R), MAX_CLICK_DISTANCE_M);
-  const relDeg=screenRelAngle(sx);
-  const o=cur;
-  const worldLook=((o.ca||0)+yaw)%360;
-  const tBrg=(worldLook+relDeg+360)%360;
-  const [tlat,tlng]=moveAlong(o.clat,o.clng,tBrg,dist);
-  // Dijkstra by walked distance, bounded
-  const budget=dist*1.5+15;
-  const distMap={}, prev={}; distMap[o.id]=0;
-  const pq=[[0,o.id]];
-  while(pq.length){
-    pq.sort((a,b)=>a[0]-b[0]); const [d,nid]=pq.shift();
-    if(d>(distMap[nid]??1e18)) continue;
-    const nd0=nodes[nid];
-    for(const nbId of (nd0.nbrs||[])){ const nb=nodes[nbId]; if(!nb) continue;
-      const hop=haversine(nd0.clat,nd0.clng,nb.clat,nb.clng); const nd=d+hop;
-      if(nd<=budget && nd<(distMap[nbId]??1e18)){ distMap[nbId]=nd; prev[nbId]=nid; pq.push([nd,nbId]); }
-    }
-  }
-  let best=o.id, bestD=Infinity;
-  for(const pid in distMap){ const n=nodes[pid]; const dd=haversine(n.clat,n.clng,tlat,tlng); if(dd<bestD){bestD=dd;best=pid;} }
-  if(best===o.id) return; // clicked spot is closest to where we are
-  // reconstruct + walk
-  const path=[best]; while(path[path.length-1]!==o.id) path.push(prev[path[path.length-1]]);
-  path.reverse();
-  for(let i=1;i<path.length;i++) snapTo(path[i]);
-  // auto-orient to road axis by travel direction
-  const finalN=nodes[best], prevN=nodes[path[path.length-2]]||o;
-  const walkBrg=bearing(prevN.clat,prevN.clng,finalN.clat,finalN.clng);
-  snapYawToRoad(finalN,walkBrg);
-  afterMove();
-}
-function snapTo(pid){ const nb=nodes[pid]; if(!nb) return;
-  const wl=((cur.ca||0)+yaw)%360; yaw=((wl-(nb.ca||0))%360+360)%360; cur=nb; steps++; }
-function snapYawToRoad(node,travelBrg){ const rf=node.rb||node.ca||0;
-  const diff=Math.abs(angDiff(travelBrg,rf)); const tgt=diff<=90?rf:(rf+180)%360;
-  yaw=((tgt-(node.ca||0))%360+360)%360; }
-
-function afterMove(){ loadPano(cur); updateHUD(); if(mapOn) drawMap(); }
-
-// ---- HUD ----
-function updateHUD(){
-  const d=haversine(cur.clat,cur.clng,G.goal_lat,G.goal_lng);
-  $("hudbar").innerHTML=`step ${steps} &nbsp; <b>${d.toFixed(0)} m</b> to goal`;
-  drawCompass();
-}
-function drawCompass(){
-  const c=$("compass"), x=c.getContext("2d"), s=128; x.clearRect(0,0,s,s);
-  x.save(); x.translate(s/2,s/2);
-  x.beginPath(); x.arc(0,0,52,0,7); x.fillStyle="rgba(10,10,10,.6)"; x.fill();
-  x.strokeStyle="rgba(255,255,255,.5)"; x.lineWidth=2; x.stroke();
-  x.rotate(-worldHeading()*D2R); // rotate so N points to bearing
-  // N marker (red) up, S grey down
-  x.fillStyle="#ff4d4d"; x.beginPath(); x.moveTo(0,-44); x.lineTo(-7,-30); x.lineTo(7,-30); x.closePath(); x.fill();
-  x.fillStyle="#bbb"; x.beginPath(); x.moveTo(0,44); x.lineTo(-7,30); x.lineTo(7,30); x.closePath(); x.fill();
+/* ---------------- overlay: compass + HUD + crosshair (ported from render.py) ---------------- */
+function drawOverlay(){
+  const c=$("overlay"), x=c.getContext("2d"); x.clearRect(0,0,c.width,c.height);
+  const s=c.width/VIEW_W;  // virtual 1024-wide → device px
+  x.save(); x.scale(s,s);
+  if(view==="pano") drawCompass(x);
+  drawCursor(x, VIEW_W/2, VIEW_H/2);
+  drawHUD(x);
   x.restore();
-  x.fillStyle="#fff"; x.font="bold 13px system-ui"; x.textAlign="center";
-  x.fillText(Math.round(worldHeading())+"°", s/2, s-6);
+}
+function drawCompass(x){
+  const cx=62,cy=62,r=44,h=worldHeading();
+  x.beginPath(); x.arc(cx,cy,r,0,7); x.fillStyle="rgba(18,22,30,0.73)"; x.fill();
+  x.lineWidth=2; x.strokeStyle="rgba(255,255,255,0.86)"; x.stroke();
+  x.beginPath(); x.arc(cx,cy,r-6,0,7); x.lineWidth=1; x.strokeStyle="rgba(255,255,255,0.18)"; x.stroke();
+  for(let deg=0;deg<360;deg+=15){ const a=(deg-h)*D2R,si=Math.sin(a),co=Math.cos(a);
+    const outer=r-3, inner=r-(deg%90===0?11:deg%45===0?8:5);
+    x.beginPath(); x.moveTo(cx+outer*si,cy-outer*co); x.lineTo(cx+inner*si,cy-inner*co);
+    x.lineWidth=deg%90===0?2:1; x.strokeStyle=deg%45===0?"rgba(255,255,255,0.82)":"rgba(255,255,255,0.43)"; x.stroke(); }
+  const aN=(-h)*D2R, nx=cx+(r-14)*Math.sin(aN), ny=cy-(r-14)*Math.cos(aN), pa=aN+Math.PI/2;
+  x.beginPath(); x.moveTo(nx,ny); x.lineTo(cx+5*Math.sin(pa),cy-5*Math.cos(pa)); x.lineTo(cx-5*Math.sin(pa),cy+5*Math.cos(pa));
+  x.closePath(); x.fillStyle="rgba(255,70,70,1)"; x.fill();
+  x.beginPath(); x.arc(cx,cy,3,0,7); x.fillStyle="rgba(245,245,245,1)"; x.fill();
+  x.textAlign="center"; x.textBaseline="middle"; x.font="bold "+_font(12);
+  for(const [lab,brg,col] of [["N",0,"rgba(255,120,120,1)"],["E",90,"rgba(240,240,240,0.92)"],["S",180,"rgba(240,240,240,0.92)"],["W",270,"rgba(240,240,240,0.92)"]]){
+    const a=(brg-h)*D2R; x.fillStyle=col; x.fillText(lab, cx+(r-17)*Math.sin(a), cy-(r-17)*Math.cos(a)); }
+  x.beginPath(); x.moveTo(cx,cy-r-2); x.lineTo(cx-6,cy-r+9); x.lineTo(cx+6,cy-r+9); x.closePath();
+  x.fillStyle="rgba(255,205,60,1)"; x.fill();
+  const txt=String(Math.round(h)).padStart(3,"0")+"°"; x.font=_font(13);
+  const tw=x.measureText(txt).width;
+  x.fillStyle="rgba(18,22,30,0.80)"; x.strokeStyle="rgba(255,255,255,0.47)"; x.lineWidth=1;
+  x.beginPath(); x.rect(cx-tw/2-8,cy+r+5,tw+16,19); x.fill(); x.stroke();
+  x.fillStyle="#fff"; x.fillText(txt, cx, cy+r+14);
+}
+function drawCursor(x,px,py){ const r=12;
+  x.lineCap="butt"; x.strokeStyle="rgba(255,255,255,0.86)"; x.lineWidth=5;
+  x.beginPath(); x.moveTo(px-r,py); x.lineTo(px+r,py); x.moveTo(px,py-r); x.lineTo(px,py+r); x.stroke();
+  x.strokeStyle="rgba(255,60,60,1)"; x.lineWidth=2;
+  x.beginPath(); x.moveTo(px-r,py); x.lineTo(px+r,py); x.moveTo(px,py-r); x.lineTo(px,py+r); x.stroke();
+  x.beginPath(); x.arc(px,py,4,0,7); x.stroke();
+}
+function drawHUD(x){
+  const text=(view==="map") ? `zoom=${mapZoom}   drag=pan  scroll=zoom`
+    : null;
+  // top-right turn/steps box (both views)
+  const tr=`turn ${turns}  steps ${steps}  view=${view}  mouse=up`;
+  x.font=_font(16); x.textBaseline="top"; x.textAlign="left";
+  let w=x.measureText(tr).width, pad=8, h=18;
+  x.fillStyle="rgba(0,0,0,0.63)"; x.fillRect(VIEW_W-w-2*pad-12,12,w+2*pad,h+2*pad);
+  x.fillStyle="#fff"; x.fillText(tr, VIEW_W-w-pad-12, 12+pad+1);
+  // map HUD top-left
+  if(text){ x.font=_font(14); w=x.measureText(text).width; h=16;
+    x.fillStyle="rgba(0,0,0,0.67)"; x.fillRect(10,10,w+2*pad,h+2*pad);
+    x.fillStyle="#fff"; x.fillText(text,10+pad,10+pad+1); }
 }
 
-// ---- interaction ----
-let drag=false, lastX=0,lastY=0, downX=0,downY=0, moved=0;
-function pointerDown(e){ if(mapOn) return; drag=true; moved=0;
-  lastX=downX=e.clientX; lastY=downY=e.clientY; $("pano").classList.add("grabbing"); }
-function pointerMove(e){ if(!drag) return;
-  const dx=e.clientX-lastX, dy=e.clientY-lastY; lastX=e.clientX; lastY=e.clientY;
-  moved+=Math.hypot(dx,dy);
-  const ppd=stage.clientWidth/fov;        // pixels per degree (Street View pan)
-  yaw=((yaw - dx/ppd)%360+360)%360;       // drag right → look left (server convention)
-  pitch=Math.max(-85,Math.min(85,pitch - dy/ppd));
-  drawCompass();
-}
-function pointerUp(e){ if(!drag) return; drag=false; $("pano").classList.remove("grabbing");
-  if(moved<CLICK_PX_THRESHOLD){ const r=$("pano").getBoundingClientRect();
-    clickWalk(e.clientX-r.left, e.clientY-r.top); } }
-function wheel(e){ if(mapOn) return; e.preventDefault();
-  const step=e.deltaY>0?-1:1; fov=Math.max(MIN_FOV,Math.min(MAX_FOV,fov-step*4)); resize(); }
-
-// ---- map (Leaflet) ----
-let lmap=null, mapOn=false, meMarker=null;
-function ensureMap(){
-  if(lmap) return;
-  lmap=L.map("map",{zoomControl:true,attributionControl:false}).setView([G.start_lat,G.start_lng],16);
-  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,crossOrigin:true}).addTo(lmap);
-  const bb=G.bbox; if(bb&&bb.length===4){ L.rectangle([[bb[1],bb[0]],[bb[3],bb[2]]],
-    {color:"#4aa3ff",weight:1.5,fill:true,fillOpacity:0.06}).addTo(lmap); }
-  L.marker([G.start_lat,G.start_lng],{icon:L.divIcon({className:"",html:'<div class="pin" style="background:#3ad17a"></div>',iconSize:[14,14]})}).addTo(lmap);
-  L.marker([G.goal_lat,G.goal_lng],{icon:L.divIcon({className:"",html:'<div class="pin" style="background:#e5484d"></div>',iconSize:[14,14]})}).addTo(lmap);
-  L.circle([G.goal_lat,G.goal_lng],{radius:G.goal_radius_m,color:"#e5484d",weight:1,fill:false}).addTo(lmap);
-}
-function drawMap(){ ensureMap();
-  if(meMarker) meMarker.remove();
-  meMarker=L.marker([cur.clat,cur.clng],{icon:L.divIcon({className:"",html:'<div class="me"></div>',iconSize:[14,14]})}).addTo(lmap);
-}
-function toggleMap(){ mapOn=!mapOn; $("map").classList.toggle("on",mapOn);
-  $("mapBtn").textContent=mapOn?"Close map":"Open map";
-  $("crosshair").style.display=mapOn?"none":"block";
-  if(mapOn){ ensureMap(); setTimeout(()=>{lmap.invalidateSize();drawMap();},10); } }
-
-// ---- submit / reset ----
-function submit(){ if(submitted) return; submitted=true;
-  const err=haversine(cur.clat,cur.clng,G.goal_lat,G.goal_lng);
-  const pp=Math.max(0,Math.min(1,1-err/Math.max(1,initialDist)));
-  let title,color;
-  if(pp>=0.995){title="Bullseye";color="#65d697";}
-  else if(pp>=0.9){title="So close";color="#65d697";}
-  else if(pp>=0.6){title="Close";color="#e8c468";}
-  else if(pp>=0.3){title="Off the mark";color="#e8c468";}
-  else {title="Lost";color="#e07a5a";}
-  $("rTitle").textContent=title; $("rScore").textContent=pp.toFixed(2); $("rScore").style.color=color;
-  $("rDetail").textContent=`${Math.round(err)} m from the goal · started ${Math.round(initialDist)} m away`;
-  $("result").classList.add("on");
-}
-function reset(){ submitted=false; $("result").classList.remove("on");
-  if(mapOn) toggleMap();
-  cur=nodes[G.start_pano_id]; steps=0; pitch=0; fov=DEFAULT_FOV;
-  yaw=((G._startYaw)%360+360)%360; resize(); loadPano(cur); updateHUD();
-  const hint=$("hint"); hint.style.opacity="1"; setTimeout(()=>hint.style.opacity="0",4000);
+/* ---------------- map view (ported from _render_map) ---------------- */
+const tileCache=new Map();
+function getTile(z,tx,ty){ const k=z+"/"+tx+"/"+ty; if(tileCache.has(k)) return tileCache.get(k);
+  const im=new Image(); im.crossOrigin="anonymous"; im.onload=()=>{ if(view==="map") drawMap(); }; im.onerror=()=>{};
+  im.src=`https://a.tile.openstreetmap.org/${z}/${tx}/${ty}.png`; tileCache.set(k,im); return im; }
+function drawMap(){
+  const c=$("mapc"), x=c.getContext("2d"), W=c.width, H=c.height, dpr=W/wrap.clientWidth;
+  const vw=VIEW_W, scale=W/vw, vh=H/scale;        // virtual canvas dims
+  const z=mapZoom;
+  const [cwx,cwy]=ll2px(mapLat,mapLng,z); const tlx=cwx-vw/2, tly=cwy-vh/2;
+  x.save(); x.scale(scale,scale);
+  x.fillStyle="#dcdcdc"; x.fillRect(0,0,vw,vh);
+  const n=2**z;
+  const txlo=Math.floor(tlx/256), txhi=Math.floor((tlx+vw)/256), tylo=Math.floor(tly/256), tyhi=Math.floor((tly+vh)/256);
+  for(let tx=txlo;tx<=txhi;tx++){ if(tx<0||tx>=n) continue;
+    for(let ty=tylo;ty<=tyhi;ty++){ if(ty<0||ty>=n) continue;
+      const im=getTile(z,tx,ty); if(im.complete && im.naturalWidth) x.drawImage(im, tx*256-tlx, ty*256-tly, 256,256); } }
+  const proj=(lat,lng)=>{ const [wx,wy]=ll2px(lat,lng,z); return [wx-tlx,wy-tly]; };
+  // bbox
+  if(G.bbox && G.bbox.length===4){ const [x1,y1]=proj(G.bbox[3],G.bbox[0]), [x2,y2]=proj(G.bbox[1],G.bbox[2]);
+    x.fillStyle="rgba(70,130,230,0.16)"; x.fillRect(x1,y1,x2-x1,y2-y1);
+    x.strokeStyle="rgba(30,90,200,0.90)"; x.lineWidth=4; x.strokeRect(x1,y1,x2-x1,y2-y1); }
+  const pin=(lat,lng,fill,label)=>{ const [px,py]=proj(lat,lng), r=10;
+    x.beginPath(); x.arc(px,py,r+2,0,7); x.lineWidth=2; x.strokeStyle="#000"; x.stroke();
+    x.beginPath(); x.arc(px,py,r,0,7); x.fillStyle=fill; x.fill();
+    x.font=_font(13); x.textBaseline="top"; const tw=x.measureText(label).width;
+    x.fillStyle="rgba(255,255,255,0.90)"; x.fillRect(px+r+2,py-9,tw+6,16);
+    x.fillStyle="#000"; x.fillText(label,px+r+4,py-8); };
+  pin(G.start_lat,G.start_lng,"rgba(40,200,40,1)","START");
+  pin(G.goal_lat,G.goal_lng,"rgba(220,40,40,1)","GOAL");
+  // YOU + heading wedge
+  const [yx,yy]=proj(cur.clat,cur.clng); const h=worldHeading()*D2R, hx=Math.sin(h), hy=-Math.cos(h), pxp=-hy, pyp=hx;
+  x.beginPath(); x.moveTo(yx+hx*26,yy+hy*26); x.lineTo(yx+pxp*9,yy+pyp*9); x.lineTo(yx-pxp*9,yy-pyp*9); x.closePath();
+  x.fillStyle="rgba(40,120,240,0.90)"; x.fill(); x.lineWidth=1; x.strokeStyle="#fff"; x.stroke();
+  x.beginPath(); x.arc(yx,yy,8,0,7); x.fillStyle="rgba(40,120,240,1)"; x.fill(); x.strokeStyle="#fff"; x.stroke();
+  x.font=_font(13); x.textBaseline="top"; const yw=x.measureText("YOU").width;
+  x.fillStyle="rgba(255,255,255,0.90)"; x.fillRect(yx+10,yy-9,yw+4,17); x.fillStyle="rgba(20,60,160,1)"; x.fillText("YOU",yx+12,yy-8);
+  x.restore();
+  drawOverlay();
 }
 
-// ---- boot ----
-fetch("graph.json").then(r=>r.json()).then(g=>{
-  G=g; g.nodes.forEach(n=>nodes[n.id]=n);
-  cur=nodes[g.start_pano_id];
-  initialDist=haversine(cur.clat,cur.clng,g.goal_lat,g.goal_lng);
-  // initial yaw: face the road toward the goal-ish (use start node road axis)
-  const toGoal=bearing(cur.clat,cur.clng,g.goal_lat,g.goal_lng);
-  const rf=cur.rb||cur.ca||0; const fwd=Math.abs(angDiff(toGoal,rf))<=90?rf:(rf+180)%360;
-  g._startYaw=((fwd-(cur.ca||0))%360+360)%360;
-  yaw=g._startYaw;
-  initGL(); loadPano(cur); updateHUD();
-  const p=$("pano");
-  p.addEventListener("pointerdown",pointerDown);
-  window.addEventListener("pointermove",pointerMove);
-  window.addEventListener("pointerup",pointerUp);
-  p.addEventListener("wheel",wheel,{passive:false});
-  $("mapBtn").onclick=toggleMap; $("guessBtn").onclick=submit;
-  $("resetBtn").onclick=reset; $("againBtn").onclick=reset;
-  setTimeout(()=>{$("hint").style.opacity="0";},4500);
-}).catch(e=>{ document.body.innerHTML='<p style="padding:20px;color:#e07a5a">Failed to load map: '+e+'</p>'; });
+/* ---------------- click → walk (ported _click_walk) ---------------- */
+function screenRel(sx){ const w=wrap.clientWidth; const focal=(w/2)/Math.tan((fov/2)*D2R); return Math.atan2(sx-w/2,focal)*R2D; }
+function clickWalk(sx,sy){
+  const h=wrap.clientHeight, w=wrap.clientWidth;
+  const vfov=fov*h/w, pitchBelow=((sy-h/2)/h)*vfov;
+  if(pitchBelow<MIN_PITCH_FOR_DISTANCE_DEG) return;
+  const dist=Math.min(CAMERA_HEIGHT_M/Math.tan(pitchBelow*D2R),MAX_CLICK_DISTANCE_M);
+  const tBrg=(((cur.ca||0)+yaw+screenRel(sx))%360+360)%360;
+  const [tlat,tlng]=moveAlong(cur.clat,cur.clng,tBrg,dist);
+  const budget=dist*1.5+15, dm={}, prev={}; dm[cur.id]=0; const pq=[[0,cur.id]];
+  while(pq.length){ pq.sort((a,b)=>a[0]-b[0]); const [d,nid]=pq.shift(); if(d>(dm[nid]??1e18)) continue;
+    const nd0=nodes[nid]; for(const nb of (nd0.nbrs||[])){ const m=nodes[nb]; if(!m) continue;
+      const hop=haversine(nd0.clat,nd0.clng,m.clat,m.clng), nd=d+hop;
+      if(nd<=budget && nd<(dm[nb]??1e18)){ dm[nb]=nd; prev[nb]=nid; pq.push([nd,nb]); } } }
+  let best=cur.id, bd=Infinity; for(const pid in dm){ const m=nodes[pid], dd=haversine(m.clat,m.clng,tlat,tlng); if(dd<bd){bd=dd;best=pid;} }
+  if(best===cur.id) return;
+  const path=[best]; while(path[path.length-1]!==cur.id) path.push(prev[path[path.length-1]]); path.reverse();
+  for(let i=1;i<path.length;i++) snapTo(path[i]);
+  const fN=nodes[best], pN=nodes[path[path.length-2]]||cur, wb=bearing(pN.clat,pN.clng,fN.clat,fN.clng);
+  const rf=fN.rb||fN.ca||0; yaw=((( Math.abs(angDiff(wb,rf))<=90?rf:(rf+180)%360 )-(fN.ca||0))%360+360)%360;
+  loadPano(cur);
+}
+function snapTo(pid){ const m=nodes[pid]; if(!m) return; const wl=((cur.ca||0)+yaw)%360; yaw=((wl-(m.ca||0))%360+360)%360; cur=m; steps++; }
+
+/* ---------------- interaction ---------------- */
+let drag=false,lx=0,ly=0,moved=0;
+$("pano").addEventListener("pointerdown",e=>{ if(view!=="pano")return; drag=true;moved=0;lx=e.clientX;ly=e.clientY;$("pano").classList.add("dragging"); });
+$("mapc").addEventListener("pointerdown",e=>{ if(view!=="map")return; drag=true;moved=0;lx=e.clientX;ly=e.clientY;$("mapc").classList.add("dragging"); });
+window.addEventListener("pointermove",e=>{ if(!drag)return; const dx=e.clientX-lx,dy=e.clientY-ly; lx=e.clientX;ly=e.clientY; moved+=Math.hypot(dx,dy);
+  if(view==="pano"){ const ppd=wrap.clientWidth/fov; yaw=((yaw-dx/ppd)%360+360)%360; pitch=Math.max(-85,Math.min(85,pitch-dy/ppd)); }
+  else { const z=mapZoom, scale=wrap.clientWidth/VIEW_W; let [cx,cy]=ll2px(mapLat,mapLng,z); cx-=dx/scale; cy-=dy/scale; [mapLat,mapLng]=px2ll(cx,cy,z); drawMap(); } });
+window.addEventListener("pointerup",e=>{ if(!drag)return; drag=false; $("pano").classList.remove("dragging"); $("mapc").classList.remove("dragging");
+  if(moved<CLICK_PX_THRESHOLD && view==="pano"){ const r=wrap.getBoundingClientRect(); turns++; clickWalk(e.clientX-r.left,e.clientY-r.top); } });
+function onWheel(e){ e.preventDefault(); if(view==="pano"){ fov=Math.max(MIN_FOV,Math.min(MAX_FOV,fov-(e.deltaY>0?-1:1)*4)); sizeCanvases(); }
+  else { mapZoom=Math.max(13,Math.min(19,mapZoom+(e.deltaY>0?-1:1))); drawMap(); } }
+$("pano").addEventListener("wheel",onWheel,{passive:false}); $("mapc").addEventListener("wheel",onWheel,{passive:false});
+
+/* ---------------- controls ---------------- */
+function setView(v){ view=v; $("mapc").style.display=v==="map"?"block":"none"; $("pano").style.display=v==="map"?"none":"block";
+  $("map-btn").textContent=v==="map"?"Close map":"Open map"; if(v==="map"){ sizeCanvases(); drawMap(); } else drawOverlay(); }
+$("map-btn").onclick=()=>{ turns++; setView(view==="map"?"pano":"map"); };
+function reset(){ submitted=false; $("result").classList.remove("show"); setView("pano");
+  cur=nodes[G.start_pano_id]; steps=0; turns=0; pitch=0; fov=DEFAULT_FOV; yaw=G._startYaw;
+  $("submit-guess-btn").disabled=false; sizeCanvases(); loadPano(cur); }
+$("reset-btn").onclick=reset; $("result-restart").onclick=reset;
+function submit(){ if(submitted)return; submitted=true; turns++;
+  const err=haversine(cur.clat,cur.clng,G.goal_lat,G.goal_lng), pp=Math.max(0,Math.min(1,1-err/Math.max(1,G._init)));
+  let t,col; if(pp>=0.995){t="Bullseye";col="#65d697";} else if(pp>=0.9){t="So close";col="#65d697";}
+  else if(pp>=0.6){t="Close";col="#e8c468";} else if(pp>=0.3){t="Off the mark";col="#e8c468";} else {t="Lost";col="#e07a5a";}
+  $("result-title").textContent=t; $("result-score").textContent=pp.toFixed(2); $("result-score").style.color=col;
+  $("result-detail").textContent=`${Math.round(err)} m from the goal · started ${Math.round(G._init)} m away`;
+  $("result").classList.add("show"); $("submit-guess-btn").disabled=true; }
+$("submit-guess-btn").onclick=submit;
+
+/* ---------------- boot ---------------- */
+fetch("graph.json").then(r=>r.json()).then(g=>{ G=g; g.nodes.forEach(n=>nodes[n.id]=n); cur=nodes[g.start_pano_id];
+  G._init=haversine(cur.clat,cur.clng,g.goal_lat,g.goal_lng);
+  const toGoal=bearing(cur.clat,cur.clng,g.goal_lat,g.goal_lng), rf=cur.rb||cur.ca||0;
+  const fwd=Math.abs(angDiff(toGoal,rf))<=90?rf:(rf+180)%360; g._startYaw=(((fwd-(cur.ca||0))%360)+360)%360; yaw=g._startYaw;
+  // map default: center bbox, zoom to fit
+  if(g.bbox && g.bbox.length===4){ mapLat=(g.bbox[1]+g.bbox[3])/2; mapLng=(g.bbox[0]+g.bbox[2])/2;
+    for(let z=19;z>=13;z--){ const [a]=ll2px(g.bbox[1],g.bbox[0],z),[b]=ll2px(g.bbox[1],g.bbox[2],z); if(Math.abs(b-a)<=VIEW_W*0.92){ mapZoom=z; break; } } }
+  else { mapLat=g.start_lat; mapLng=g.start_lng; }
+  // single-task dropdown (matches server)
+  $("task-picker").innerHTML=`<option>${g.task_id} · ${(g.optimal_distance_m||0).toFixed(0)}m / ${g.optimal_steps} hops</option>`;
+  initGL(); loadPano(cur);
+}).catch(e=>{ document.body.innerHTML='<p style="padding:20px;color:#e07a5a">Failed to load: '+e+'</p>'; });
 </script>
-</body>
-</html>
+</body></html>
