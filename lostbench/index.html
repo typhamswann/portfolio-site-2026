@@ -79,6 +79,28 @@
       .stage-spinner.hidden { display: none; }
       @keyframes lb-hero-spin { to { transform: rotate(360deg); } }
 
+      /* ---------- MODEL THINKING (hero replay) ---------- */
+      .stage-thought {
+        margin: 14px 0 0;
+        padding: 12px 15px;
+        height: 100px;
+        overflow-y: auto;
+        background: rgba(255,255,255,0.025);
+        border: 1px solid var(--rule);
+        border-left: 2px solid #65d697;
+        border-radius: 6px;
+        font-size: 0.86rem;
+        line-height: 1.55;
+        color: #cfcfcf;
+      }
+      .stage-thought.empty { display: none; }
+      .stage-thought .lbl {
+        display: block;
+        font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+        font-size: 0.6rem; letter-spacing: 0.16em; text-transform: uppercase;
+        color: var(--muted); margin-bottom: 5px;
+      }
+
       /* ---------- GET STARTED ---------- */
       /* Open, spaced layout (no boxed card): a mono section label, the site's
          standard buttons with the primary leading, then a single hairline
@@ -275,6 +297,7 @@
                 <select id="rollout-select" aria-label="Select rollout"></select>
                 <span id="dist-chip" class="chip subtle"></span>
             </div>
+            <div id="stage-thought" class="stage-thought empty" aria-live="polite"></div>
         </div>
     </header>
 
@@ -595,6 +618,6 @@
     })();
     </script>
 
-    <script src="script.js?v=14"></script>
+    <script src="script.js?v=15"></script>
 </body>
 </html>

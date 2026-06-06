@@ -36,6 +36,7 @@
         runnerName: document.getElementById('runner-name'),
         dist:       document.getElementById('dist-chip'),
         spinner:    document.getElementById('stage-spinner'),
+        thought:    document.getElementById('stage-thought'),
     };
 
     // Hide the loading spinner once the first frame has actually painted.
@@ -164,6 +165,26 @@
         els.scrubber.value = sIdx;
         els.count.textContent = `${sIdx} / ${r.steps.length - 1}`;
         els.select.value = rIdx;
+
+        // Model "thinking" — recovered from the run transcript. Not every run has
+        // it (e.g. Gemini's wasn't recorded), so hide the panel when absent.
+        // Thoughts attach to the steps where the model reasoned; carry the most
+        // recent one forward so scrubbing always shows the active reasoning.
+        if (els.thought) {
+            if (r._hasThoughts === undefined)
+                r._hasThoughts = r.steps.some(function (s) { return s.thought; });
+            if (!r._hasThoughts) {
+                els.thought.className = 'stage-thought empty';
+                els.thought.innerHTML = '';
+            } else {
+                let th = '';
+                for (let i = sIdx; i >= 0; i--) { if (r.steps[i].thought) { th = r.steps[i].thought; break; } }
+                if (!th) for (let i = 0; i < r.steps.length; i++) { if (r.steps[i].thought) { th = r.steps[i].thought; break; } }
+                els.thought.className = 'stage-thought';
+                els.thought.innerHTML =
+                    `<span class="lbl">${escapeHtml(r.runner)} · thinking</span>${escapeHtml(th)}`;
+            }
+        }
 
         // Runner badge on the frame
         const slug = r.runner_slug || (r.runner.toLowerCase().includes('claude') ? 'claude'
