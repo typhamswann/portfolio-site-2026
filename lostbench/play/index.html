@@ -9,11 +9,12 @@
   .panel { background: #222; padding: 12px; border-radius: 6px; flex: 1 1 240px; min-width: 220px; }
   #view-wrap { position: relative; width: 100%; max-width: 1024px; aspect-ratio: 4 / 3;
     overflow: hidden; border-radius: 4px; background: #000; }
-  #view-wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
-  #pano { cursor: crosshair; touch-action: none; user-select: none; }
+  #view-wrap canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+  #pano { display: block; cursor: crosshair; touch-action: none; user-select: none; }
   #pano.dragging { cursor: grabbing; }
-  #overlay { pointer-events: none; }
+  #overlay { display: block; pointer-events: none; }
   #mapc { display: none; cursor: grab; }
+  #mapc.on { display: block; }
   #mapc.dragging { cursor: grabbing; }
   .ctrl-bar { display: flex; gap: 8px; margin-top: 8px; }
   .ctrl { flex: 1; padding: 8px 10px; background: #2a2a2a; color: #eee;
@@ -32,7 +33,7 @@
     border: 0; border-radius: 5px; font-size: 14px; font-weight: 600; cursor: pointer; }
   .result-btn:hover { background: #79e0a6; }
   h2 { margin: 4px 0 8px; font-size: 14px; color: #888; font-weight: normal; text-transform: uppercase; letter-spacing: 0.06em; }
-  #busy { display: none; position: absolute; top: 50%; left: 50%; z-index: 4;
+  #busy { display: none; pointer-events: none; position: absolute; top: 50%; left: 50%; z-index: 4;
     width: 32px; height: 32px; margin: -16px 0 0 -16px; border-radius: 50%;
     border: 3px solid rgba(0,0,0,0.35); border-top-color: #65d697;
     box-shadow: 0 0 0 1px rgba(255,255,255,0.15); animation: lb-spin 0.7s linear infinite; }
@@ -314,7 +315,7 @@ fetch("graph.json").then(r=>r.json()).then(g=>{ G=g; g.nodes.forEach(n=>nodes[n.
   else { mapLat=g.start_lat; mapLng=g.start_lng; }
   // single-task dropdown (matches server)
   $("task-picker").innerHTML=`<option>${g.task_id} · ${(g.optimal_distance_m||0).toFixed(0)}m / ${g.optimal_steps} hops</option>`;
-  initGL(); loadPano(cur);
+  initGL(); setView("pano"); loadPano(cur);
 }).catch(e=>{ document.body.innerHTML='<p style="padding:20px;color:#e07a5a">Failed to load: '+e+'</p>'; });
 </script>
 </body></html>
