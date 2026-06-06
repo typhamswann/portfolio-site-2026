@@ -105,6 +105,7 @@ function px2ll(x,y,z){const n=2**z;const lng=x/(256*n)*360-180;
 
 let G=null, nodes={}, cur=null, yaw=0, pitch=0, fov=DEFAULT_FOV, steps=0, turns=0, submitted=false;
 let view="pano", mapZoom=16, mapLat=0, mapLng=0;
+let cursorX=VIEW_W/2, cursorY=VIEW_H/2;   // red crosshair position (virtual coords), moves to click point
 const $=id=>document.getElementById(id);
 const wrap=$("view-wrap");
 
@@ -144,7 +145,7 @@ function drawOverlay(){
   const s=c.width/VIEW_W;  // virtual 1024-wide → device px
   x.save(); x.scale(s,s);
   if(view==="pano") drawCompass(x);
-  drawCursor(x, VIEW_W/2, VIEW_H/2);
+  drawCursor(x, cursorX, cursorY);
   drawHUD(x);
   x.restore();
 }
@@ -259,15 +260,28 @@ function clickWalk(sx,sy){
 }
 function snapTo(pid){ const m=nodes[pid]; if(!m) return; const wl=((cur.ca||0)+yaw)%360; yaw=((wl-(m.ca||0))%360+360)%360; cur=m; steps++; }
 
-/* ---------------- interaction ---------------- */
-let drag=false,lx=0,ly=0,moved=0;
-$("pano").addEventListener("pointerdown",e=>{ if(view!=="pano")return; drag=true;moved=0;lx=e.clientX;ly=e.clientY;$("pano").classList.add("dragging"); });
-$("mapc").addEventListener("pointerdown",e=>{ if(view!=="map")return; drag=true;moved=0;lx=e.clientX;ly=e.clientY;$("mapc").classList.add("dragging"); });
-window.addEventListener("pointermove",e=>{ if(!drag)return; const dx=e.clientX-lx,dy=e.clientY-ly; lx=e.clientX;ly=e.clientY; moved+=Math.hypot(dx,dy);
-  if(view==="pano"){ const ppd=wrap.clientWidth/fov; yaw=((yaw-dx/ppd)%360+360)%360; pitch=Math.max(-85,Math.min(85,pitch-dy/ppd)); }
-  else { const z=mapZoom, scale=wrap.clientWidth/VIEW_W; let [cx,cy]=ll2px(mapLat,mapLng,z); cx-=dx/scale; cy-=dy/scale; [mapLat,mapLng]=px2ll(cx,cy,z); drawMap(); } });
-window.addEventListener("pointerup",e=>{ if(!drag)return; drag=false; $("pano").classList.remove("dragging"); $("mapc").classList.remove("dragging");
-  if(moved<CLICK_PX_THRESHOLD && view==="pano"){ const r=wrap.getBoundingClientRect(); turns++; clickWalk(e.clientX-r.left,e.clientY-r.top); } });
+/* ---------------- interaction ----------------
+   Matches the server's discrete feel: during a drag the frame SLIDES (CSS preview,
+   like the server translating the rendered JPEG); on release the yaw/pitch (or map
+   pan) is applied in ONE step and a new frame snaps in — i.e. frame-to-frame, not
+   continuous smooth rotation. */
+let drag=false, sx0=0, sy0=0, dxNow=0, dyNow=0, moved=0;
+const activeCanvas=()=> view==="map" ? $("mapc") : $("pano");
+function onDown(e){ drag=true; moved=0; sx0=e.clientX; sy0=e.clientY; dxNow=dyNow=0; activeCanvas().classList.add("dragging"); }
+$("pano").addEventListener("pointerdown",e=>{ if(view==="pano") onDown(e); });
+$("mapc").addEventListener("pointerdown",e=>{ if(view==="map") onDown(e); });
+window.addEventListener("pointermove",e=>{ if(!drag)return; dxNow=e.clientX-sx0; dyNow=e.clientY-sy0; moved=Math.hypot(dxNow,dyNow);
+  const t=`translate(${dxNow}px,${dyNow}px)`; activeCanvas().style.transform=t; $("overlay").style.transform=t; });
+window.addEventListener("pointerup",e=>{ if(!drag)return; drag=false; const ac=activeCanvas(); ac.classList.remove("dragging");
+  ac.style.transform=""; $("overlay").style.transform="";
+  if(moved<CLICK_PX_THRESHOLD){
+    if(view==="pano"){ const r=wrap.getBoundingClientRect(), px=e.clientX-r.left, py=e.clientY-r.top;
+      cursorX=px/wrap.clientWidth*VIEW_W; cursorY=py/wrap.clientHeight*VIEW_H;   // crosshair → click point
+      turns++; clickWalk(px,py); }
+  } else if(view==="pano"){ const ppd=wrap.clientWidth/fov;        // discrete pan snap
+    yaw=((yaw - dxNow/ppd)%360+360)%360; pitch=Math.max(-85,Math.min(85,pitch - dyNow/ppd));
+  } else { const z=mapZoom, scale=wrap.clientWidth/VIEW_W;          // discrete map pan
+    let [cx,cy]=ll2px(mapLat,mapLng,z); cx-=dxNow/scale; cy-=dyNow/scale; [mapLat,mapLng]=px2ll(cx,cy,z); drawMap(); } });
 function onWheel(e){ e.preventDefault(); if(view==="pano"){ fov=Math.max(MIN_FOV,Math.min(MAX_FOV,fov-(e.deltaY>0?-1:1)*4)); sizeCanvases(); }
   else { mapZoom=Math.max(13,Math.min(19,mapZoom+(e.deltaY>0?-1:1))); drawMap(); } }
 $("pano").addEventListener("wheel",onWheel,{passive:false}); $("mapc").addEventListener("wheel",onWheel,{passive:false});
@@ -277,7 +291,7 @@ function setView(v){ view=v; $("mapc").style.display=v==="map"?"block":"none"; $
   $("map-btn").textContent=v==="map"?"Close map":"Open map"; if(v==="map"){ sizeCanvases(); drawMap(); } else drawOverlay(); }
 $("map-btn").onclick=()=>{ turns++; setView(view==="map"?"pano":"map"); };
 function reset(){ submitted=false; $("result").classList.remove("show"); setView("pano");
-  cur=nodes[G.start_pano_id]; steps=0; turns=0; pitch=0; fov=DEFAULT_FOV; yaw=G._startYaw;
+  cur=nodes[G.start_pano_id]; steps=0; turns=0; pitch=0; fov=DEFAULT_FOV; yaw=G._startYaw; cursorX=VIEW_W/2; cursorY=VIEW_H/2;
   $("submit-guess-btn").disabled=false; sizeCanvases(); loadPano(cur); }
 $("reset-btn").onclick=reset; $("result-restart").onclick=reset;
 function submit(){ if(submitted)return; submitted=true; turns++;
