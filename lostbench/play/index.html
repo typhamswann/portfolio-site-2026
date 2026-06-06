@@ -271,20 +271,19 @@ const activeCanvas=()=> view==="map" ? $("mapc") : $("pano");
 function onDown(e){ drag=true; moved=0; sx0=e.clientX; sy0=e.clientY; dxNow=dyNow=0; activeCanvas().classList.add("dragging"); }
 $("pano").addEventListener("pointerdown",e=>{ if(view==="pano") onDown(e); });
 $("mapc").addEventListener("pointerdown",e=>{ if(view==="map") onDown(e); });
-window.addEventListener("pointermove",e=>{
-  // Keep the red crosshair under the actual pointer (so clicks AND drags track it).
-  const r=wrap.getBoundingClientRect(), mx=e.clientX-r.left, my=e.clientY-r.top;
-  if(mx>=0&&mx<=r.width&&my>=0&&my<=r.height){ cursorX=mx/r.width*VIEW_W; cursorY=my/r.height*VIEW_H; }
-  if(!drag)return; dxNow=e.clientX-sx0; dyNow=e.clientY-sy0; moved=Math.hypot(dxNow,dyNow);
-  // Slide ONLY the image as a drag preview — the overlay (crosshair/compass/HUD)
-  // stays fixed so the crosshair remains under the pointer, not offset by a slide.
-  activeCanvas().style.transform=`translate(${dxNow}px,${dyNow}px)`; });
+window.addEventListener("pointermove",e=>{ if(!drag)return; dxNow=e.clientX-sx0; dyNow=e.clientY-sy0; moved=Math.hypot(dxNow,dyNow);
+  // Slide the frame AND its overlay together as the drag preview, so the crosshair
+  // (and compass/HUD) move WITH the scene — exactly like the server slid its baked
+  // JPEG. On release the crosshair lands at the release point (set in pointerup).
+  const t=`translate(${dxNow}px,${dyNow}px)`; activeCanvas().style.transform=t; $("overlay").style.transform=t; });
 window.addEventListener("pointerup",e=>{ if(!drag)return; drag=false; const ac=activeCanvas(); ac.classList.remove("dragging");
-  ac.style.transform="";
+  ac.style.transform=""; $("overlay").style.transform="";
+  const r=wrap.getBoundingClientRect(), px=e.clientX-r.left, py=e.clientY-r.top;
+  // crosshair lands where you release — for a click AND a drag — matching the server (move_cursor → end)
+  cursorX=Math.max(0,Math.min(VIEW_W, px/wrap.clientWidth*VIEW_W));
+  cursorY=Math.max(0,Math.min(VIEW_H, py/wrap.clientHeight*VIEW_H));
   if(moved<CLICK_PX_THRESHOLD){
-    if(view==="pano"){ const r=wrap.getBoundingClientRect(), px=e.clientX-r.left, py=e.clientY-r.top;
-      cursorX=px/wrap.clientWidth*VIEW_W; cursorY=py/wrap.clientHeight*VIEW_H;   // crosshair → click point
-      turns++; clickWalk(px,py); }
+    if(view==="pano"){ turns++; clickWalk(px,py); }
   } else if(view==="pano"){ const ppd=wrap.clientWidth/fov;        // discrete pan snap
     yaw=((yaw - dxNow/ppd)%360+360)%360; pitch=Math.max(-85,Math.min(85,pitch - dyNow/ppd));
   } else { const z=mapZoom, scale=wrap.clientWidth/VIEW_W;          // discrete map pan
