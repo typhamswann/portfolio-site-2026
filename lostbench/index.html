@@ -250,16 +250,6 @@
                 <span id="dist-chip" class="chip subtle"></span>
             </div>
         </div>
-
-        <div class="cta-row">
-            <a class="cta primary" href="https://github.com/typhamswann/lostbench">Run the Public Benchmark</a>
-            <a class="cta" href="#play">Play the Benchmark</a>
-            <a class="cta" href="#intro">Read the Blog</a>
-        </div>
-
-        <p class="contact-note">
-            Contact <a href="mailto:phamswannty@gmail.com">phamswannty@gmail.com</a> for the full RL environment &mdash; <strong>6,324 real-world Street-View tasks</strong>, many with time horizons and difficulty orders of magnitude beyond the public benchmark.
-        </p>
     </header>
 
     <main>
@@ -267,6 +257,16 @@
             <h2>Introduction</h2>
             <p>
                 LostBench is built to assess and improve spatial-reasoning capabilities in frontier models by measuring performance on diverse, long-horizon spatial reasoning tasks. Each task has been completed by a human on the first attempt. The benchmark is far from saturated &mdash; the scores below are on the <em>easiest</em> tasks, in the <em>easiest</em> setting, at the <em>shortest</em> horizons. Powering the benchmark are scalable data pipelines that integrate open-source data and allow trivial creation of tasks with orders-of-magnitude longer time horizons. It&apos;s available as a Harbor-compatible repository at <a href="https://github.com/typhamswann/lostbench"><code>typhamswann/lostbench</code></a>.
+            </p>
+
+            <div class="cta-row">
+                <a class="cta primary" href="https://github.com/typhamswann/lostbench">Run the Public Benchmark</a>
+                <a class="cta" href="#play">Play the Benchmark</a>
+                <a class="cta" href="#intro">Read the Blog</a>
+            </div>
+
+            <p class="contact-note">
+                Contact <a href="mailto:phamswannty@gmail.com">phamswannty@gmail.com</a> for the full RL environment &mdash; <strong>6,324 real-world Street-View tasks</strong>, many with time horizons and difficulty orders of magnitude beyond the public benchmark.
             </p>
         </section>
 
@@ -285,7 +285,7 @@
                 While frontier LLMs have made significant progress in coding, reasoning, and complex tasks in recent years, visual reasoning capabilities still lack robustness compared to other domains. One especially challenging subset of visual reasoning for current models is spatial reasoning, which typically requires understanding many parts of an image at a given time and maintaining that understanding across multiple scenes or images.
             </p>
             <p>
-                People excel at these types of tasks and use interfaces like Street View, Google Maps, and Geoguessr in everyday work quite naturally. The gap is most visible exactly where humans take it for granted.
+                People excel at these types of tasks and use interfaces like Street View, Autodesk, and Matterport in everyday work quite naturally.
             </p>
             <p>
                 Due to cost constraints, only a small subset of ten tasks has been included in the results above and Claude Opus 4.8 and GPT-5.5 were assessed using the Claude Code and Codex harnesses respectively. To fund a full assessment, access the full RL environment with thousands of long-horizon tasks, or hire me, contact <a href="mailto:phamswannty@gmail.com">phamswannty@gmail.com</a>.
