@@ -109,16 +109,15 @@
       /* ---------- PLAY EMBED ---------- */
       .play-embed {
         width: 100%;
-        max-width: 600px;           /* compact, left-aligned with the body text */
-        margin: 12px 0 6px;
-        aspect-ratio: 15 / 16;      /* fits the player: view + controls + dropdown */
+        max-width: 720px;           /* full text-column width — a touch more dominant */
+        margin: 16px 0 8px;
         border: 1px solid var(--rule);
         border-radius: 6px;
         overflow: hidden;
         background: #111;
+        /* height is set by JS to the player's reported content height (auto-fit) */
       }
-      .play-embed iframe { width: 100%; height: 100%; border: 0; display: block; }
-      @media (max-width: 600px) { .play-embed { aspect-ratio: 5 / 6; } }
+      .play-embed iframe { width: 100%; height: 660px; border: 0; display: block; }
       .play-poster {
         width: 100%; height: 100%;
         display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -357,7 +356,7 @@
             <p>
                 Note that the UI is choppy in the simulation to emulate what the model sees in the environment, as opposed to the human advantage of seeing continuous frames.
             </p>
-            <div class="play-embed" id="play-embed" data-src="play/?v=3"></div>
+            <div class="play-embed" id="play-embed" data-src="play/?v=4"></div>
         </section>
 
         <section class="prose">
@@ -543,6 +542,16 @@
                 '<div class="chart-axis"><span>0</span><span>1&times;</span><span>2&times;</span><span>3&times;</span></div><div></div></div>';
         el.innerHTML = html;
       }
+
+      // The player reports its exact content height; size the iframe to it so the
+      // box fits snugly (no empty space below Submit) at any width.
+      window.addEventListener('message', function (ev) {
+        var h = ev.data && ev.data.lbHeight;
+        if (typeof h === 'number' && h > 200 && h < 3000) {
+          var f = document.getElementById('play-frame');
+          if (f) f.style.height = h + 'px';
+        }
+      });
 
       // Auto-load the play embed when it scrolls into view (lazy: avoids loading
       // the simulator for visitors who never reach this section).

@@ -39,6 +39,7 @@
     box-shadow: 0 0 0 1px rgba(255,255,255,0.15); animation: lb-spin 0.7s linear infinite; }
   @keyframes lb-spin { to { transform: rotate(360deg); } }
   body.embed { padding: 8px; }
+  body.embed .row { gap: 8px; }            /* tighten the gap above Submit (dropdown removed) */
   body.embed .panel { background: transparent; padding: 0; min-width: 0; flex-basis: 100%; }
   body.embed .panel h2 { display: none !important; }
   body.embed #submit-guess-btn { margin-top: 0; }
@@ -105,6 +106,10 @@ let view="pano", mapZoom=16, mapLat=0, mapLng=0;
 let cursorX=VIEW_W/2, cursorY=VIEW_H/2;   // red crosshair position (virtual coords), moves to click point
 const $=id=>document.getElementById(id);
 const wrap=$("view-wrap");
+// Report content height to the embedding page so the iframe can size to fit exactly
+// (no empty space below Submit, no scrollbar) at any width.
+function lbPostHeight(){ try{ parent.postMessage({lbHeight: Math.ceil(document.body.scrollHeight)+2}, "*"); }catch(e){} }
+addEventListener("load", lbPostHeight); addEventListener("resize", lbPostHeight);
 
 /* ---------------- three.js pano ---------------- */
 let renderer, scene, camera, sphereMat, texLoader;
@@ -128,6 +133,7 @@ function sizeCanvases(){
   const hf=fov*D2R; camera.fov=2*Math.atan(Math.tan(hf/2)/camera.aspect)*R2D; camera.updateProjectionMatrix();
   for(const id of ["overlay","mapc"]){ const c=$(id); c.width=Math.round(w*dpr); c.height=Math.round(h*dpr); }
   if(view==="map") drawMap();
+  lbPostHeight();
 }
 function panoUrl(img){const s=(""+(parseInt(img,10)%100)).padStart(2,"0");return `${PANOS_BASE}/${s}/${img}.jpg`;}
 function loadPano(node){ $("busy").style.display="block";
@@ -316,6 +322,7 @@ fetch("graph.json").then(r=>r.json()).then(g=>{ G=g; g.nodes.forEach(n=>nodes[n.
   else { mapLat=g.start_lat; mapLng=g.start_lng; }
   // single-task dropdown (matches server)
   initGL(); setView("pano"); loadPano(cur);
+  lbPostHeight(); setTimeout(lbPostHeight, 300);
 }).catch(e=>{ document.body.innerHTML='<p style="padding:20px;color:#e07a5a">Failed to load: '+e+'</p>'; });
 </script>
 </body></html>
