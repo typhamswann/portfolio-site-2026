@@ -80,56 +80,42 @@
       @keyframes lb-hero-spin { to { transform: rotate(360deg); } }
 
       /* ---------- MODEL THINKING (hero replay, in-frame caption) ----------
-         An ambient lower-third caption pinned inside the frame, not a boxy
-         panel below it. Quiet glass card, clamped to two lines, expands on
-         hover; a small pulsing dot marks live reasoning. Cross-fades on change
-         so it reads as part of the animation rather than competing with it. */
+         An editorial aside, not an AI-product widget: a quiet glass plate set
+         in the calm sky band, the recovered reasoning in italic prose. No status
+         dot, no caps label, no accent bar — the first-person voice and the model
+         badge make the attribution self-evident. Clamped to two lines; the full
+         thought reveals on hover. Cross-fades only on a genuine change. */
       .stage-thought {
         position: absolute;
         /* clear the burned-in compass (top-left) and turn/step HUD (top-right);
            the calm sky band between them is the only uncluttered zone */
-        top: 12px; left: 13.5%;
-        max-width: 56%;
+        top: 14px; left: 13.5%;
+        max-width: 54%;
         z-index: 4;
-        padding: 7px 12px 8px;
-        background: rgba(10,10,10,0.58);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
-        border-left: 2px solid #65d697;
-        border-radius: 5px;
-        color: #e6e6e6;
-        font-size: 12.5px;
-        line-height: 1.5;
-        letter-spacing: 0.01em;
+        padding: 9px 14px 10px;
+        background: rgba(8,8,8,0.62);
+        backdrop-filter: blur(9px);
+        -webkit-backdrop-filter: blur(9px);
+        border-radius: 3px;
+        color: #d4d4d4;
+        font-family: inherit;
+        font-style: italic;
+        font-size: 13px;
+        line-height: 1.55;
+        letter-spacing: 0.005em;
         pointer-events: auto;
       }
       .stage-thought.empty { display: none; }
-      .stage-thought .lbl {
-        display: flex; align-items: center; gap: 6px;
-        font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
-        font-size: 0.56rem; letter-spacing: 0.18em; text-transform: uppercase;
-        color: var(--muted); margin-bottom: 4px;
-      }
-      .stage-thought .lbl::before {
-        content: ''; width: 6px; height: 6px; border-radius: 50%;
-        background: #65d697; flex-shrink: 0;
-        animation: lb-think-pulse 1.7s ease-out infinite;
-      }
-      @keyframes lb-think-pulse {
-        0%   { box-shadow: 0 0 0 0 rgba(101,214,151,0.55); }
-        70%  { box-shadow: 0 0 0 6px rgba(101,214,151,0); }
-        100% { box-shadow: 0 0 0 0 rgba(101,214,151,0); }
-      }
       .stage-thought .txt {
         display: -webkit-box;
         -webkit-line-clamp: 2; -webkit-box-orient: vertical;
         overflow: hidden;
       }
       .stage-thought:hover .txt { -webkit-line-clamp: 12; }
-      .stage-thought.fade .txt { animation: lb-think-fade 0.45s ease; }
-      @keyframes lb-think-fade { from { opacity: 0.12; } to { opacity: 1; } }
+      .stage-thought.fade .txt { animation: lb-think-fade 0.5s ease; }
+      @keyframes lb-think-fade { from { opacity: 0.1; } to { opacity: 1; } }
       @media (max-width: 640px) {
-        .stage-thought { left: 13.5%; max-width: 62%; font-size: 11px; padding: 6px 9px 7px; }
+        .stage-thought { left: 13.5%; max-width: 64%; font-size: 11.5px; padding: 7px 11px 8px; }
       }
 
       /* ---------- GET STARTED ---------- */
@@ -649,6 +635,6 @@
     })();
     </script>
 
-    <script src="script.js?v=16"></script>
+    <script src="script.js?v=17"></script>
 </body>
 </html>

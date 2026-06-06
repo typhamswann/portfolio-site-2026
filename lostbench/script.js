@@ -186,8 +186,7 @@
                 for (let i = sIdx; i >= 0; i--) { if (r.steps[i].thought) { th = r.steps[i].thought; break; } }
                 if (!th) for (let i = 0; i < r.steps.length; i++) { if (r.steps[i].thought) { th = r.steps[i].thought; break; } }
                 if (!els.thought._built) {
-                    els.thought.innerHTML =
-                        '<span class="lbl">thinking</span><span class="txt"></span>';
+                    els.thought.innerHTML = '<span class="txt"></span>';
                     els.thought._built = true;
                     els.thought._txt = null;
                 }
