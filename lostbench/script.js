@@ -35,7 +35,12 @@
         runnerIcon: document.getElementById('runner-icon'),
         runnerName: document.getElementById('runner-name'),
         dist:       document.getElementById('dist-chip'),
+        spinner:    document.getElementById('stage-spinner'),
     };
+
+    // Hide the loading spinner once the first frame has actually painted.
+    function hideSpinner() { if (els.spinner) els.spinner.classList.add('hidden'); }
+    if (els.img) els.img.addEventListener('load', hideSpinner, { once: true });
 
     let rollouts = [];
     let featuredOrder = [];   // indices into `rollouts`, in rotation order
@@ -50,7 +55,7 @@
         .then(r => r.json())
         .then(data => {
             rollouts = data.rollouts || [];
-            if (!rollouts.length) { els.overlay.textContent = 'No rollouts found.'; return; }
+            if (!rollouts.length) { hideSpinner(); els.overlay.textContent = 'No rollouts found.'; return; }
             featuredOrder = rollouts
                 .map((r, i) => r.featured ? i : -1)
                 .filter(i => i >= 0);
@@ -62,7 +67,7 @@
             render();
             startPlay();
         })
-        .catch(err => { console.error(err); els.overlay.textContent = 'Could not load rollouts.'; });
+        .catch(err => { console.error(err); hideSpinner(); els.overlay.textContent = 'Could not load rollouts.'; });
 
     function preload(i) {
         (rollouts[i].steps || []).forEach(s => { const im = new Image(); im.src = 'images/' + s.image; });
