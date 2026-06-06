@@ -166,26 +166,39 @@
         els.count.textContent = `${sIdx} / ${r.steps.length - 1}`;
         els.select.value = rIdx;
 
+        // Runner badge on the frame
+        const slug = r.runner_slug || (r.runner.toLowerCase().includes('claude') ? 'claude'
+                                       : r.runner.toLowerCase().includes('gemini') ? 'gemini'
+                                       : r.runner.toLowerCase().includes('gpt') || r.runner.toLowerCase().includes('codex') ? 'codex'
+                                       : 'human');
+        els.runnerWrap.className = 'runner-badge runner-' + slug;
+        els.runnerIcon.innerHTML = ICONS[slug] || '';
+        els.runnerName.textContent = r.runner;
+
+        const ppLabel = (r.path_progress != null) ? ` · pp ${r.path_progress.toFixed(2)}` : '';
+        els.dist.textContent = `optimal ${Math.round(r.optimal_distance_m)} m · ${r.optimal_steps} hops${ppLabel}`;
+
         // Model "thinking" — recovered from the run transcript, shown as an
         // ambient in-frame caption (the model name already rides in the badge).
-        // Not every run has it (e.g. Gemini's wasn't recorded), so hide the
-        // caption when absent. Thoughts attach to the steps where the model
-        // reasoned; carry the most recent one forward so scrubbing always shows
-        // the active reasoning. We mutate only the text node when it actually
-        // changes — rebuilding innerHTML every frame would restart the pulse and
-        // re-fire the fade on every 450ms tick.
+        // Not every run has it, so hide the caption when absent. Thoughts attach
+        // to the steps where the model reasoned; carry the most recent one
+        // forward so scrubbing always shows the active reasoning. We mutate only
+        // the text node when it actually changes — rebuilding innerHTML every
+        // frame would re-fire the fade on every 450ms tick. Kept LAST in render
+        // so a fault here can never block the image/badge/chips above.
         if (els.thought) {
             if (r._hasThoughts === undefined)
                 r._hasThoughts = r.steps.some(function (s) { return s.thought; });
             if (!r._hasThoughts) {
                 els.thought.className = 'stage-thought empty';
                 els.thought.innerHTML = '';
+                els.thought._built = false;   // span removed — force rebuild next time
                 els.thought._txt = null;
             } else {
                 let th = '';
                 for (let i = sIdx; i >= 0; i--) { if (r.steps[i].thought) { th = r.steps[i].thought; break; } }
                 if (!th) for (let i = 0; i < r.steps.length; i++) { if (r.steps[i].thought) { th = r.steps[i].thought; break; } }
-                if (!els.thought._built) {
+                if (!els.thought._built || !els.thought.querySelector('.txt')) {
                     els.thought.innerHTML = '<span class="txt"></span>';
                     els.thought._built = true;
                     els.thought._txt = null;
@@ -201,18 +214,6 @@
                 }
             }
         }
-
-        // Runner badge on the frame
-        const slug = r.runner_slug || (r.runner.toLowerCase().includes('claude') ? 'claude'
-                                       : r.runner.toLowerCase().includes('gemini') ? 'gemini'
-                                       : r.runner.toLowerCase().includes('gpt') || r.runner.toLowerCase().includes('codex') ? 'codex'
-                                       : 'human');
-        els.runnerWrap.className = 'runner-badge runner-' + slug;
-        els.runnerIcon.innerHTML = ICONS[slug] || '';
-        els.runnerName.textContent = r.runner;
-
-        const ppLabel = (r.path_progress != null) ? ` · pp ${r.path_progress.toFixed(2)}` : '';
-        els.dist.textContent = `optimal ${Math.round(r.optimal_distance_m)} m · ${r.optimal_steps} hops${ppLabel}`;
     }
 
     function escapeHtml(s) { const d = document.createElement('div'); d.textContent = String(s); return d.innerHTML; }
