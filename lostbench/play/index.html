@@ -1,0 +1,317 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>LostBench — Play</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+  :root { --accent:#65d697; }
+  * { box-sizing:border-box; }
+  html,body { margin:0; height:100%; background:#0a0a0a; color:#eee;
+    font-family:system-ui,-apple-system,sans-serif; overflow:hidden; overscroll-behavior:none; }
+  #stage { position:relative; width:100vw; height:100vh; background:#000; overflow:hidden; }
+  #pano, #map { position:absolute; inset:0; width:100%; height:100%; }
+  #pano { cursor:grab; touch-action:none; display:block; }
+  #pano.grabbing { cursor:grabbing; }
+  #map { display:none; }
+  #map.on { display:block; }
+  /* HUD */
+  .hud { position:absolute; z-index:10; pointer-events:none; }
+  #compass { top:12px; left:12px; width:64px; height:64px; }
+  #hudbar { left:12px; bottom:12px; background:rgba(10,10,10,0.72);
+    padding:7px 11px; border-radius:6px; font:12px/1.4 'JetBrains Mono',monospace;
+    letter-spacing:.02em; color:#e5e5e5; }
+  #hudbar b { color:var(--accent); }
+  #crosshair { left:50%; top:50%; width:18px; height:18px; transform:translate(-50%,-50%);
+    opacity:.8; }
+  #crosshair:before,#crosshair:after { content:''; position:absolute; background:#ff3b3b; }
+  #crosshair:before { left:8px; top:0; width:2px; height:18px; }
+  #crosshair:after { top:8px; left:0; height:2px; width:18px; }
+  /* controls */
+  .controls { position:absolute; z-index:11; left:50%; bottom:14px; transform:translateX(-50%);
+    display:flex; gap:8px; }
+  .btn { pointer-events:auto; padding:9px 14px; border-radius:7px; border:1px solid #3a3a3a;
+    background:rgba(20,20,20,.86); color:#eee; font-size:13px; font-weight:500; cursor:pointer;
+    -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); }
+  .btn:hover { background:rgba(40,40,40,.92); border-color:#5a5a5a; }
+  .btn.primary { background:#c4382f; border-color:#c4382f; color:#fff; font-weight:600; }
+  .btn.primary:hover { background:#d4453b; }
+  .btn.go { background:var(--accent); border-color:var(--accent); color:#0a0a0a; font-weight:600; }
+  /* spinner */
+  #spin { position:absolute; z-index:12; left:50%; top:50%; width:34px; height:34px;
+    margin:-17px 0 0 -17px; border-radius:50%; border:3px solid rgba(0,0,0,.4);
+    border-top-color:var(--accent); box-shadow:0 0 0 1px rgba(255,255,255,.15);
+    animation:spin .7s linear infinite; display:none; }
+  @keyframes spin { to { transform:rotate(360deg);} }
+  /* result */
+  #result { position:absolute; inset:0; z-index:20; display:none; align-items:center;
+    justify-content:center; background:rgba(8,8,8,.82); -webkit-backdrop-filter:blur(4px); backdrop-filter:blur(4px); }
+  #result.on { display:flex; }
+  .card { text-align:center; padding:26px 30px; }
+  .card .t { font-size:13px; letter-spacing:.12em; text-transform:uppercase; color:#9a9a9a; }
+  .card .s { font-size:60px; font-weight:200; line-height:1.04; margin-top:8px; color:var(--accent); }
+  .card .sub { font-size:11px; letter-spacing:.1em; text-transform:uppercase; color:#777; }
+  .card .d { font-size:13px; color:#cfcfcf; margin-top:12px; }
+  .card .btn { margin-top:18px; display:inline-block; }
+  #hint { position:absolute; z-index:10; left:50%; top:14px; transform:translateX(-50%);
+    background:rgba(10,10,10,.7); padding:5px 12px; border-radius:20px; font-size:12px; color:#cfcfcf;
+    pointer-events:none; transition:opacity .5s; }
+  .leaflet-container { background:#111; }
+  .pin { width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 4px rgba(0,0,0,.6);}
+  .me { width:14px;height:14px;border-radius:50%;background:#4aa3ff;border:2px solid #fff;}
+</style>
+</head>
+<body>
+<div id="stage">
+  <canvas id="pano"></canvas>
+  <div id="map"></div>
+  <div id="spin"></div>
+  <canvas id="compass" class="hud" width="128" height="128"></canvas>
+  <div id="crosshair" class="hud"></div>
+  <div id="hudbar" class="hud"></div>
+  <div id="hint">Click the road to walk · drag to look · scroll to zoom</div>
+  <div class="controls">
+    <button class="btn" id="mapBtn" type="button">Open map</button>
+    <button class="btn primary" id="guessBtn" type="button">Submit guess</button>
+    <button class="btn" id="resetBtn" type="button">Reset</button>
+  </div>
+  <div id="result"><div class="card">
+    <div class="t" id="rTitle">Arrived</div>
+    <div class="s" id="rScore">0.00</div>
+    <div class="sub">score · 0–1</div>
+    <div class="d" id="rDetail"></div>
+    <button class="btn go" id="againBtn" type="button">Play again</button>
+  </div></div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+"use strict";
+// ---- where the panos live (same-origin by default; set to the panos host in prod) ----
+const PANOS_BASE = (window.LB_PANOS_BASE || "panos");  // e.g. "https://user.github.io/lostbench-panos/panos"
+
+// ---- constants ported from the sim ----
+const MIN_FOV=30, MAX_FOV=110, DEFAULT_FOV=80;
+const CAMERA_HEIGHT_M=2.5, MAX_CLICK_DISTANCE_M=120, MAX_CLICK_HOPS=15;
+const MIN_PITCH_FOR_DISTANCE_DEG=0.3, CLICK_PX_THRESHOLD=8;
+const R=6371000, D2R=Math.PI/180, R2D=180/Math.PI;
+
+// ---- geo helpers (ported) ----
+function haversine(la1,lo1,la2,lo2){const p1=la1*D2R,p2=la2*D2R,dp=(la2-la1)*D2R,dl=(lo2-lo1)*D2R;
+  const a=Math.sin(dp/2)**2+Math.cos(p1)*Math.cos(p2)*Math.sin(dl/2)**2;return 2*R*Math.asin(Math.sqrt(a));}
+function bearing(la1,lo1,la2,lo2){const p1=la1*D2R,p2=la2*D2R,dl=(lo2-lo1)*D2R;
+  const y=Math.sin(dl)*Math.cos(p2),x=Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl);
+  return (Math.atan2(y,x)*R2D+360)%360;}
+function moveAlong(la,lo,brg,dist){const b=brg*D2R,p1=la*D2R,l1=lo*D2R,dr=dist/R;
+  const p2=Math.asin(Math.sin(p1)*Math.cos(dr)+Math.cos(p1)*Math.sin(dr)*Math.cos(b));
+  const l2=l1+Math.atan2(Math.sin(b)*Math.sin(dr)*Math.cos(p1),Math.cos(dr)-Math.sin(p1)*Math.sin(p2));
+  return [p2*R2D,l2*R2D];}
+function angDiff(a,b){return (a-b+540)%360-180;}
+
+// ---- state ----
+let G=null, nodes={}, cur=null, yaw=0, pitch=0, fov=DEFAULT_FOV, initialDist=1, steps=0, submitted=false;
+const $=id=>document.getElementById(id);
+const stage=$("stage");
+
+// ---- three.js ----
+let renderer, scene, camera, sphereMat, texLoader;
+function initGL(){
+  renderer=new THREE.WebGLRenderer({canvas:$("pano"),antialias:true});
+  renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+  scene=new THREE.Scene();
+  camera=new THREE.PerspectiveCamera(70,1,0.1,1000);
+  const geo=new THREE.SphereGeometry(500,64,48);
+  geo.scale(-1,1,1); // view from inside, non-mirrored (text reads correctly)
+  sphereMat=new THREE.MeshBasicMaterial({color:0x808080});
+  scene.add(new THREE.Mesh(geo,sphereMat));
+  texLoader=new THREE.TextureLoader(); texLoader.crossOrigin="anonymous";
+  resize(); window.addEventListener("resize",resize);
+  renderLoop();
+}
+function resize(){
+  const w=stage.clientWidth,h=stage.clientHeight;
+  renderer.setSize(w,h,false);
+  camera.aspect=w/h;
+  // keep horizontal FOV = fov (server convention); derive vertical fov for three.js
+  const hfovR=fov*D2R; const vfovR=2*Math.atan(Math.tan(hfovR/2)/camera.aspect);
+  camera.fov=vfovR*R2D; camera.updateProjectionMatrix();
+}
+let YAW_OFFSET=90;  // rendering calibration (with geo x-flip): yaw=0 shows equirect center, +yaw turns right
+function applyCam(){
+  const off=(window.YOFF!==undefined?window.YOFF:YAW_OFFSET);
+  camera.rotation.order="YXZ";
+  camera.rotation.y=(yaw+off)*D2R;
+  camera.rotation.x=pitch*D2R;
+}
+function renderLoop(){ applyCam(); renderer.render(scene,camera); requestAnimationFrame(renderLoop); }
+
+// ---- pano loading ----
+function panoUrl(img){ const s=(""+(parseInt(img,10)%100)).padStart(2,"0"); return `${PANOS_BASE}/${s}/${img}.jpg`; }
+function loadPano(node, done){
+  $("spin").style.display="block";
+  texLoader.load(panoUrl(node.img), tex=>{
+    if(THREE.SRGBColorSpace!==undefined) tex.colorSpace=THREE.SRGBColorSpace;
+    const old=sphereMat.map; sphereMat.map=tex; sphereMat.color.set(0xffffff); sphereMat.needsUpdate=true;
+    if(old) old.dispose();
+    $("spin").style.display="none"; if(done)done();
+  }, undefined, ()=>{ $("spin").style.display="none"; });
+}
+
+// ---- worldHeading ----
+function worldHeading(){ return ((cur.ca||0)+yaw+360)%360; }
+
+// ---- click → walk (ported _click_walk) ----
+function screenRelAngle(sx){ const w=stage.clientWidth; const focal=(w/2)/Math.tan((fov/2)*D2R);
+  return Math.atan2(sx-w/2, focal)*R2D; }
+function clickWalk(sx,sy){
+  const h=stage.clientHeight;
+  // vertical: server uses dy from horizon (center) with linear vfov approx, ignoring pitch
+  const vfov=fov*h/stage.clientWidth;
+  const dyFrac=(sy-h/2)/h;
+  const pitchBelow=dyFrac*vfov;
+  if(pitchBelow<MIN_PITCH_FOR_DISTANCE_DEG) return; // sky / above horizon
+  const dist=Math.min(CAMERA_HEIGHT_M/Math.tan(pitchBelow*D2R), MAX_CLICK_DISTANCE_M);
+  const relDeg=screenRelAngle(sx);
+  const o=cur;
+  const worldLook=((o.ca||0)+yaw)%360;
+  const tBrg=(worldLook+relDeg+360)%360;
+  const [tlat,tlng]=moveAlong(o.clat,o.clng,tBrg,dist);
+  // Dijkstra by walked distance, bounded
+  const budget=dist*1.5+15;
+  const distMap={}, prev={}; distMap[o.id]=0;
+  const pq=[[0,o.id]];
+  while(pq.length){
+    pq.sort((a,b)=>a[0]-b[0]); const [d,nid]=pq.shift();
+    if(d>(distMap[nid]??1e18)) continue;
+    const nd0=nodes[nid];
+    for(const nbId of (nd0.nbrs||[])){ const nb=nodes[nbId]; if(!nb) continue;
+      const hop=haversine(nd0.clat,nd0.clng,nb.clat,nb.clng); const nd=d+hop;
+      if(nd<=budget && nd<(distMap[nbId]??1e18)){ distMap[nbId]=nd; prev[nbId]=nid; pq.push([nd,nbId]); }
+    }
+  }
+  let best=o.id, bestD=Infinity;
+  for(const pid in distMap){ const n=nodes[pid]; const dd=haversine(n.clat,n.clng,tlat,tlng); if(dd<bestD){bestD=dd;best=pid;} }
+  if(best===o.id) return; // clicked spot is closest to where we are
+  // reconstruct + walk
+  const path=[best]; while(path[path.length-1]!==o.id) path.push(prev[path[path.length-1]]);
+  path.reverse();
+  for(let i=1;i<path.length;i++) snapTo(path[i]);
+  // auto-orient to road axis by travel direction
+  const finalN=nodes[best], prevN=nodes[path[path.length-2]]||o;
+  const walkBrg=bearing(prevN.clat,prevN.clng,finalN.clat,finalN.clng);
+  snapYawToRoad(finalN,walkBrg);
+  afterMove();
+}
+function snapTo(pid){ const nb=nodes[pid]; if(!nb) return;
+  const wl=((cur.ca||0)+yaw)%360; yaw=((wl-(nb.ca||0))%360+360)%360; cur=nb; steps++; }
+function snapYawToRoad(node,travelBrg){ const rf=node.rb||node.ca||0;
+  const diff=Math.abs(angDiff(travelBrg,rf)); const tgt=diff<=90?rf:(rf+180)%360;
+  yaw=((tgt-(node.ca||0))%360+360)%360; }
+
+function afterMove(){ loadPano(cur); updateHUD(); if(mapOn) drawMap(); }
+
+// ---- HUD ----
+function updateHUD(){
+  const d=haversine(cur.clat,cur.clng,G.goal_lat,G.goal_lng);
+  $("hudbar").innerHTML=`step ${steps} &nbsp; <b>${d.toFixed(0)} m</b> to goal`;
+  drawCompass();
+}
+function drawCompass(){
+  const c=$("compass"), x=c.getContext("2d"), s=128; x.clearRect(0,0,s,s);
+  x.save(); x.translate(s/2,s/2);
+  x.beginPath(); x.arc(0,0,52,0,7); x.fillStyle="rgba(10,10,10,.6)"; x.fill();
+  x.strokeStyle="rgba(255,255,255,.5)"; x.lineWidth=2; x.stroke();
+  x.rotate(-worldHeading()*D2R); // rotate so N points to bearing
+  // N marker (red) up, S grey down
+  x.fillStyle="#ff4d4d"; x.beginPath(); x.moveTo(0,-44); x.lineTo(-7,-30); x.lineTo(7,-30); x.closePath(); x.fill();
+  x.fillStyle="#bbb"; x.beginPath(); x.moveTo(0,44); x.lineTo(-7,30); x.lineTo(7,30); x.closePath(); x.fill();
+  x.restore();
+  x.fillStyle="#fff"; x.font="bold 13px system-ui"; x.textAlign="center";
+  x.fillText(Math.round(worldHeading())+"°", s/2, s-6);
+}
+
+// ---- interaction ----
+let drag=false, lastX=0,lastY=0, downX=0,downY=0, moved=0;
+function pointerDown(e){ if(mapOn) return; drag=true; moved=0;
+  lastX=downX=e.clientX; lastY=downY=e.clientY; $("pano").classList.add("grabbing"); }
+function pointerMove(e){ if(!drag) return;
+  const dx=e.clientX-lastX, dy=e.clientY-lastY; lastX=e.clientX; lastY=e.clientY;
+  moved+=Math.hypot(dx,dy);
+  const ppd=stage.clientWidth/fov;        // pixels per degree (Street View pan)
+  yaw=((yaw - dx/ppd)%360+360)%360;       // drag right → look left (server convention)
+  pitch=Math.max(-85,Math.min(85,pitch - dy/ppd));
+  drawCompass();
+}
+function pointerUp(e){ if(!drag) return; drag=false; $("pano").classList.remove("grabbing");
+  if(moved<CLICK_PX_THRESHOLD){ const r=$("pano").getBoundingClientRect();
+    clickWalk(e.clientX-r.left, e.clientY-r.top); } }
+function wheel(e){ if(mapOn) return; e.preventDefault();
+  const step=e.deltaY>0?-1:1; fov=Math.max(MIN_FOV,Math.min(MAX_FOV,fov-step*4)); resize(); }
+
+// ---- map (Leaflet) ----
+let lmap=null, mapOn=false, meMarker=null;
+function ensureMap(){
+  if(lmap) return;
+  lmap=L.map("map",{zoomControl:true,attributionControl:false}).setView([G.start_lat,G.start_lng],16);
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,crossOrigin:true}).addTo(lmap);
+  const bb=G.bbox; if(bb&&bb.length===4){ L.rectangle([[bb[1],bb[0]],[bb[3],bb[2]]],
+    {color:"#4aa3ff",weight:1.5,fill:true,fillOpacity:0.06}).addTo(lmap); }
+  L.marker([G.start_lat,G.start_lng],{icon:L.divIcon({className:"",html:'<div class="pin" style="background:#3ad17a"></div>',iconSize:[14,14]})}).addTo(lmap);
+  L.marker([G.goal_lat,G.goal_lng],{icon:L.divIcon({className:"",html:'<div class="pin" style="background:#e5484d"></div>',iconSize:[14,14]})}).addTo(lmap);
+  L.circle([G.goal_lat,G.goal_lng],{radius:G.goal_radius_m,color:"#e5484d",weight:1,fill:false}).addTo(lmap);
+}
+function drawMap(){ ensureMap();
+  if(meMarker) meMarker.remove();
+  meMarker=L.marker([cur.clat,cur.clng],{icon:L.divIcon({className:"",html:'<div class="me"></div>',iconSize:[14,14]})}).addTo(lmap);
+}
+function toggleMap(){ mapOn=!mapOn; $("map").classList.toggle("on",mapOn);
+  $("mapBtn").textContent=mapOn?"Close map":"Open map";
+  $("crosshair").style.display=mapOn?"none":"block";
+  if(mapOn){ ensureMap(); setTimeout(()=>{lmap.invalidateSize();drawMap();},10); } }
+
+// ---- submit / reset ----
+function submit(){ if(submitted) return; submitted=true;
+  const err=haversine(cur.clat,cur.clng,G.goal_lat,G.goal_lng);
+  const pp=Math.max(0,Math.min(1,1-err/Math.max(1,initialDist)));
+  let title,color;
+  if(pp>=0.995){title="Bullseye";color="#65d697";}
+  else if(pp>=0.9){title="So close";color="#65d697";}
+  else if(pp>=0.6){title="Close";color="#e8c468";}
+  else if(pp>=0.3){title="Off the mark";color="#e8c468";}
+  else {title="Lost";color="#e07a5a";}
+  $("rTitle").textContent=title; $("rScore").textContent=pp.toFixed(2); $("rScore").style.color=color;
+  $("rDetail").textContent=`${Math.round(err)} m from the goal · started ${Math.round(initialDist)} m away`;
+  $("result").classList.add("on");
+}
+function reset(){ submitted=false; $("result").classList.remove("on");
+  if(mapOn) toggleMap();
+  cur=nodes[G.start_pano_id]; steps=0; pitch=0; fov=DEFAULT_FOV;
+  yaw=((G._startYaw)%360+360)%360; resize(); loadPano(cur); updateHUD();
+  const hint=$("hint"); hint.style.opacity="1"; setTimeout(()=>hint.style.opacity="0",4000);
+}
+
+// ---- boot ----
+fetch("graph.json").then(r=>r.json()).then(g=>{
+  G=g; g.nodes.forEach(n=>nodes[n.id]=n);
+  cur=nodes[g.start_pano_id];
+  initialDist=haversine(cur.clat,cur.clng,g.goal_lat,g.goal_lng);
+  // initial yaw: face the road toward the goal-ish (use start node road axis)
+  const toGoal=bearing(cur.clat,cur.clng,g.goal_lat,g.goal_lng);
+  const rf=cur.rb||cur.ca||0; const fwd=Math.abs(angDiff(toGoal,rf))<=90?rf:(rf+180)%360;
+  g._startYaw=((fwd-(cur.ca||0))%360+360)%360;
+  yaw=g._startYaw;
+  initGL(); loadPano(cur); updateHUD();
+  const p=$("pano");
+  p.addEventListener("pointerdown",pointerDown);
+  window.addEventListener("pointermove",pointerMove);
+  window.addEventListener("pointerup",pointerUp);
+  p.addEventListener("wheel",wheel,{passive:false});
+  $("mapBtn").onclick=toggleMap; $("guessBtn").onclick=submit;
+  $("resetBtn").onclick=reset; $("againBtn").onclick=reset;
+  setTimeout(()=>{$("hint").style.opacity="0";},4500);
+}).catch(e=>{ document.body.innerHTML='<p style="padding:20px;color:#e07a5a">Failed to load map: '+e+'</p>'; });
+</script>
+</body>
+</html>
