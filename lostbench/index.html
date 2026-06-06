@@ -79,6 +79,39 @@
       .stage-spinner.hidden { display: none; }
       @keyframes lb-hero-spin { to { transform: rotate(360deg); } }
 
+      /* ---------- INTRO CTA CARD ---------- */
+      .intro-cta {
+        max-width: 720px;
+        margin: 34px 0 12px;
+        padding: 22px 24px 18px;
+        border: 1px solid var(--rule);
+        border-radius: 10px;
+        background:
+          radial-gradient(130% 150% at 0% 0%, rgba(101,214,151,0.08), transparent 55%),
+          var(--bg-2);
+      }
+      .intro-cta .cta-eyebrow {
+        font-size: 0.68rem; letter-spacing: 0.16em; text-transform: uppercase;
+        color: var(--muted); margin: 0 0 14px;
+      }
+      .intro-cta .cta-row {            /* override the hero's centered row */
+        margin: 0; justify-content: flex-start; gap: 10px;
+      }
+      .intro-cta .cta {                /* lift outline buttons for contrast on the card */
+        background: rgba(255,255,255,0.05);
+        border-color: #383838; border-radius: 6px;
+      }
+      .intro-cta .cta:hover { background: rgba(255,255,255,0.11); border-color: #5a5a5a; }
+      .intro-cta .cta.primary { background: var(--fg); border-color: var(--fg); border-radius: 6px; }
+      .intro-cta .cta.primary:hover { background: #d4d4d4; border-color: #d4d4d4; }
+      .intro-cta .contact-note {
+        margin: 18px 0 0; padding-top: 16px;
+        border-top: 1px solid var(--rule); max-width: none;
+      }
+      @media (max-width: 600px) {
+        .intro-cta .cta { flex: 1 1 100%; text-align: center; }
+      }
+
       /* ---------- PLAY EMBED ---------- */
       .play-embed {
         width: 100%;
@@ -259,15 +292,17 @@
                 LostBench is built to assess and improve spatial-reasoning capabilities in frontier models by measuring performance on diverse, long-horizon spatial reasoning tasks. Each task has been completed by a human on the first attempt. The benchmark is far from saturated &mdash; the scores below are on the <em>easiest</em> tasks, in the <em>easiest</em> setting, at the <em>shortest</em> horizons. Powering the benchmark are scalable data pipelines that integrate open-source data and allow trivial creation of tasks with orders-of-magnitude longer time horizons. It&apos;s available as a Harbor-compatible repository at <a href="https://github.com/typhamswann/lostbench"><code>typhamswann/lostbench</code></a>.
             </p>
 
-            <div class="cta-row">
-                <a class="cta primary" href="https://github.com/typhamswann/lostbench">Run the Public Benchmark</a>
-                <a class="cta" href="#play">Play the Benchmark</a>
-                <a class="cta" href="#intro">Read the Blog</a>
+            <div class="intro-cta">
+                <p class="cta-eyebrow">Get started</p>
+                <div class="cta-row">
+                    <a class="cta primary" href="https://github.com/typhamswann/lostbench">Run the Public Benchmark</a>
+                    <a class="cta" href="#play">Play the Benchmark</a>
+                    <a class="cta" href="#intro">Read the Blog</a>
+                </div>
+                <p class="contact-note">
+                    Contact <a href="mailto:phamswannty@gmail.com">phamswannty@gmail.com</a> for the full RL environment &mdash; <strong>6,324 real-world Street-View tasks</strong>, many with time horizons and difficulty orders of magnitude beyond the public benchmark.
+                </p>
             </div>
-
-            <p class="contact-note">
-                Contact <a href="mailto:phamswannty@gmail.com">phamswannty@gmail.com</a> for the full RL environment &mdash; <strong>6,324 real-world Street-View tasks</strong>, many with time horizons and difficulty orders of magnitude beyond the public benchmark.
-            </p>
         </section>
 
         <section id="leaderboard" class="prose">
