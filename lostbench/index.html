@@ -431,56 +431,19 @@
         </section>
 
         <section id="rigor" class="prose">
-            <h2>Benchmark rigor &amp; the noise floor</h2>
+            <h2>The noise floor</h2>
             <p>
-                A single-scaffold mean is one observation drawn from a distribution whose width the benchmark never measured. As reasoning-budget tuning, tool-shape post-training, content-policy filtering and provider-route fragmentation stack up, that width &mdash; the <em>noise floor</em> &mdash; is approaching the signal. LostBench therefore reports the floor, not just the score. Every diagnostic below is <strong>deterministic and judge-free</strong>: the verifier is a closed-form haversine, so there is no LLM grader to bias, drift on replay, or self-enhance. The full rationale is in <a href="https://github.com/typhamswann/lostbench/blob/main/METHODOLOGY.md"><code>METHODOLOGY.md</code></a>.
+                A benchmark is a measurement instrument, and in 2026 the hardest part of measuring an agent is no longer the model &mdash; it&apos;s everything wrapped around it. The same weights score differently depending on the scaffold they run in, the harness they were post-trained against, the provider route that serves them, and how much reasoning budget they&apos;re allowed to spend. Those choices stack into a <em>noise floor</em>: a band of variance that has nothing to do with capability. When the floor is wide, a headline number says more about the harness than the model, and a benchmark that never measures its own floor is quietly reporting a single draw from a distribution whose width it never checked. Much of the work of making LostBench trustworthy is keeping that floor low and being honest about where it isn&apos;t.
             </p>
-            <p class="rigor-note">
-                The numbers below come from a deliberately small <strong>variance study</strong> &mdash; a 5-task subset (3 easy / 1 medium / 1 hard), an 80-turn cap, Qwen3.7-Plus and GLM-5V-Turbo served via OpenRouter &mdash; run to <em>demonstrate every diagnostic on real rollouts</em> rather than to rank the field. They are a separate, smaller run from the headline leaderboard above; the full multi-seed / multi-route / strict-mode sweep is gated behind funding (see <code>METHODOLOGY.md</code>).
-            </p>
-
-            <h3>Raw vs. engaged-subset &mdash; the harness <em>is</em> the product</h3>
             <p>
-                Open-weight models routinely emit a turn with empty content and no tool call. A naive harness reads that as an intentional stop and scores it <code>0.000</code>; the one-line fix (reprompt instead of scoring the empty memo) can move more reward than a model generation does. LostBench classifies every un-parseable turn (<code>empty_response</code> / <code>parse_fail</code> / <code>refusal</code>), soft-reprompts, and reports two means: the <strong>raw</strong> mean over all rollouts and the <strong>engaged-subset</strong> mean that excludes only rollouts which never produced a parseable action. The gap is the size of the harness artifact.
+                Some of it is settled by design. Scoring is a closed-form distance, not a model grading another model, so the failures that haunt judge-based evals &mdash; a grader favoring its own family, scores that drift when you replay them, rubric ambiguity &mdash; never enter the picture. The world is deterministic, and the goal is shown only as a pin on the map, never written as a coordinate the agent can read: across all 57 tasks the target location appears nowhere in the prompt, so a model can&apos;t skip the navigation by recognizing a memorized answer. And because the worlds are stitched from live Mapillary and OpenStreetMap data, the task pool stays refreshable &mdash; realism here is a street a person actually walked, not a scenario an annotator was asked to invent.
             </p>
-            <figure id="chart-engaged" class="chart" aria-label="Raw vs engaged-subset mean by model"></figure>
-            <p class="caption" id="cap-engaged"></p>
-
-            <h3>Distribution &amp; bimodality &mdash; the mean hides the shape</h3>
             <p>
-                Instability does not look like a wide bell curve; it looks like two spikes &mdash; a pile near 0 and a pile near 1 &mdash; with the mean landing in the empty middle, describing no actual rollout. Per model we report median, spread, <code>%&lt;0.30</code>, <code>%&gt;0.70</code> and a bimodality flag.
+                What design doesn&apos;t settle, I measured. I re-ran a small slice of the benchmark many times over, and once more after a single change to the scaffold, to separate how much of a score is the model from how much is the setup. Three things stood out. The same model gives different answers to the same task: run repeatedly against an identical world, Qwen3.7-Plus reaches a consistent outcome &mdash; arrived or not &mdash; on only <strong>40%</strong> of tasks and GLM-5V-Turbo on <strong>60%</strong>, succeeding on some attempts and failing on others for the rest. The averages also hide their own shape &mdash; GLM&apos;s mean of <strong>0.20</strong> is bimodal underneath, most rollouts near zero and a fifth near solved, so the mean describes no rollout that actually happened. And most telling, when I shrank the observation window the agent carries from four frames to one &mdash; one scaffolding knob, the model untouched &mdash; per-task scores moved by as much as <strong>0.32</strong>, with four of five tasks shifting by more than five points. A single setup choice was worth an entire tier of apparent capability. I also built the handling for the case where a model returns an empty turn and a naive harness scores it zero outright; these two models never tripped it, so their raw and reprompted numbers agree &mdash; but the instrument is ready for the ones that don&apos;t.
             </p>
-            <figure id="chart-dist" class="chart" aria-label="Path-progress distribution by model"></figure>
-            <p class="caption" id="cap-dist"></p>
-
-            <h3>Cross-rollout determinism</h3>
             <p>
-                With N seeds per task, does the model give the same answer to the same prompt? Because the sim has no RNG, all variance here is model sampling &mdash; a low determinism score is a property of the model, not the environment.
+                None of this is exotic. It&apos;s the difference between a number and a measurement, and it&apos;s the bar I think a benchmark has to clear before its leaderboard means anything. The reproducible details &mdash; full per-model distributions, the per-task scaffold spreads, and the sandbox and provider-route manifest a buyer would need to re-run all of it &mdash; live alongside the benchmark in <a href="https://github.com/typhamswann/lostbench/blob/main/METHODOLOGY.md"><code>METHODOLOGY.md</code></a>.
             </p>
-            <div id="det-summary" class="metric-callout"></div>
-
-            <h3>Surface-stratification &mdash; one number is one surface</h3>
-            <p>
-                The same model under two scaffold configurations (here the observation-truncation window) is two measurements. We report the per-task spread across scaffolds and flag any task whose spread exceeds <strong>5pp</strong> as scaffolding-sensitive; a headline must then declare which surface it is calibrated against.
-            </p>
-            <div id="strat-table"></div>
-
-            <h3>Failure-class taxonomy</h3>
-            <p>
-                An aggregate mean says a model is worse; it doesn&apos;t say <em>how</em>. Every rollout is classified into one primary failure class by deterministic rules over its logged trajectory &mdash; separating <em>the harness never let the model act</em> (<code>terminator_harness</code>) from <em>the model never localized the goal</em> (<code>never_opened_map</code>) from <em>the model can&apos;t ground the viewport</em> (<code>noop_thrash</code>).
-            </p>
-            <figure id="chart-taxonomy" class="chart" aria-label="Failure-class taxonomy by model"></figure>
-            <p class="caption" id="cap-taxonomy"></p>
-            <p id="rigor-status" class="rigor-note"></p>
-
-            <h3>Contamination &amp; memorization-shortcut probe</h3>
-            <div id="contam-result" class="metric-callout"></div>
-
-            <h3>Reproducibility manifest</h3>
-            <p>
-                The exact contract a buyer needs to re-run LostBench against the same scaffolding: image digests, egress, tool-approval, isolation, turn cap, observation-truncation policy &mdash; plus the provider route served and a harness-declaration check against the accepted production harnesses.
-            </p>
-            <div id="manifest-table"></div>
         </section>
 
         <section class="prose">
@@ -511,6 +474,9 @@
             <h2>Future Work</h2>
             <p>
                 This project was significantly budget-constrained, serving as a barrier to running the full 59 tasks, running the benchmark in strict mode, and running it with higher turn limits (or without any cap). The full RL environment contains many more diverse tasks with higher difficulty and longer time horizons. The data pipeline allows trivially creating tasks with orders-of-magnitude longer time horizons. As frontier models progress, it will be interesting to track their progression on benchmark performance.
+            </p>
+            <p>
+                The variance study also maps what a full-coverage run would take, most of it a question of compute rather than method. The honest version of the scaffold test runs every model under at least two harnesses, one of them the harness it was actually post-trained against &mdash; Claude Code for Anthropic, Codex for OpenAI, the Gemini CLI for Google &mdash; because a model tuned to its own tool surface and then scored under a foreign one is being measured on the gap, not the capability. The serving route matters for the same reason: identical weights behind Bedrock or Vertex meet different content filters and tool schemas than served direct, so a complete run reports a provider-route matrix rather than a single endpoint. The rest is scale &mdash; every one of the 57 tasks repeated enough times for the distributions to settle, strict mode across the full set instead of spot checks, and a task pool refreshed continuously from the live pipeline so the benchmark stays ahead of contamination rather than freezing into it. I demonstrated each of these on a handful of tasks; running them across the whole field is the part the budget gates.
             </p>
             <p>
                 To fund a full assessment, access the full RL environment with thousands of long-horizon tasks, or hire me, contact <a href="mailto:phamswannty@gmail.com">phamswannty@gmail.com</a>.
@@ -685,191 +651,6 @@
       } else {
         [pp, tn].forEach(function(c){ if (c) c.classList.add('shown'); });
       }
-    })();
-    </script>
-
-    <!-- Rigor section: fetches the real manifest / contamination / metrics JSON
-         and renders the noise-floor diagnostics. Degrades gracefully when the
-         variance-study metrics.json has not been produced yet. -->
-    <script>
-    (function () {
-      'use strict';
-      function esc(s){ var d=document.createElement('div'); d.textContent=String(s==null?'':s); return d.innerHTML; }
-      function el(id){ return document.getElementById(id); }
-      function getJSON(url){ return fetch(url, {cache:'no-store'}).then(function(r){ return r.ok ? r.json() : null; }).catch(function(){ return null; }); }
-      var PALETTE = ['#d97757','#10a37f','#4285f4','#646b7a','#8a6fb0','#c2410c'];
-      var TAX_COLORS = {
-        solved:'#4a9d6b', near_miss:'#8fb573', wrong_heading_stuck:'#c9a227',
-        no_recovery:'#d9883f', noop_thrash:'#d96b4a', premature_submit:'#b85c8a',
-        out_of_turns:'#9a6fb0', never_opened_map:'#6b7fb8',
-        terminator_harness:'#c0392b', refusal:'#7d3c98', other:'#888'
-      };
-
-      // ---- raw vs engaged grouped bars ----
-      function renderEngaged(m){
-        var box = el('chart-engaged'); if(!box) return;
-        var rows = m.leaderboard || [];
-        if(!rows.length){ box.style.display='none'; return; }
-        var html = '<div class="rg-bars">';
-        rows.forEach(function(r){
-          var raw = Math.round((r.raw_mean||0)*100), eng = Math.round((r.engaged_mean||0)*100);
-          html += '<div class="rg-row"><div class="rg-name">'+esc(r.model)+
-            (r.bimodal?' <span class="rg-flag">bimodal</span>':'')+'</div>'+
-            '<div class="rg-pair">'+
-              '<div class="rg-bar"><span style="width:'+raw+'%;background:#9aa3b0"></span><label>raw '+(r.raw_mean||0).toFixed(3)+'</label></div>'+
-              '<div class="rg-bar"><span style="width:'+eng+'%;background:#d97757"></span><label>engaged '+(r.engaged_mean||0).toFixed(3)+
-              (r.harness_delta>0?' (Δ +'+r.harness_delta.toFixed(3)+')':'')+'</label></div>'+
-            '</div></div>';
-        });
-        html += '</div>';
-        box.innerHTML = html; box.classList.add('shown');
-        var cap = el('cap-engaged');
-        var maxd = rows.reduce(function(a,r){ return Math.max(a, r.harness_delta||0); }, 0);
-        if(cap) cap.textContent = maxd>0
-          ? 'Engaged-subset mean excludes rollouts that died in the empty-response/parse death-spiral. Largest harness delta here: +'+maxd.toFixed(3)+' reward — a pure scaffolding fix, not capability.'
-          : 'No terminator failures in this sample (raw = engaged).';
-      }
-
-      // ---- distribution strip ----
-      function renderDist(m){
-        var box = el('chart-dist'); if(!box) return;
-        var models = m.models||{}; var names = Object.keys(models);
-        if(!names.length){ box.style.display='none'; return; }
-        var html = '<table class="rg-table"><thead><tr><th>model</th><th>median</th><th>std</th><th>&lt;0.30</th><th>&gt;0.70</th><th>shape</th></tr></thead><tbody>';
-        names.forEach(function(n){
-          var d = (models[n].distribution)||{};
-          html += '<tr><td>'+esc(n)+'</td><td>'+(d.median!=null?d.median.toFixed(3):'—')+
-            '</td><td>'+(d.std!=null?d.std.toFixed(3):'—')+
-            '</td><td>'+(d['pct_below_0.30']!=null?Math.round(d['pct_below_0.30']*100)+'%':'—')+
-            '</td><td>'+(d['pct_above_0.70']!=null?Math.round(d['pct_above_0.70']*100)+'%':'—')+
-            '</td><td>'+(d.bimodal?'<span class="rg-flag">bimodal</span>':'unimodal')+'</td></tr>';
-        });
-        html += '</tbody></table>';
-        box.innerHTML = html; box.classList.add('shown');
-      }
-
-      // ---- determinism callout ----
-      function renderDet(m){
-        var box = el('det-summary'); if(!box) return;
-        var models = m.models||{}; var any=false; var html='<ul class="rg-list">';
-        Object.keys(models).forEach(function(n){
-          var det = models[n].determinism||{};
-          if(det.n_tasks_multi_seed){ any=true;
-            html += '<li><strong>'+esc(n)+'</strong>: '+Math.round(det.pct_binary_deterministic*100)+
-              '% of '+det.n_tasks_multi_seed+' multi-seed tasks agree on reached/not; within-task std '+
-              det.mean_within_task_std.toFixed(3)+'</li>';
-          }
-        });
-        html += '</ul>';
-        if(!any){ box.innerHTML = '<p class="rigor-note">Determinism needs &gt;1 seed/task — run <code>wb run --rollouts-per-task 5</code> to populate.</p>'; return; }
-        box.innerHTML = html;
-      }
-
-      // ---- stratification table ----
-      function renderStrat(m){
-        var box = el('strat-table'); if(!box) return;
-        var models = m.models||{}; var html=''; var any=false;
-        Object.keys(models).forEach(function(n){
-          var s = models[n].surface_stratification;
-          if(!s || !s.rows || !s.rows.length) return; any=true;
-          html += '<p class="rg-subhead">'+esc(n)+' — scaffolds: '+esc((s.scaffolds||[]).join(', '))+
-            ' · <strong>'+s['n_flagged_>5pp']+'</strong> of '+s.n_tasks_compared+' tasks scaffolding-sensitive (max spread '+s.max_spread.toFixed(3)+')</p>';
-          html += '<table class="rg-table"><thead><tr><th>task</th>'+
-            (s.scaffolds||[]).map(function(c){return '<th>'+esc(c)+'</th>';}).join('')+
-            '<th>spread</th></tr></thead><tbody>';
-          s.rows.forEach(function(r){
-            html += '<tr'+(r.scaffolding_sensitive?' class="rg-warn"':'')+'><td>'+esc(r.task_id)+'</td>'+
-              (s.scaffolds||[]).map(function(c){ var v=r.by_scaffold[c]; return '<td>'+(v!=null?v.toFixed(3):'—')+'</td>'; }).join('')+
-              '<td>'+r.spread.toFixed(3)+(r.scaffolding_sensitive?' ⚑':'')+'</td></tr>';
-          });
-          html += '</tbody></table>';
-        });
-        if(!any){ box.innerHTML = '<p class="rigor-note">Surface-stratification needs the same model under ≥2 scaffolds — run two <code>wb run</code>s with different <code>--image-history</code> / <code>--scaffold</code>.</p>'; return; }
-        box.innerHTML = html;
-      }
-
-      // ---- failure taxonomy stacked bars ----
-      function renderTaxonomy(m){
-        var box = el('chart-taxonomy'); if(!box) return;
-        var models = m.models||{}; var names=Object.keys(models);
-        if(!names.length){ box.style.display='none'; return; }
-        var classes={};
-        var html='<div class="rg-bars">';
-        names.forEach(function(n){
-          var tax = models[n].failure_taxonomy||{};
-          var total=Object.keys(tax).reduce(function(a,k){return a+tax[k];},0)||1;
-          html += '<div class="rg-row"><div class="rg-name">'+esc(n)+'</div><div class="rg-stack">';
-          Object.keys(tax).forEach(function(k){
-            classes[k]=true;
-            html += '<span title="'+esc(k)+': '+tax[k]+'" style="width:'+(tax[k]/total*100)+'%;background:'+(TAX_COLORS[k]||'#888')+'"></span>';
-          });
-          html += '</div></div>';
-        });
-        html += '</div>';
-        var legend='<div class="rg-legend">'+Object.keys(classes).map(function(k){
-          return '<span><i style="background:'+(TAX_COLORS[k]||'#888')+'"></i>'+esc(k)+'</span>';
-        }).join('')+'</div>';
-        box.innerHTML = html+legend; box.classList.add('shown');
-      }
-
-      // ---- contamination ----
-      function renderContam(c){
-        var box = el('contam-result'); if(!box) return;
-        if(!c){ box.innerHTML='<p class="rigor-note">Run <code>scripts/contamination_probe.py -p tasks</code>.</p>'; return; }
-        var p1 = c.part1_static_ngram_scan||{};
-        var pass = (p1.n_with_goal_coord_in_prompt===0);
-        var html = '<div class="rg-stat '+(pass?'ok':'warn')+'"><span class="rg-stat-big">'+
-          (p1.n_tasks - (p1.n_with_goal_coord_in_prompt||0))+'/'+p1.n_tasks+'</span>'+
-          '<span class="rg-stat-label">tasks with NO goal coordinate in any agent-visible text — a literal n-gram match to a memorized answer is impossible. '+
-          (pass?'PASS':'INSPECT')+'</span></div>';
-        if(c.part2_blind_geo_probe && c.part2_blind_geo_probe.median_blind_error_m!=null){
-          var p2=c.part2_blind_geo_probe;
-          html += '<p class="rg-subhead">Blind-geo probe ('+esc(p2.model)+'): median blind guess error '+
-            p2.median_blind_error_m+' m vs 25 m goal radius — '+esc(p2.verdict)+'</p>';
-        }
-        box.innerHTML = html;
-      }
-
-      // ---- manifest ----
-      function renderManifest(mf){
-        var box = el('manifest-table'); if(!box) return;
-        if(!mf){ box.innerHTML='<p class="rigor-note">Run <code>wb manifest</code>.</p>'; return; }
-        var dig = mf.docker_image_digest||{};
-        var hd = mf.harness_declaration||{};
-        var rows = [
-          ['docker image (base / task)', esc(dig.base||'')+'<br>'+esc(dig.task||'')],
-          ['network egress', esc(mf.network_egress_policy)],
-          ['tool approval', esc(mf.tool_approval_policy)],
-          ['isolation', esc(mf.isolation_granularity)],
-          ['max turns / rollout', esc(mf.max_turns_per_rollout)],
-          ['observation truncation', esc(mf.observation_truncation_policy)],
-          ['provider route', esc(mf.provider_route)+(hd.route_recognized?' ✓':' ⚑')],
-          ['harness', esc(hd.harness)+(hd.harness_recognized?' ✓':' ⚑')],
-          ['verifier', esc((mf.scoring||{}).verifier)]
-        ];
-        box.innerHTML = '<table class="rg-table rg-manifest"><tbody>'+rows.map(function(r){
-          return '<tr><th>'+r[0]+'</th><td>'+r[1]+'</td></tr>';
-        }).join('')+'</tbody></table>';
-      }
-
-      Promise.all([getJSON('metrics.json'), getJSON('contamination_report.json'), getJSON('manifest.json')])
-        .then(function(res){
-          var m = res[0], contam = res[1], mf = res[2];
-          renderContam(contam); renderManifest(mf);
-          var status = el('rigor-status');
-          if(m){
-            renderEngaged(m); renderDist(m); renderDet(m); renderStrat(m); renderTaxonomy(m);
-            if(status) status.textContent = 'Diagnostics computed from '+m.n_rollouts_total+
-              ' rollouts across '+m.n_models+' model(s). Deterministic, no LLM judge.';
-          } else {
-            ['chart-engaged','chart-dist','chart-taxonomy'].forEach(function(id){ var e=el(id); if(e) e.style.display='none'; });
-            renderDet({}); renderStrat({});
-            if(status) status.innerHTML = 'The variance-study <code>metrics.json</code> has not been generated yet. '+
-              'Produce it with: <code>wb run -p tasks --rollouts-per-task 5 …</code> then '+
-              '<code>python scripts/analyze.py eval_out/*.json -o metrics.json</code>. '+
-              'The manifest and contamination results above are live.';
-          }
-        });
     })();
     </script>
 
