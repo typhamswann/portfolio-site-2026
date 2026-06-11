@@ -316,6 +316,27 @@
         opacity: 0.5;
         background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.35) 0 3px, transparent 3px 6px);
       }
+      /* reproducibility table + task lists */
+      .table-wrap { max-width: 720px; overflow-x: auto; margin: 14px 0 10px; }
+      table.repro {
+        width: 100%; border-collapse: collapse;
+        font-family: 'Inter', -apple-system, sans-serif; font-size: 0.8rem;
+      }
+      table.repro th, table.repro td {
+        text-align: left; padding: 8px 14px 8px 0;
+        border-bottom: 1px solid #1d1d1d; white-space: nowrap;
+      }
+      table.repro th {
+        font-size: 0.62rem; letter-spacing: 0.05em; text-transform: uppercase;
+        color: #8a8a8a; font-weight: 500;
+      }
+      table.repro td { color: #cfcfcf; }
+      .repro-list { font-size: 0.84rem; line-height: 1.7; }
+      .repro-list code {
+        font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+        color: #b8b8b8; background: rgba(255,255,255,0.04);
+        padding: 1px 5px; border-radius: 3px;
+      }
       .chart-axis {
         grid-column: 2;
         display: flex;
@@ -471,33 +492,67 @@
 
             <h3>Harness Selection &amp; Cost Limitations</h3>
             <p>
-                The benchmark is structured as a Harbor-compatible repository where each model assessed used a simple custom completion loop. The Claude Opus 4.8 and GPT-5.5 runs, however, were conducted via the Claude Code and Codex harnesses. This was driven by cost limitations and likely impacted performance, though their harnesses enabled them no exclusive information access that would contaminate the task.
+                The benchmark is structured as a Harbor-compatible repository with a provided simple custom completion loop harness. The benchmark results, however, tested models on their own native harnesses. This was done for fair testing following the analysis provided in the Robustness section.
             </p>
             <p>
-                The scores above represent performance on only twelve select tasks with difficulty breakdown <strong>4 easy / 4 medium / 4 hard</strong>, each run with 3 seeds. This was due to cost constraints; a run on the entire 57 tasks would provide a stronger baseline and tighter confidence intervals. Additionally, runs were only conducted in default mode, not strict. Small-scale tests indicate that frontier models remain incapable of completing all but the simplest tasks in strict mode. On all runs, turn budgets were set at <strong>3 &times; the optimal (shortest-path) route length</strong> &mdash; a budget the human tester completed every task within. Longer exploration would likely have increased performance, but cost constraints again proved a limiting factor.
+                The scores above represent performance on twelve select tasks with difficulty breakdown <strong>4 easy / 4 medium / 4 hard</strong>. This was due to cost constraints; a run on the entire 57 tasks would provide a stronger baseline. Additionally, runs were only conducted in default mode, not strict. Small-scale tests indicate that frontier models remain incapable of completing all but the simplest tasks in strict mode. On all runs, turn budgets were set at <strong>3 &times; the turns the human tester took to complete the task</strong>. Longer exploration may have increased performance, but cost constraints again proved a limiting factor.
             </p>
         </section>
 
         <section id="rigor" class="prose">
             <h2>Robustness</h2>
+
+            <h3>Cross-Harness Testing</h3>
             <p>
-                A benchmark is a measurement instrument, and in 2026 the hardest part of measuring an agent is no longer the model &mdash; it&apos;s everything wrapped around it. The same weights score differently depending on the scaffold they run in, the harness they were post-trained against, the provider route that serves them, and how much reasoning budget they&apos;re allowed to spend. Those choices stack into a <em>noise floor</em>: a band of variance that has nothing to do with capability. When the floor is wide, a headline number says more about the harness than the model, and a benchmark that never measures its own floor is quietly reporting a single draw from a distribution whose width it never checked. Much of the work of making LostBench trustworthy is keeping that floor low and being honest about where it isn&apos;t.
+                Recent benchmark results have indicated that the harnesses used in assessment significantly impact model performance. As such, each model was tested on the simple completion loop harness created for the tasks and its native harness across three randomly selected tasks, two times each harness.
+            </p>
+            <figure id="chart-xh" class="chart" aria-label="Native harness versus the custom completion loop, by model"></figure>
+            <p class="caption">Mean path-progress for each model on its native harness versus the custom completion loop, over the three-task cross-harness slice. Solid bar = native harness; hatched bar = custom loop.</p>
+            <p>
+                The results indicate that for LostBench tasks, frontier models are quite robust across harnesses. In contrast, the open source models appear to be quite fragile, with performance degrading substantially outside of their recommended scaffolding. Given the results of this analysis, models were run in the production benchmark within their own native harnesses. GLM was included in this analysis but ultimately struck from the full benchmarking due to endpoint instability.
+            </p>
+
+            <h3>Reasoning Level</h3>
+            <p>
+                Models were also tested at different reasoning levels twice for each harness across the same three tasks.
+            </p>
+            <figure id="chart-reason" class="chart" aria-label="Low versus high reasoning effort, by model"></figure>
+            <p class="caption">Mean path-progress at low versus high reasoning effort on the native harness, over the same three-task slice. Solid bar = low effort; hatched bar = high effort.</p>
+            <p>
+                Reasoning levels did not appear to have a significant impact on performance in these tasks. While the differences were very minimal and below the noise threshold, all models did report higher scores on their native harnesses with mixed results on the default loop, potentially indicating that benefits of higher reasoning are tied to the harness the model was trained on. Further exploration on this question would be interesting.
+            </p>
+
+            <h3>Contamination Testing</h3>
+            <p>
+                Models were tested for contamination via a simple task where models were shown panoramas from different tasks and asked to identify the exact coordinates.
             </p>
             <p>
-                Some of it is settled by design. Scoring is a closed-form distance, not a model grading another model, so the failures that haunt judge-based evals &mdash; a grader favoring its own family, scores that drift when you replay them, rubric ambiguity &mdash; never enter the picture. The world is deterministic, and the goal is shown only as a pin on the map, never written as a coordinate the agent can read: across all 57 tasks the target location appears nowhere in the prompt, so a model can&apos;t skip the navigation by recognizing a memorized answer. And because the worlds are stitched from live Mapillary and OpenStreetMap data, the task pool stays refreshable &mdash; realism here is a street a person actually walked, not a scenario an annotator was asked to invent.
+                Results support other benchmarks finding that frontier models are adept at identifying general locations from photos. However, the imprecision of the guesses offers some evidence that the models were less likely to be trained on the exact panorama and location data found in the benchmark. More importantly, the task is fairly robust to contamination as models are required to navigate to reach a final location instead of simply submitting a guess, assessing spatial reasoning capabilities even if they&apos;ve seen locations before.
             </p>
-            <h3>Cross-harness: the scaffold is part of the score</h3>
-            <figure id="chart-xh" class="chart" aria-label="Native CLI versus my custom harness, same model and route"></figure>
-            <p class="caption">Same weights, same provider route, only the harness swapped, over a fixed easy / medium / hard slice. Solid bar = the model&apos;s production agentic CLI; hatched bar = my generic image&rarr;action loop. Frontier models barely move (&Delta; &le; 0.03); the open models swing 2&ndash;4&times;.</p>
+
+            <h3>Reproducibility</h3>
             <p>
-                The sharpest source of noise isn&apos;t randomness &mdash; it&apos;s the scaffold. Holding the model and its serving route fixed and swapping only the harness, every frontier model lands within <strong>0.03</strong> of itself whether it runs in its own production CLI or my plain completion loop: a strong model drives a generic loop about as well as its bespoke one. The open models are a different story. The native Qwen Code CLI scored Qwen3.7-Plus at <strong>0.39</strong> and GLM-5V-Turbo at <strong>0.48</strong>; dropped into my generic loop, the same weights fell to <strong>0.11</strong> and <strong>0.24</strong> &mdash; a 2&ndash;4&times; swing from the harness alone. A large share of what an open-model leaderboard reads as &ldquo;capability&rdquo; is really harness fit, which is why a number from one harness can never be set against a number from another. (The native CLIs are coding tools, so part of that gap is how well each model drives an unfamiliar image-and-tool loop rather than navigation skill as such.)
+                Every run &mdash; model, harness, provider route, reasoning level, and temperature &mdash; is recorded below, with the full per-rollout trajectory, transcript, and config captured in the run manifest.
             </p>
-            <p>
-                Determinism is the other half of the floor. I re-ran a small slice of the benchmark many times over, and once more after a single change to the scaffold, to separate how much of a score is the model from how much is the setup. Three things stood out. The same model gives different answers to the same task: run repeatedly against an identical world, Qwen3.7-Plus reaches a consistent outcome &mdash; arrived or not &mdash; on only <strong>40%</strong> of tasks and GLM-5V-Turbo on <strong>60%</strong>, succeeding on some attempts and failing on others for the rest. The averages also hide their own shape &mdash; GLM&apos;s mean of <strong>0.20</strong> is bimodal underneath, most rollouts near zero and a fifth near solved, so the mean describes no rollout that actually happened. And most telling, when I shrank the observation window the agent carries from four frames to one &mdash; one scaffolding knob, the model untouched &mdash; per-task scores moved by as much as <strong>0.32</strong>, with four of five tasks shifting by more than five points. A single setup choice was worth an entire tier of apparent capability. I also built the handling for the case where a model returns an empty turn and a naive harness scores it zero outright; these two models never tripped it, so their raw and reprompted numbers agree &mdash; but the instrument is ready for the ones that don&apos;t.
-            </p>
-            <p>
-                None of this is exotic. It&apos;s the difference between a number and a measurement, and it&apos;s the bar I think a benchmark has to clear before its leaderboard means anything. The reproducible details &mdash; full per-model distributions, the per-task scaffold spreads, and the sandbox and provider-route manifest a buyer would need to re-run all of it &mdash; live alongside the benchmark in <a href="https://github.com/typhamswann/lostbench/blob/main/METHODOLOGY.md"><code>METHODOLOGY.md</code></a>.
-            </p>
+            <div class="table-wrap">
+            <table class="repro">
+                <thead><tr><th>Model</th><th>Harness</th><th>Provider route</th><th>Reasoning</th><th>Temperature</th></tr></thead>
+                <tbody>
+                    <tr><td>Claude Opus 4.8</td><td>Claude Code</td><td>Anthropic</td><td>default</td><td>default</td></tr>
+                    <tr><td>Claude Opus 4.7</td><td>Claude Code</td><td>Anthropic</td><td>default</td><td>default</td></tr>
+                    <tr><td>Claude Sonnet 4.6</td><td>Claude Code</td><td>Anthropic</td><td>default</td><td>default</td></tr>
+                    <tr><td>GPT-5.5</td><td>Codex</td><td>OpenAI direct</td><td>default</td><td>default</td></tr>
+                    <tr><td>Gemini 3.1 Pro</td><td>Antigravity</td><td>Google (Gemini API)</td><td>default</td><td>default</td></tr>
+                    <tr><td>Gemini 3.5 Flash</td><td>Antigravity</td><td>Google (Gemini API)</td><td>default</td><td>default</td></tr>
+                    <tr><td>Qwen3.7-Plus</td><td>Qwen Code</td><td>OpenRouter</td><td>default</td><td>default</td></tr>
+                </tbody>
+            </table>
+            </div>
+            <p class="caption">Production benchmark: each model run on its native harness, three seeds per task. The cross-harness and reasoning studies additionally routed Claude via AWS Bedrock and the open models via OpenRouter for the custom-loop arm.</p>
+            <p class="repro-list"><strong>Full Benchmark Tasks Assessed (12):</strong> <code>cand_0046_national_easy_02</code>, <code>cand_0060_national2_easy_01</code>, <code>cand_0118_national2_easy_02</code>, <code>cand_0233_national_easy_02</code>, <code>cand_0030_national2_medium_02</code>, <code>cand_0071_national_medium_01</code>, <code>cand_0182_national2_medium_01</code>, <code>cand_0279_national2_medium_02</code>, <code>cand_0046_national_hard_01</code>, <code>cand_0161_national2_hard_02</code>, <code>cand_0196_national_hard_02</code>, <code>cand_0233_national_hard_02</code></p>
+            <p class="repro-list"><strong>Robustness Testing Tasks Assessed (3):</strong> <code>cell_new_00236_easy_02</code>, <code>cand_0030_national2_medium_02</code>, <code>cand_0196_national_hard_02</code></p>
+            <p class="repro-list"><strong>Contamination Testing Panoramas Assessed (12):</strong> <code>cand_0030_national2_medium_02</code>, <code>cand_0071_national_medium_01</code>, <code>cand_0196_national_hard_02</code>, <code>cand_0279_national2_medium_02</code>, <code>cand_0362_national2_hard_02</code>, <code>cand_0465_national_medium_01</code>, <code>cand_0597_national2_easy_01</code>, <code>cand_0637_national2_easy_01</code>, <code>cell_new_00134_medium_02</code>, <code>cell_new_00198_medium_01</code>, <code>cell_new_00306_easy_02</code>, <code>cell_new_00357_medium_02</code></p>
+            <p class="repro-list"><strong>Manifest:</strong> <a href="manifest.json"><code>manifest.json</code></a></p>
         </section>
 
         <section class="prose">
@@ -610,6 +665,17 @@
         { name:'GLM-5V-Turbo',      native:0.478, mine:0.241, c:C.open   },
       ];
 
+      // Reasoning level: low vs high effort on the native harness, same 3-task slice.
+      // Differences are minimal and below the noise threshold (see §B of the study).
+      var REASON = [
+        { name:'GPT-5.5',           native:0.871, mine:0.877, c:C.gpt    },
+        { name:'Claude Opus 4.8',   native:0.910, mine:0.917, c:C.claude },
+        { name:'Claude Opus 4.7',   native:0.877, mine:0.879, c:C.claude },
+        { name:'Claude Sonnet 4.6', native:0.882, mine:0.898, c:C.claude },
+        { name:'Gemini 3.1 Pro',    native:0.899, mine:0.916, c:C.gemini },
+        { name:'Gemini 3.5 Flash',  native:0.874, mine:0.884, c:C.gemini },
+      ];
+
       function esc(s){ var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
 
       // White monochrome marks (the bar carries the brand color).
@@ -679,13 +745,16 @@
         el.innerHTML = html;
       }
 
-      // Cross-harness paired-bar chart: native CLI vs my harness, domain 0..1.
-      function renderXH(el){
+      // Paired-bar chart (domain 0..1): two bars per model — a solid bar (.native)
+      // and a hatched bar (.mine) — with a Δ = mine − native readout. Reused for the
+      // cross-harness chart (native CLI vs custom loop) and the reasoning chart
+      // (low vs high effort).
+      function renderPaired(el, rows, legA, legB){
         var max = 1.0;
         var html = '<div class="xh-legend">' +
-          '<span><i class="xh-swatch"></i>native CLI</span>' +
-          '<span><i class="xh-swatch mine"></i>my harness</span></div>';
-        XH.forEach(function(d){
+          '<span><i class="xh-swatch"></i>' + esc(legA) + '</span>' +
+          '<span><i class="xh-swatch mine"></i>' + esc(legB) + '</span></div>';
+        rows.forEach(function(d){
           var wn = (d.native / max * 100).toFixed(1) + '%';
           var wm = (d.mine / max * 100).toFixed(1) + '%';
           var dl = d.mine - d.native;
@@ -741,18 +810,20 @@
       var pp = document.getElementById('chart-pp');
       var tn = document.getElementById('chart-turns');
       var xh = document.getElementById('chart-xh');
+      var rs = document.getElementById('chart-reason');
       if (pp) renderPP(pp);
       if (tn) renderTurns(tn);
-      if (xh) renderXH(xh);
+      if (xh) renderPaired(xh, XH, 'native harness', 'custom loop');
+      if (rs) renderPaired(rs, REASON, 'low effort', 'high effort');
 
       // Animate bars in when each chart scrolls into view.
       if ('IntersectionObserver' in window) {
         var io = new IntersectionObserver(function(entries){
           entries.forEach(function(e){ if (e.isIntersecting){ e.target.classList.add('shown'); io.unobserve(e.target); } });
         }, { threshold: 0.25 });
-        [pp, tn, xh].forEach(function(c){ if (c) io.observe(c); });
+        [pp, tn, xh, rs].forEach(function(c){ if (c) io.observe(c); });
       } else {
-        [pp, tn, xh].forEach(function(c){ if (c) c.classList.add('shown'); });
+        [pp, tn, xh, rs].forEach(function(c){ if (c) c.classList.add('shown'); });
       }
     })();
     </script>
