@@ -626,6 +626,8 @@
 
         <section id="results" class="prose">
             <h2>Results</h2>
+            <figure id="chart-pp2" class="chart" aria-label="Mean path-progress by model"></figure>
+            <p class="caption">Mean path-progress across the 12-task subset (1.0 = arrived at the goal). Bars show the human ceiling and each model in their respective harness. Error bars are 95% confidence intervals from the three seeds.</p>
             <p>
                 Claude Opus 4.8 proved to be the most successful by far. As noted above, it was run using the Claude Code harness. In limited tests, all models failed to achieve any successful guesses in strict mode, which prevents use of the compass and hides the agent&apos;s location and direction on the map. Tasks in this setting, which humans are also able to solve in testing, are likely more difficult for frontier agents due to higher visual and spatial reasoning requirements. Agents in strict mode cannot track themselves on the map &mdash; a UI task that&apos;s likely well represented in their training distribution &mdash; and instead must find visual landmarks and street signs to orient.
             </p>
@@ -874,10 +876,12 @@
       })();
 
       var pp = document.getElementById('chart-pp');
+      var pp2 = document.getElementById('chart-pp2');
       var tn = document.getElementById('chart-turns');
       var xh = document.getElementById('chart-xh');
       var rs = document.getElementById('chart-reason');
       if (pp) renderPP(pp);
+      if (pp2) renderPP(pp2);
       if (tn) renderTurns(tn);
       if (xh) renderPaired(xh, XH, 'native harness', 'custom loop');
       if (rs) renderPaired(rs, REASON, 'low effort', 'high effort');
@@ -887,9 +891,9 @@
         var io = new IntersectionObserver(function(entries){
           entries.forEach(function(e){ if (e.isIntersecting){ e.target.classList.add('shown'); io.unobserve(e.target); } });
         }, { threshold: 0.25 });
-        [pp, tn, xh, rs].forEach(function(c){ if (c) io.observe(c); });
+        [pp, pp2, tn, xh, rs].forEach(function(c){ if (c) io.observe(c); });
       } else {
-        [pp, tn, xh, rs].forEach(function(c){ if (c) c.classList.add('shown'); });
+        [pp, pp2, tn, xh, rs].forEach(function(c){ if (c) c.classList.add('shown'); });
       }
 
       // Scroll-spy: highlight the nav link for the section currently in view.
