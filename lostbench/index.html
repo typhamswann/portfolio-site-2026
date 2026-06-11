@@ -178,6 +178,32 @@
       .play-poster-sub { font-size: 0.78rem; color: var(--muted); letter-spacing: 0.02em; }
 
       /* ---------- DATA-VIZ CHARTS ---------- */
+      /* subtle sticky section nav */
+      .section-nav {
+        position: sticky; top: 0; z-index: 50;
+        background: rgba(10,10,10,0.82);
+        -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
+        border-bottom: 1px solid #1a1a1a;
+      }
+      .nav-inner {
+        max-width: 760px; margin: 0 auto; padding: 9px 24px;
+        display: flex; gap: 20px; overflow-x: auto;
+        font-family: 'JetBrains Mono', monospace; font-size: 0.66rem;
+        letter-spacing: 0.05em; text-transform: uppercase;
+        scrollbar-width: none;
+      }
+      .nav-inner::-webkit-scrollbar { display: none; }
+      .section-nav a {
+        color: #767676; text-decoration: none; white-space: nowrap;
+        padding-bottom: 2px; border-bottom: 1px solid transparent;
+        transition: color 0.2s ease, border-color 0.2s ease;
+      }
+      .section-nav a:hover { color: #cfcfcf; }
+      .section-nav a.active { color: #e9c46a; border-bottom-color: #e9c46a; }
+      main section[id] { scroll-margin-top: 54px; }
+      @media (max-width: 600px) {
+        .nav-inner { padding: 8px 16px; gap: 16px; font-size: 0.62rem; }
+      }
       .chart {
         max-width: 720px;
         margin: 8px 0 4px;
@@ -301,8 +327,8 @@
         box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
       }
       .xh-bar.mine {
-        opacity: 0.5;
-        background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.22) 0 3px, transparent 3px 6px);
+        opacity: 0.92;
+        background-image: repeating-linear-gradient(45deg, rgba(0,0,0,0.5) 0 2px, rgba(0,0,0,0) 2px 5px);
       }
       .chart.shown .xh-bar { width: var(--w); }
       .xh-legend {
@@ -311,13 +337,20 @@
         font-family: 'JetBrains Mono', monospace; font-size: 0.64rem; color: #9a9a9a;
       }
       .xh-legend span { display: inline-flex; align-items: center; gap: 6px; }
-      .xh-swatch { width: 14px; height: 10px; border-radius: 2px; display: inline-block; background: #8a8a8a; }
+      .xh-swatch { width: 14px; height: 10px; border-radius: 2px; display: inline-block; background-color: #8a8a8a; }
       .xh-swatch.mine {
-        opacity: 0.5;
-        background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.35) 0 3px, transparent 3px 6px);
+        opacity: 0.92;
+        background-image: repeating-linear-gradient(45deg, rgba(0,0,0,0.5) 0 2px, rgba(0,0,0,0) 2px 5px);
       }
       /* reproducibility table + task lists */
-      .table-wrap { max-width: 720px; overflow-x: auto; margin: 14px 0 10px; }
+      .table-label {
+        font-size: 0.66rem; letter-spacing: 0.05em; text-transform: uppercase;
+        color: #9a9a9a; font-weight: 600; margin: 22px 0 2px;
+      }
+      table.repro td code {
+        font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: #b8b8b8;
+      }
+      .table-wrap { max-width: 720px; overflow-x: auto; margin: 6px 0 10px; }
       table.repro {
         width: 100%; border-collapse: collapse;
         font-family: 'Inter', -apple-system, sans-serif; font-size: 0.8rem;
@@ -387,6 +420,19 @@
         </div>
     </header>
 
+    <nav id="section-nav" class="section-nav" aria-label="Section navigation">
+        <div class="nav-inner">
+            <a href="#leaderboard">Leaderboard</a>
+            <a href="#overview">Overview</a>
+            <a href="#play">Play</a>
+            <a href="#methodology">Methodology</a>
+            <a href="#rigor">Robustness</a>
+            <a href="#results">Results</a>
+            <a href="#discussion">Discussion</a>
+            <a href="#future">Future Work</a>
+        </div>
+    </nav>
+
     <main>
         <section id="intro" class="prose">
             <h2>Introduction</h2>
@@ -416,7 +462,7 @@
             <p class="caption">Mean path-progress across the 12-task subset (1.0 = arrived at the goal). Bars show the human ceiling and each model in their respective harness. Error bars are 95% confidence intervals from the three seeds.</p>
         </section>
 
-        <section class="prose">
+        <section id="overview" class="prose">
             <h2>Overview</h2>
             <p>
                 While frontier LLMs have made significant progress in coding, reasoning, and complex tasks in recent years, visual reasoning capabilities still lack robustness compared to other domains. One especially challenging subset of visual reasoning for current models is spatial reasoning, which typically requires understanding many parts of an image at a given time and maintaining that understanding across multiple scenes or images.
@@ -468,7 +514,7 @@
             <div class="play-embed" id="play-embed" data-src="play/?v=4"></div>
         </section>
 
-        <section class="prose">
+        <section id="methodology" class="prose">
             <h2>Methodology</h2>
 
             <h3>World Development</h3>
@@ -495,7 +541,7 @@
                 The benchmark is structured as a Harbor-compatible repository with a provided simple custom completion loop harness. The benchmark results, however, tested models on their own native harnesses. This was done for fair testing following the analysis provided in the Robustness section.
             </p>
             <p>
-                The scores above represent performance on twelve select tasks with difficulty breakdown <strong>4 easy / 4 medium / 4 hard</strong>. This was due to cost constraints; a run on the entire 57 tasks would provide a stronger baseline. Additionally, runs were only conducted in default mode, not strict. Small-scale tests indicate that frontier models remain incapable of completing all but the simplest tasks in strict mode. On all runs, turn budgets were set at <strong>3 &times; the turns the human tester took to complete the task</strong>. Longer exploration may have increased performance, but cost constraints again proved a limiting factor.
+                The scores above represent performance on twelve select tasks with difficulty breakdown <strong>4 easy / 4 medium / 4 hard</strong>. This was due to cost constraints; a run on the entire 57 tasks would provide a stronger baseline. Additionally, runs were only conducted in default mode, not strict. Small-scale tests indicate that frontier models remain incapable of completing all but the simplest tasks in strict mode. On all runs, turn budgets were set at <strong>3 &times; the optimal path</strong>. Longer exploration may have increased performance, but cost constraints again proved a limiting factor.
             </p>
         </section>
 
@@ -526,36 +572,65 @@
             <p>
                 Models were tested for contamination via a simple task where models were shown panoramas from different tasks and asked to identify the exact coordinates.
             </p>
+            <div class="table-wrap">
+            <table class="repro">
+                <thead><tr><th>Model</th><th>Median error</th><th>Best guess</th><th>Within 50 km</th></tr></thead>
+                <tbody>
+                    <tr><td>GLM-5V-Turbo</td><td>15.8 km</td><td>3.21 km</td><td>67%</td></tr>
+                    <tr><td>Claude Opus 4.8</td><td>19.0 km</td><td>1.16 km</td><td>67%</td></tr>
+                    <tr><td>GPT-5.5</td><td>169 km</td><td>0.94 km</td><td>45%</td></tr>
+                    <tr><td>Qwen3.7-Plus</td><td>219 km</td><td>1.80 km</td><td>50%</td></tr>
+                </tbody>
+            </table>
+            </div>
+            <p class="caption">Geolocation error when each model is shown a clean panorama (no map, no coordinates) and asked for the exact coordinates, over 12 probe panoramas (GPT-5.5 returned 11). Median error is tens-to-hundreds of kilometres &mdash; city/region level at best, never the exact location. Gemini 3.1 Pro returned no successful geolocations and is omitted.</p>
             <p>
                 Results support other benchmarks finding that frontier models are adept at identifying general locations from photos. However, the imprecision of the guesses offers some evidence that the models were less likely to be trained on the exact panorama and location data found in the benchmark. More importantly, the task is fairly robust to contamination as models are required to navigate to reach a final location instead of simply submitting a guess, assessing spatial reasoning capabilities even if they&apos;ve seen locations before.
             </p>
 
             <h3>Reproducibility</h3>
             <p>
-                Every run &mdash; model, harness, provider route, reasoning level, and temperature &mdash; is recorded below, with the full per-rollout trajectory, transcript, and config captured in the run manifest.
+                Every run &mdash; model, harness, provider route, reasoning level, and temperature &mdash; is recorded below, with the full per-rollout trajectory, transcript, and config captured in the run manifest. The provider route in particular differs by harness: the production benchmark drives each model through its native CLI on that vendor&apos;s own route, while the custom completion loop calls each provider&apos;s API directly (Anthropic via AWS Bedrock).
             </p>
+            <p class="table-label">Production benchmark &mdash; native harnesses (12 tasks &times; 3 seeds)</p>
             <div class="table-wrap">
             <table class="repro">
                 <thead><tr><th>Model</th><th>Harness</th><th>Provider route</th><th>Reasoning</th><th>Temperature</th></tr></thead>
                 <tbody>
-                    <tr><td>Claude Opus 4.8</td><td>Claude Code</td><td>Anthropic</td><td>default</td><td>default</td></tr>
-                    <tr><td>Claude Opus 4.7</td><td>Claude Code</td><td>Anthropic</td><td>default</td><td>default</td></tr>
-                    <tr><td>Claude Sonnet 4.6</td><td>Claude Code</td><td>Anthropic</td><td>default</td><td>default</td></tr>
-                    <tr><td>GPT-5.5</td><td>Codex</td><td>OpenAI direct</td><td>default</td><td>default</td></tr>
-                    <tr><td>Gemini 3.1 Pro</td><td>Antigravity</td><td>Google (Gemini API)</td><td>default</td><td>default</td></tr>
-                    <tr><td>Gemini 3.5 Flash</td><td>Antigravity</td><td>Google (Gemini API)</td><td>default</td><td>default</td></tr>
-                    <tr><td>Qwen3.7-Plus</td><td>Qwen Code</td><td>OpenRouter</td><td>default</td><td>default</td></tr>
+                    <tr><td>Claude Opus 4.8</td><td>Claude Code</td><td>Anthropic (direct)</td><td>high</td><td>default</td></tr>
+                    <tr><td>Claude Opus 4.7</td><td>Claude Code</td><td>Anthropic (direct)</td><td>high</td><td>default</td></tr>
+                    <tr><td>Claude Sonnet 4.6</td><td>Claude Code</td><td>Anthropic (direct)</td><td>high</td><td>default</td></tr>
+                    <tr><td>GPT-5.5</td><td>Codex</td><td>OpenAI (direct)</td><td>high</td><td>default</td></tr>
+                    <tr><td>Gemini 3.1 Pro</td><td>Antigravity</td><td>Google (Gemini API)</td><td>high</td><td>default</td></tr>
+                    <tr><td>Gemini 3.5 Flash</td><td>Antigravity</td><td>Google (Gemini API)</td><td>high</td><td>default</td></tr>
+                    <tr><td>Qwen3.7-Plus</td><td>Qwen Code</td><td>OpenRouter &mdash; <code>qwen/qwen3.7-plus</code></td><td>n/a</td><td>default</td></tr>
                 </tbody>
             </table>
             </div>
-            <p class="caption">Production benchmark: each model run on its native harness, three seeds per task. The cross-harness and reasoning studies additionally routed Claude via AWS Bedrock and the open models via OpenRouter for the custom-loop arm.</p>
+            <p class="table-label">Robustness studies &mdash; custom completion loop (cross-harness &amp; reasoning, 3 tasks)</p>
+            <div class="table-wrap">
+            <table class="repro">
+                <thead><tr><th>Model</th><th>Harness</th><th>Provider route</th><th>Reasoning</th><th>Temperature</th></tr></thead>
+                <tbody>
+                    <tr><td>Claude Opus 4.8</td><td>Custom completion loop</td><td>AWS Bedrock</td><td>low &amp; high</td><td>default</td></tr>
+                    <tr><td>Claude Opus 4.7</td><td>Custom completion loop</td><td>AWS Bedrock</td><td>low &amp; high</td><td>default</td></tr>
+                    <tr><td>Claude Sonnet 4.6</td><td>Custom completion loop</td><td>AWS Bedrock</td><td>low &amp; high</td><td>default</td></tr>
+                    <tr><td>GPT-5.5</td><td>Custom completion loop</td><td>OpenAI (direct)</td><td>low &amp; high</td><td>default</td></tr>
+                    <tr><td>Gemini 3.1 Pro</td><td>Custom completion loop</td><td>Google (Gemini API)</td><td>low &amp; high</td><td>default</td></tr>
+                    <tr><td>Gemini 3.5 Flash</td><td>Custom completion loop</td><td>Google (Gemini API)</td><td>low &amp; high</td><td>default</td></tr>
+                    <tr><td>Qwen3.7-Plus</td><td>Custom completion loop</td><td>OpenRouter &mdash; <code>qwen/qwen3.7-plus</code></td><td>n/a</td><td>default</td></tr>
+                    <tr><td>GLM-5V-Turbo</td><td>Custom completion loop</td><td>OpenRouter &mdash; <code>z-ai/glm-5v-turbo</code></td><td>n/a</td><td>default</td></tr>
+                </tbody>
+            </table>
+            </div>
+            <p class="caption">Native harnesses manage their own decoding params, so temperature is the vendor default and reasoning is the effort level passed to the CLI (<code>high</code> in production; Qwen Code exposes no reasoning knob). The custom loop swept low and high effort for the reasoning study. GLM-5V-Turbo appears only in the studies &mdash; it was struck from the production benchmark for endpoint instability.</p>
             <p class="repro-list"><strong>Full Benchmark Tasks Assessed (12):</strong> <code>cand_0046_national_easy_02</code>, <code>cand_0060_national2_easy_01</code>, <code>cand_0118_national2_easy_02</code>, <code>cand_0233_national_easy_02</code>, <code>cand_0030_national2_medium_02</code>, <code>cand_0071_national_medium_01</code>, <code>cand_0182_national2_medium_01</code>, <code>cand_0279_national2_medium_02</code>, <code>cand_0046_national_hard_01</code>, <code>cand_0161_national2_hard_02</code>, <code>cand_0196_national_hard_02</code>, <code>cand_0233_national_hard_02</code></p>
             <p class="repro-list"><strong>Robustness Testing Tasks Assessed (3):</strong> <code>cell_new_00236_easy_02</code>, <code>cand_0030_national2_medium_02</code>, <code>cand_0196_national_hard_02</code></p>
             <p class="repro-list"><strong>Contamination Testing Panoramas Assessed (12):</strong> <code>cand_0030_national2_medium_02</code>, <code>cand_0071_national_medium_01</code>, <code>cand_0196_national_hard_02</code>, <code>cand_0279_national2_medium_02</code>, <code>cand_0362_national2_hard_02</code>, <code>cand_0465_national_medium_01</code>, <code>cand_0597_national2_easy_01</code>, <code>cand_0637_national2_easy_01</code>, <code>cell_new_00134_medium_02</code>, <code>cell_new_00198_medium_01</code>, <code>cell_new_00306_easy_02</code>, <code>cell_new_00357_medium_02</code></p>
             <p class="repro-list"><strong>Manifest:</strong> <a href="manifest.json"><code>manifest.json</code></a></p>
         </section>
 
-        <section class="prose">
+        <section id="results" class="prose">
             <h2>Results</h2>
             <p>
                 Claude Opus 4.8 proved to be the most successful by far. As noted above, it was run using the Claude Code harness. In limited tests, all models failed to achieve any successful guesses in strict mode, which prevents use of the compass and hides the agent&apos;s location and direction on the map. Tasks in this setting, which humans are also able to solve in testing, are likely more difficult for frontier agents due to higher visual and spatial reasoning requirements. Agents in strict mode cannot track themselves on the map &mdash; a UI task that&apos;s likely well represented in their training distribution &mdash; and instead must find visual landmarks and street signs to orient.
@@ -569,7 +644,7 @@
             </p>
         </section>
 
-        <section class="prose">
+        <section id="discussion" class="prose">
             <h2>Discussion</h2>
             <p>
                 Frontier models still have a significant way to go in spatial reasoning, where capabilities lag in comparison to other reasoning domains like coding. Claude Opus 4.8 using the Claude Code harness was the most accurate by far, but still wasn&apos;t perfectly accurate on the easier assessment set, and was meaningfully less efficient than the human tester. Further, isolated tests indicated that all harnesses struggled to complete tasks in strict mode, which requires greater spatial reasoning across longer time horizons.
@@ -579,7 +654,7 @@
             </p>
         </section>
 
-        <section class="prose">
+        <section id="future" class="prose">
             <h2>Future Work</h2>
             <p>
                 This project was significantly budget-constrained, serving as a barrier to running the full 57 tasks, running the benchmark in strict mode, and running it with higher turn limits (or without any cap). The full RL environment contains many more diverse tasks with higher difficulty and longer time horizons. The data pipeline allows trivially creating tasks with orders-of-magnitude longer time horizons. As frontier models progress, it will be interesting to track their progression on benchmark performance.
@@ -758,8 +833,8 @@
           var dstr = (dl >= 0 ? '+' : '−') + Math.abs(dl).toFixed(2);
           html += '<div class="chart-row">' + nameCell(d, false) +
             '<div class="chart-track xh-track">' +
-              '<div class="xh-bar native" style="--w:' + wn + ';background:' + d.c + '"></div>' +
-              '<div class="xh-bar mine" style="--w:' + wm + ';background:' + d.c + '"></div>' +
+              '<div class="xh-bar native" style="--w:' + wn + ';background-color:' + d.c + '"></div>' +
+              '<div class="xh-bar mine" style="--w:' + wm + ';background-color:' + d.c + '"></div>' +
             '</div>' +
             '<div class="chart-val">Δ ' + dstr + '</div>' +
             '</div>';
@@ -822,6 +897,32 @@
       } else {
         [pp, tn, xh, rs].forEach(function(c){ if (c) c.classList.add('shown'); });
       }
+
+      // Scroll-spy: highlight the nav link for the section currently in view.
+      (function(){
+        var nav = document.getElementById('section-nav');
+        if (!nav) return;
+        var links = Array.prototype.slice.call(nav.querySelectorAll('a'));
+        var map = {}, ids = [];
+        links.forEach(function(a){
+          var id = a.getAttribute('href').slice(1);
+          if (document.getElementById(id)) { map[id] = a; ids.push(id); }
+        });
+        if (!ids.length) return;
+        function onScroll(){
+          var pos = window.scrollY + (nav.offsetHeight || 0) + 40;
+          var current = ids[0];
+          ids.forEach(function(id){
+            var s = document.getElementById(id);
+            if (s && s.offsetTop <= pos) current = id;
+          });
+          links.forEach(function(a){ a.classList.remove('active'); });
+          if (map[current]) map[current].classList.add('active');
+        }
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', onScroll);
+        onScroll();
+      })();
     })();
     </script>
 
