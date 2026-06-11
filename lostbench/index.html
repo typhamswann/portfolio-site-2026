@@ -178,32 +178,29 @@
       .play-poster-sub { font-size: 0.78rem; color: var(--muted); letter-spacing: 0.02em; }
 
       /* ---------- DATA-VIZ CHARTS ---------- */
-      /* subtle sticky section nav */
-      .section-nav {
-        position: sticky; top: 0; z-index: 50;
-        background: rgba(10,10,10,0.82);
-        -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px);
-        border-bottom: 1px solid #1a1a1a;
+      /* Google-Docs-style fixed outline rail — always visible in the left margin */
+      .doc-outline {
+        position: fixed; left: 30px; top: 50%; transform: translateY(-50%);
+        z-index: 40; display: flex; flex-direction: column; gap: 11px;
+        max-height: 86vh; overflow-y: auto; scrollbar-width: none; padding: 4px 0;
       }
-      .nav-inner {
-        max-width: 760px; margin: 0 auto; padding: 9px 24px;
-        display: flex; gap: 20px; overflow-x: auto;
+      .doc-outline::-webkit-scrollbar { display: none; }
+      .doc-outline a {
+        display: flex; align-items: center; gap: 10px;
         font-family: 'JetBrains Mono', monospace; font-size: 0.66rem;
-        letter-spacing: 0.05em; text-transform: uppercase;
-        scrollbar-width: none;
+        letter-spacing: 0.02em; color: #6b6b6b; text-decoration: none;
+        white-space: nowrap; transition: color 0.2s ease;
       }
-      .nav-inner::-webkit-scrollbar { display: none; }
-      .section-nav a {
-        color: #767676; text-decoration: none; white-space: nowrap;
-        padding-bottom: 2px; border-bottom: 1px solid transparent;
-        transition: color 0.2s ease, border-color 0.2s ease;
+      .doc-outline a::before {
+        content: ''; width: 16px; height: 1.5px; background: currentColor;
+        flex-shrink: 0; transition: width 0.2s ease, background 0.2s ease;
       }
-      .section-nav a:hover { color: #cfcfcf; }
-      .section-nav a.active { color: #e9c46a; border-bottom-color: #e9c46a; }
-      main section[id] { scroll-margin-top: 54px; }
-      @media (max-width: 600px) {
-        .nav-inner { padding: 8px 16px; gap: 16px; font-size: 0.62rem; }
-      }
+      .doc-outline a:hover { color: #b8b8b8; }
+      .doc-outline a.active { color: #e9c46a; }
+      .doc-outline a.active::before { width: 30px; background: #e9c46a; }
+      main section[id] { scroll-margin-top: 24px; }
+      /* hide the rail when there isn't room beside the centered content */
+      @media (max-width: 1180px) { .doc-outline { display: none; } }
       .chart {
         max-width: 720px;
         margin: 8px 0 4px;
@@ -315,7 +312,7 @@
         transform: translateY(-50%);
       }
       .chart.shown .chart-err { opacity: 1; }
-      /* cross-harness paired bars: native CLI (solid) vs my harness (hatched).
+      /* cross-harness paired bars: native CLI (solid) vs my harness (lighter tint).
          Flow blocks (not absolute) so percentage widths resolve like .chart-fill. */
       .xh-track {
         height: 30px; background: transparent;
@@ -327,8 +324,8 @@
         box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
       }
       .xh-bar.mine {
-        opacity: 0.92;
-        background-image: repeating-linear-gradient(45deg, rgba(0,0,0,0.5) 0 2px, rgba(0,0,0,0) 2px 5px);
+        /* same hue, lightened — a softer tint of the native bar */
+        background-image: linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5));
       }
       .chart.shown .xh-bar { width: var(--w); }
       .xh-legend {
@@ -339,13 +336,12 @@
       .xh-legend span { display: inline-flex; align-items: center; gap: 6px; }
       .xh-swatch { width: 14px; height: 10px; border-radius: 2px; display: inline-block; background-color: #8a8a8a; }
       .xh-swatch.mine {
-        opacity: 0.92;
-        background-image: repeating-linear-gradient(45deg, rgba(0,0,0,0.5) 0 2px, rgba(0,0,0,0) 2px 5px);
+        background-image: linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5));
       }
       /* reproducibility table + task lists */
       .table-label {
-        font-size: 0.66rem; letter-spacing: 0.05em; text-transform: uppercase;
-        color: #9a9a9a; font-weight: 600; margin: 22px 0 2px;
+        font-size: 0.92rem; color: #e4e4e4; font-weight: 600;
+        margin: 26px 0 8px;
       }
       table.repro td code {
         font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: #b8b8b8;
@@ -420,17 +416,15 @@
         </div>
     </header>
 
-    <nav id="section-nav" class="section-nav" aria-label="Section navigation">
-        <div class="nav-inner">
-            <a href="#leaderboard">Leaderboard</a>
-            <a href="#overview">Overview</a>
-            <a href="#play">Play</a>
-            <a href="#methodology">Methodology</a>
-            <a href="#rigor">Robustness</a>
-            <a href="#results">Results</a>
-            <a href="#discussion">Discussion</a>
-            <a href="#future">Future Work</a>
-        </div>
+    <nav id="section-nav" class="doc-outline" aria-label="Document outline">
+        <a href="#leaderboard">Leaderboard</a>
+        <a href="#overview">Overview</a>
+        <a href="#play">Play</a>
+        <a href="#methodology">Methodology</a>
+        <a href="#rigor">Robustness</a>
+        <a href="#results">Results</a>
+        <a href="#discussion">Discussion</a>
+        <a href="#future">Future Work</a>
     </nav>
 
     <main>
@@ -456,7 +450,7 @@
         <section id="leaderboard" class="prose">
             <h2>Leaderboard</h2>
             <p>
-                Twelve-task validation subset of the 57-task public benchmark, default-mode, haversine scoring (closer to goal = higher). Each model received the same observation channel: a 1024 × 768 viewport image, one-line HUD, sliding-window image history of 4. Per-task turn budget = 3 &times; the human tester&apos;s turn count on that task. Models ran three times per task in their native harnesses; see cross-harness analysis below.
+                Twelve-task validation subset of the 57-task public benchmark, default-mode, haversine scoring (closer to goal = higher). Each model received the same observation channel: a 1024 × 768 viewport image, one-line HUD, sliding-window image history of 4. Per-task turn budget = 3 &times; the computed optimal path. Models ran three times per task in their native harnesses; see cross-harness analysis below.
             </p>
             <figure id="chart-pp" class="chart" aria-label="Mean path-progress by model"></figure>
             <p class="caption">Mean path-progress across the 12-task subset (1.0 = arrived at the goal). Bars show the human ceiling and each model in their respective harness. Error bars are 95% confidence intervals from the three seeds.</p>
@@ -541,7 +535,7 @@
                 The benchmark is structured as a Harbor-compatible repository with a provided simple custom completion loop harness. The benchmark results, however, tested models on their own native harnesses. This was done for fair testing following the analysis provided in the Robustness section.
             </p>
             <p>
-                The scores above represent performance on twelve select tasks with difficulty breakdown <strong>4 easy / 4 medium / 4 hard</strong>. This was due to cost constraints; a run on the entire 57 tasks would provide a stronger baseline. Additionally, runs were only conducted in default mode, not strict. Small-scale tests indicate that frontier models remain incapable of completing all but the simplest tasks in strict mode. On all runs, turn budgets were set at <strong>3 &times; the optimal path</strong>. Longer exploration may have increased performance, but cost constraints again proved a limiting factor.
+                The scores above represent performance on twelve select tasks with difficulty breakdown <strong>4 easy / 4 medium / 4 hard</strong>. This was due to cost constraints; a run on the entire 57 tasks would provide a stronger baseline. Additionally, runs were only conducted in default mode, not strict. Small-scale tests indicate that frontier models remain incapable of completing all but the simplest tasks in strict mode. On all runs, turn budgets were set at <strong>3 &times; the computed optimal path</strong>. Longer exploration may have increased performance, but cost constraints again proved a limiting factor.
             </p>
         </section>
 
@@ -553,7 +547,7 @@
                 Recent benchmark results have indicated that the harnesses used in assessment significantly impact model performance. As such, each model was tested on the simple completion loop harness created for the tasks and its native harness across three randomly selected tasks, two times each harness.
             </p>
             <figure id="chart-xh" class="chart" aria-label="Native harness versus the custom completion loop, by model"></figure>
-            <p class="caption">Mean path-progress for each model on its native harness versus the custom completion loop, over the three-task cross-harness slice. Solid bar = native harness; hatched bar = custom loop.</p>
+            <p class="caption">Mean path-progress for each model on its native harness versus the custom completion loop, over the three-task cross-harness slice. Solid bar = native harness; lighter bar = custom loop.</p>
             <p>
                 The results indicate that for LostBench tasks, frontier models are quite robust across harnesses. In contrast, the open source models appear to be quite fragile, with performance degrading substantially outside of their recommended scaffolding. Given the results of this analysis, models were run in the production benchmark within their own native harnesses. GLM was included in this analysis but ultimately struck from the full benchmarking due to endpoint instability.
             </p>
@@ -563,7 +557,7 @@
                 Models were also tested at different reasoning levels twice for each harness across the same three tasks.
             </p>
             <figure id="chart-reason" class="chart" aria-label="Low versus high reasoning effort, by model"></figure>
-            <p class="caption">Mean path-progress at low versus high reasoning effort on the native harness, over the same three-task slice. Solid bar = low effort; hatched bar = high effort.</p>
+            <p class="caption">Mean path-progress at low versus high reasoning effort on the native harness, over the same three-task slice. Solid bar = low effort; lighter bar = high effort.</p>
             <p>
                 Reasoning levels did not appear to have a significant impact on performance in these tasks. While the differences were very minimal and below the noise threshold, all models did report higher scores on their native harnesses with mixed results on the default loop, potentially indicating that benefits of higher reasoning are tied to the harness the model was trained on. Further exploration on this question would be interesting.
             </p>
@@ -597,13 +591,13 @@
             <table class="repro">
                 <thead><tr><th>Model</th><th>Harness</th><th>Provider route</th><th>Reasoning</th><th>Temperature</th></tr></thead>
                 <tbody>
-                    <tr><td>Claude Opus 4.8</td><td>Claude Code</td><td>Anthropic (direct)</td><td>high</td><td>default</td></tr>
-                    <tr><td>Claude Opus 4.7</td><td>Claude Code</td><td>Anthropic (direct)</td><td>high</td><td>default</td></tr>
-                    <tr><td>Claude Sonnet 4.6</td><td>Claude Code</td><td>Anthropic (direct)</td><td>high</td><td>default</td></tr>
-                    <tr><td>GPT-5.5</td><td>Codex</td><td>OpenAI (direct)</td><td>high</td><td>default</td></tr>
-                    <tr><td>Gemini 3.1 Pro</td><td>Antigravity</td><td>Google (Gemini API)</td><td>high</td><td>default</td></tr>
-                    <tr><td>Gemini 3.5 Flash</td><td>Antigravity</td><td>Google (Gemini API)</td><td>high</td><td>default</td></tr>
-                    <tr><td>Qwen3.7-Plus</td><td>Qwen Code</td><td>OpenRouter &mdash; <code>qwen/qwen3.7-plus</code></td><td>n/a</td><td>default</td></tr>
+                    <tr><td>Claude Opus 4.8</td><td>Claude Code</td><td>Claude Code</td><td>high</td><td>1.0</td></tr>
+                    <tr><td>Claude Opus 4.7</td><td>Claude Code</td><td>Claude Code</td><td>high</td><td>1.0</td></tr>
+                    <tr><td>Claude Sonnet 4.6</td><td>Claude Code</td><td>Claude Code</td><td>high</td><td>1.0</td></tr>
+                    <tr><td>GPT-5.5</td><td>Codex</td><td>Codex</td><td>high</td><td>1.0</td></tr>
+                    <tr><td>Gemini 3.1 Pro</td><td>Antigravity</td><td>Antigravity</td><td>high</td><td>1.0</td></tr>
+                    <tr><td>Gemini 3.5 Flash</td><td>Antigravity</td><td>Antigravity</td><td>high</td><td>1.0</td></tr>
+                    <tr><td>Qwen3.7-Plus</td><td>Qwen Code</td><td>OpenRouter &mdash; <code>qwen/qwen3.7-plus</code></td><td>n/a</td><td>1.0</td></tr>
                 </tbody>
             </table>
             </div>
@@ -612,18 +606,18 @@
             <table class="repro">
                 <thead><tr><th>Model</th><th>Harness</th><th>Provider route</th><th>Reasoning</th><th>Temperature</th></tr></thead>
                 <tbody>
-                    <tr><td>Claude Opus 4.8</td><td>Custom completion loop</td><td>AWS Bedrock</td><td>low &amp; high</td><td>default</td></tr>
-                    <tr><td>Claude Opus 4.7</td><td>Custom completion loop</td><td>AWS Bedrock</td><td>low &amp; high</td><td>default</td></tr>
-                    <tr><td>Claude Sonnet 4.6</td><td>Custom completion loop</td><td>AWS Bedrock</td><td>low &amp; high</td><td>default</td></tr>
-                    <tr><td>GPT-5.5</td><td>Custom completion loop</td><td>OpenAI (direct)</td><td>low &amp; high</td><td>default</td></tr>
-                    <tr><td>Gemini 3.1 Pro</td><td>Custom completion loop</td><td>Google (Gemini API)</td><td>low &amp; high</td><td>default</td></tr>
-                    <tr><td>Gemini 3.5 Flash</td><td>Custom completion loop</td><td>Google (Gemini API)</td><td>low &amp; high</td><td>default</td></tr>
-                    <tr><td>Qwen3.7-Plus</td><td>Custom completion loop</td><td>OpenRouter &mdash; <code>qwen/qwen3.7-plus</code></td><td>n/a</td><td>default</td></tr>
-                    <tr><td>GLM-5V-Turbo</td><td>Custom completion loop</td><td>OpenRouter &mdash; <code>z-ai/glm-5v-turbo</code></td><td>n/a</td><td>default</td></tr>
+                    <tr><td>Claude Opus 4.8</td><td>Custom completion loop</td><td>AWS Bedrock</td><td>low &amp; high</td><td>1.0</td></tr>
+                    <tr><td>Claude Opus 4.7</td><td>Custom completion loop</td><td>AWS Bedrock</td><td>low &amp; high</td><td>1.0</td></tr>
+                    <tr><td>Claude Sonnet 4.6</td><td>Custom completion loop</td><td>AWS Bedrock</td><td>low &amp; high</td><td>1.0</td></tr>
+                    <tr><td>GPT-5.5</td><td>Custom completion loop</td><td>OpenAI (direct)</td><td>low &amp; high</td><td>1.0</td></tr>
+                    <tr><td>Gemini 3.1 Pro</td><td>Custom completion loop</td><td>Google (Gemini API)</td><td>low &amp; high</td><td>1.0</td></tr>
+                    <tr><td>Gemini 3.5 Flash</td><td>Custom completion loop</td><td>Google (Gemini API)</td><td>low &amp; high</td><td>1.0</td></tr>
+                    <tr><td>Qwen3.7-Plus</td><td>Custom completion loop</td><td>OpenRouter &mdash; <code>qwen/qwen3.7-plus</code></td><td>n/a</td><td>1.0</td></tr>
+                    <tr><td>GLM-5V-Turbo</td><td>Custom completion loop</td><td>OpenRouter &mdash; <code>z-ai/glm-5v-turbo</code></td><td>n/a</td><td>1.0</td></tr>
                 </tbody>
             </table>
             </div>
-            <p class="caption">Native harnesses manage their own decoding params, so temperature is the vendor default and reasoning is the effort level passed to the CLI (<code>high</code> in production; Qwen Code exposes no reasoning knob). The custom loop swept low and high effort for the reasoning study. GLM-5V-Turbo appears only in the studies &mdash; it was struck from the production benchmark for endpoint instability.</p>
+            <p class="caption">No run overrode temperature, so every run used the provider default of 1.0 (the value reasoning and extended-thinking modes require in any case). Reasoning is the effort level passed to the harness &mdash; <code>high</code> in production; Qwen Code exposes no reasoning knob &mdash; while the custom loop swept low and high for the reasoning study. GLM-5V-Turbo appears only in the studies; it was struck from the production benchmark for endpoint instability.</p>
             <p class="repro-list"><strong>Full Benchmark Tasks Assessed (12):</strong> <code>cand_0046_national_easy_02</code>, <code>cand_0060_national2_easy_01</code>, <code>cand_0118_national2_easy_02</code>, <code>cand_0233_national_easy_02</code>, <code>cand_0030_national2_medium_02</code>, <code>cand_0071_national_medium_01</code>, <code>cand_0182_national2_medium_01</code>, <code>cand_0279_national2_medium_02</code>, <code>cand_0046_national_hard_01</code>, <code>cand_0161_national2_hard_02</code>, <code>cand_0196_national_hard_02</code>, <code>cand_0233_national_hard_02</code></p>
             <p class="repro-list"><strong>Robustness Testing Tasks Assessed (3):</strong> <code>cell_new_00236_easy_02</code>, <code>cand_0030_national2_medium_02</code>, <code>cand_0196_national_hard_02</code></p>
             <p class="repro-list"><strong>Contamination Testing Panoramas Assessed (12):</strong> <code>cand_0030_national2_medium_02</code>, <code>cand_0071_national_medium_01</code>, <code>cand_0196_national_hard_02</code>, <code>cand_0279_national2_medium_02</code>, <code>cand_0362_national2_hard_02</code>, <code>cand_0465_national_medium_01</code>, <code>cand_0597_national2_easy_01</code>, <code>cand_0637_national2_easy_01</code>, <code>cell_new_00134_medium_02</code>, <code>cell_new_00198_medium_01</code>, <code>cell_new_00306_easy_02</code>, <code>cell_new_00357_medium_02</code></p>
@@ -818,7 +812,7 @@
       }
 
       // Paired-bar chart (domain 0..1): two bars per model — a solid bar (.native)
-      // and a hatched bar (.mine) — with a Δ = mine − native readout. Reused for the
+      // and a lighter-tint bar (.mine) — with a Δ = mine − native readout. Reused for the
       // cross-harness chart (native CLI vs custom loop) and the reasoning chart
       // (low vs high effort).
       function renderPaired(el, rows, legA, legB){
@@ -910,7 +904,7 @@
         });
         if (!ids.length) return;
         function onScroll(){
-          var pos = window.scrollY + (nav.offsetHeight || 0) + 40;
+          var pos = window.scrollY + 140;
           var current = ids[0];
           ids.forEach(function(id){
             var s = document.getElementById(id);
