@@ -268,6 +268,27 @@
         color: #e9c46a;
         white-space: nowrap;
       }
+      /* 95% CI error bar (I-beam) overlaid on the path-progress bars */
+      .chart-err {
+        position: absolute;
+        top: 50%;
+        height: 9px;
+        transform: translateY(-50%);
+        border-left: 1.5px solid rgba(255,255,255,0.85);
+        border-right: 1.5px solid rgba(255,255,255,0.85);
+        z-index: 3;
+        opacity: 0;
+        transition: opacity 0.5s ease 1s;
+      }
+      .chart-err::before {
+        content: '';
+        position: absolute;
+        top: 50%; left: 0; right: 0;
+        height: 1.5px;
+        background: rgba(255,255,255,0.85);
+        transform: translateY(-50%);
+      }
+      .chart.shown .chart-err { opacity: 1; }
       .chart-axis {
         grid-column: 2;
         display: flex;
@@ -341,10 +362,10 @@
         <section id="leaderboard" class="prose">
             <h2>Leaderboard</h2>
             <p>
-                Ten-task validation subset of the 59-task public benchmark, default-mode, v0.4 haversine scoring (closer to goal = higher). Each model received the same observation channel: a 1024 × 768 viewport image, one-line HUD, sliding-window image history of 4. Per-task turn budget = 3 &times; the human tester&apos;s turn count on that task.
+                Twelve-task validation subset (4 easy / 4 medium / 4 hard) of the 59-task public benchmark, default-mode, haversine scoring (closer to goal = higher). Each model ran all 12 tasks &times; 3 seeds through its <strong>native agentic harness</strong> &mdash; Claude Code, Codex, Antigravity, or Qwen Code &mdash; observing a 1024 × 768 viewport image with a one-line HUD each turn. Per-task turn budget = 3 &times; the optimal route length, a budget a real human completed every task within.
             </p>
             <figure id="chart-pp" class="chart" aria-label="Mean path-progress by model"></figure>
-            <p class="caption">Mean path-progress across the 10-task subset (1.0 = arrived at the goal). Bars show the human ceiling, the three frontier agent harnesses, and the open-model field.</p>
+            <p class="caption">Mean path-progress across the 12-task subset, 3 seeds each (1.0 = arrived at the goal). Error bars are 95% confidence intervals from the 3 seeds (measurement precision on this task set). Bars show the human ceiling, six frontier models across four native harnesses, and the open-model field.</p>
         </section>
 
         <section class="prose">
@@ -356,7 +377,7 @@
                 People excel at these types of tasks and use interfaces like Street View, Autodesk, and Matterport in everyday work quite naturally.
             </p>
             <p>
-                Due to cost constraints, only a small subset of ten tasks has been included in the results above and Claude Opus 4.8 and GPT-5.5 were assessed using the Claude Code and Codex harnesses respectively. To fund a full assessment, access the full RL environment with thousands of long-horizon tasks, or hire me, contact <a href="mailto:phamswannty@gmail.com">phamswannty@gmail.com</a>.
+                Due to cost constraints, only a twelve-task subset is shown above. Each model was run through the <strong>native agentic harness</strong> people actually use it with &mdash; Claude models via Claude Code, GPT-5.5 via Codex, Gemini via Antigravity, and Qwen3.7-Plus via Qwen Code &mdash; so the score reflects model plus scaffold, not a stripped-down API call. To fund a full assessment, access the full RL environment with thousands of long-horizon tasks, or hire me, contact <a href="mailto:phamswannty@gmail.com">phamswannty@gmail.com</a>.
             </p>
 
             <h3>Custom interface with controllable primitives</h3>
@@ -376,7 +397,7 @@
                 Higher scores mean the agent guessed when they were closer to the target. This continuous scoring allows greater granularity in assessing model capability than binary success.
             </p>
             <p>
-                Each task has been tested by a real human, who was able to complete each one efficiently on their first attempt. In <strong>48 out of 58 found sessions, the human guessed exactly on the endpoint (0.0 meters from target)</strong>, with the overall mean distance from target being <strong>1.50 meters</strong>. For a person, it is trivial to guess the exact location once they can access it.
+                Each task was also run by a real human under the same turn budget. On these 12 tasks, the human guessed <strong>exactly on the endpoint (0.0 m) in 11 of 12</strong>, and within 6 m on the last &mdash; a mean path-progress of <strong>0.998</strong>, and the human stayed within budget on every task (e.g. 275 of 276 turns on the hardest). For a person, it is trivial to guess the exact location once they can access it, which is why the human ceiling sits just shy of 1.0.
             </p>
 
             <h3>Novel tasks from a custom-built graph</h3>
@@ -426,7 +447,7 @@
                 The benchmark is structured as a Harbor-compatible repository where each model assessed used a simple custom completion loop. The Claude Opus 4.8 and GPT-5.5 runs, however, were conducted via the Claude Code and Codex harnesses. This was driven by cost limitations and likely impacted performance, though their harnesses enabled them no exclusive information access that would contaminate the task.
             </p>
             <p>
-                The scores above represent performance on only ten select tasks with difficulty breakdown <strong>5 easy / 3 medium / 2 hard</strong>. This was due to cost constraints; a run on the entire 59 tasks would provide a stronger baseline. Additionally, runs were only conducted in default mode, not strict. Small-scale tests indicate that frontier models remain incapable of completing all but the simplest tasks in strict mode. On all runs, turn budgets were set at <strong>3 &times; the turns the human tester took to complete the task</strong>. Longer exploration would likely have increased performance, but cost constraints again proved a limiting factor.
+                The scores above represent performance on only twelve select tasks with difficulty breakdown <strong>4 easy / 4 medium / 4 hard</strong>, each run with 3 seeds. This was due to cost constraints; a run on the entire 59 tasks would provide a stronger baseline and tighter confidence intervals. Additionally, runs were only conducted in default mode, not strict. Small-scale tests indicate that frontier models remain incapable of completing all but the simplest tasks in strict mode. On all runs, turn budgets were set at <strong>3 &times; the optimal (shortest-path) route length</strong> &mdash; a budget the human tester completed every task within. Longer exploration would likely have increased performance, but cost constraints again proved a limiting factor.
             </p>
         </section>
 
@@ -516,28 +537,29 @@
         open:   '#646b7a',  // open-model field (muted slate)
       };
 
+      // Path-progress: mean over the fixed 12 tasks; ci = 95% CI from the 3 seeds
+      // (measurement precision on this task set; tasks treated as fixed).
       var PP = [
-        { name:'Human',             sub:'first try',   v:0.996, c:C.human  },
-        { name:'Claude Opus 4.8',   sub:'Claude Code', v:0.692, c:C.claude },
-        { name:'GPT-5.5',           sub:'Codex CLI',   v:0.557, c:C.gpt    },
-        { name:'Gemini 3.5 Flash',  sub:'',            v:0.317, c:C.gemini },
-        { name:'Qwen 3.7 Plus',     sub:'',            v:0.184, c:C.open   },
-        { name:'Qwen 3.5-397B-A17B',sub:'',            v:0.138, c:C.open   },
-        { name:'GLM-5V Turbo',      sub:'',            v:0.109, c:C.open   },
-        { name:'Kimi K2.6',         sub:'',            v:0.088, c:C.open   },
-        { name:'Gemma 4 26B-A4B',   sub:'',            v:0.000, c:C.open   },
+        { name:'Human',             sub:'first try',   v:0.998, ci:0.004, c:C.human  },
+        { name:'Claude Opus 4.8',   sub:'Claude Code', v:0.852, ci:0.056, c:C.claude },
+        { name:'GPT-5.5',           sub:'Codex',       v:0.774, ci:0.096, c:C.gpt    },
+        { name:'Claude Opus 4.7',   sub:'Claude Code', v:0.771, ci:0.092, c:C.claude },
+        { name:'Gemini 3.1 Pro',    sub:'Antigravity', v:0.694, ci:0.096, c:C.gemini },
+        { name:'Gemini 3.5 Flash',  sub:'Antigravity', v:0.641, ci:0.121, c:C.gemini },
+        { name:'Claude Sonnet 4.6', sub:'Claude Code', v:0.571, ci:0.089, c:C.claude },
+        { name:'Qwen3.7-Plus',      sub:'Qwen Code',   v:0.313, ci:0.097, c:C.open   },
       ];
 
+      // Turn efficiency: mean turns ÷ human mean (79 turns); <1.0× = faster than human.
       var TURNS = [
-        { name:'Human',             sub:'52 turns',  v:1.00, c:C.human },
-        { name:'Claude Opus 4.8',   sub:'94 turns',  v:1.99, c:C.claude },
-        { name:'GPT-5.5',           sub:'107 turns', v:2.29, c:C.gpt },
-        { name:'Gemini 3.5 Flash',  sub:'148 turns', v:2.76, c:C.gemini },
-        { name:'Qwen 3.7 Plus',     sub:'121 turns', v:2.73, c:C.open },
-        { name:'Qwen 3.5-397B-A17B',sub:'151 turns', v:2.78, c:C.open },
-        { name:'GLM-5V Turbo',      sub:'139 turns', v:2.74, c:C.open },
-        { name:'Kimi K2.6',         sub:'153 turns', v:2.88, c:C.open },
-        { name:'Gemma 4 26B-A4B',   sub:'152 turns', v:2.93, c:C.open },
+        { name:'Human',             sub:'79 turns',  v:1.00, c:C.human },
+        { name:'GPT-5.5',           sub:'59 turns',  v:0.74, c:C.gpt },
+        { name:'Claude Opus 4.8',   sub:'74 turns',  v:0.94, c:C.claude },
+        { name:'Gemini 3.5 Flash',  sub:'96 turns',  v:1.21, c:C.gemini },
+        { name:'Claude Sonnet 4.6', sub:'99 turns',  v:1.25, c:C.claude },
+        { name:'Claude Opus 4.7',   sub:'99 turns',  v:1.25, c:C.claude },
+        { name:'Gemini 3.1 Pro',    sub:'102 turns', v:1.29, c:C.gemini },
+        { name:'Qwen3.7-Plus',      sub:'157 turns', v:1.98, c:C.open },
       ];
 
       function esc(s){ var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
@@ -572,8 +594,15 @@
         var max = 1.0, html = '';
         PP.forEach(function(d){
           var w = (d.v / max * 100).toFixed(1) + '%';
+          var err = '';
+          if (d.ci) {
+            var lo = Math.max(0, d.v - d.ci) / max * 100;
+            var hi = Math.min(max, d.v + d.ci) / max * 100;
+            err = '<div class="chart-err" style="left:' + lo.toFixed(1) + '%;width:' +
+                  (hi - lo).toFixed(1) + '%"></div>';
+          }
           html += '<div class="chart-row">' + nameCell(d, false) +
-            '<div class="chart-track"><div class="chart-fill" style="--w:' + w + ';background:' + d.c + '"></div></div>' +
+            '<div class="chart-track"><div class="chart-fill" style="--w:' + w + ';background:' + d.c + '"></div>' + err + '</div>' +
             '<div class="chart-val">' + d.v.toFixed(3) + '</div>' +
             '</div>';
         });
@@ -584,7 +613,7 @@
 
       // Turn-efficiency chart: domain 0..3.1x, dashed reference at human 1.0x.
       function renderTurns(el){
-        var max = 3.1, refPct = (1.0 / max * 100);
+        var max = 2.2, refPct = (1.0 / max * 100);
         var html = '';
         TURNS.forEach(function(d){
           var w = (d.v / max * 100).toFixed(1) + '%';
@@ -598,7 +627,7 @@
             '</div>';
         });
         html += '<div class="chart-row" style="height:auto"><div></div>' +
-                '<div class="chart-axis"><span>0</span><span>1&times;</span><span>2&times;</span><span>3&times;</span></div><div></div></div>';
+                '<div class="chart-axis"><span>0</span><span>1&times;</span><span>2&times;</span></div><div></div></div>';
         el.innerHTML = html;
       }
 
