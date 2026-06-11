@@ -313,21 +313,34 @@
       }
       .chart.shown .chart-err { opacity: 1; }
       /* cross-harness paired bars: native CLI (solid) vs my harness (lighter tint).
-         Flow blocks (not absolute) so percentage widths resolve like .chart-fill. */
-      .xh-track {
-        height: 30px; background: transparent;
-        display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 4px;
-      }
+         Absolutely positioned so the 95% CI whiskers can centre on each bar. */
+      .xh-track { position: relative; height: 30px; background: transparent; }
       .xh-bar {
-        height: 12px; width: 0; border-radius: 3px;
+        position: absolute; height: 11px; width: 0; border-radius: 3px;
         transition: width 1.05s cubic-bezier(0.22, 1, 0.36, 1);
         box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
       }
+      .xh-bar.native { top: 3px; }
       .xh-bar.mine {
+        top: 16px;
         /* same hue, lightened — a softer tint of the native bar */
         background-image: linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5));
       }
       .chart.shown .xh-bar { width: var(--w); }
+      /* 95% CI whisker (I-beam), centred on each bar */
+      .xh-err {
+        position: absolute; height: 7px; transform: translateY(-50%);
+        border-left: 1.5px solid rgba(255,255,255,0.8);
+        border-right: 1.5px solid rgba(255,255,255,0.8);
+        z-index: 3; opacity: 0; transition: opacity 0.5s ease 0.9s;
+      }
+      .xh-err::before {
+        content: ''; position: absolute; top: 50%; left: 0; right: 0;
+        height: 1.5px; background: rgba(255,255,255,0.8); transform: translateY(-50%);
+      }
+      .xh-err.native { top: 8.5px; }
+      .xh-err.mine { top: 21.5px; }
+      .chart.shown .xh-err { opacity: 1; }
       .xh-legend {
         display: flex; gap: 18px; justify-content: flex-end; align-items: center;
         max-width: 720px; margin: 2px 0 12px;
@@ -547,7 +560,7 @@
                 Recent benchmark results have indicated that the harnesses used in assessment significantly impact model performance. As such, each model was tested on the simple completion loop harness created for the tasks and its native harness across three randomly selected tasks, two times each harness.
             </p>
             <figure id="chart-xh" class="chart" aria-label="Native harness versus the custom completion loop, by model"></figure>
-            <p class="caption">Mean path-progress for each model on its native harness versus the custom completion loop, over the three-task cross-harness slice. Solid bar = native harness; lighter bar = custom loop.</p>
+            <p class="caption">Mean path-progress for each model on its native harness versus the custom completion loop, over the three-task cross-harness slice. Solid bar = native harness; lighter bar = custom loop; whiskers are 95% confidence intervals (frontier n=12, open models n=6&ndash;15).</p>
             <p>
                 The results indicate that for LostBench tasks, frontier models are quite robust across harnesses. In contrast, the open source models appear to be quite fragile, with performance degrading substantially outside of their recommended scaffolding. Given the results of this analysis, models were run in the production benchmark within their own native harnesses. GLM was included in this analysis but ultimately struck from the full benchmarking due to endpoint instability.
             </p>
@@ -557,7 +570,7 @@
                 Models were also tested at different reasoning levels twice for each harness across the same three tasks.
             </p>
             <figure id="chart-reason" class="chart" aria-label="Low versus high reasoning effort, by model"></figure>
-            <p class="caption">Mean path-progress at low versus high reasoning effort on the native harness, over the same three-task slice. Solid bar = low effort; lighter bar = high effort.</p>
+            <p class="caption">Mean path-progress at low versus high reasoning effort on the native harness, over the same three-task slice. Solid bar = low effort; lighter bar = high effort; whiskers are 95% confidence intervals (n=6). The intervals overlap heavily &mdash; the reasoning effect sits within the noise.</p>
             <p>
                 Reasoning levels did not appear to have a significant impact on performance in these tasks. While the differences were very minimal and below the noise threshold, all models did report higher scores on their native harnesses with mixed results on the default loop, potentially indicating that benefits of higher reasoning are tied to the harness the model was trained on. Further exploration on this question would be interesting.
             </p>
@@ -722,26 +735,28 @@
       // fixed 3-task slice (easy/medium/hard). native = each model's production agentic
       // CLI; mine = my generic image→action completion loop. Frontier gaps are noise
       // (≤0.03); the open models swing 2–4× on the harness alone.
+      // ci = 95% CI (t-based) over the rollouts behind each bar; frontier n=12
+      // (3 tasks × 2 efforts × 2 seeds), open models n=6–15.
       var XH = [
-        { name:'GPT-5.5',           native:0.874, mine:0.900, c:C.gpt    },
-        { name:'Claude Opus 4.8',   native:0.914, mine:0.913, c:C.claude },
-        { name:'Claude Opus 4.7',   native:0.878, mine:0.899, c:C.claude },
-        { name:'Claude Sonnet 4.6', native:0.890, mine:0.881, c:C.claude },
-        { name:'Gemini 3.1 Pro',    native:0.908, mine:0.878, c:C.gemini },
-        { name:'Gemini 3.5 Flash',  native:0.879, mine:0.906, c:C.gemini },
-        { name:'Qwen3.7-Plus',      native:0.394, mine:0.111, c:C.open   },
-        { name:'GLM-5V-Turbo',      native:0.478, mine:0.241, c:C.open   },
+        { name:'GPT-5.5',           native:0.874, nativeCi:0.058, mine:0.900, mineCi:0.057, c:C.gpt    },
+        { name:'Claude Opus 4.8',   native:0.914, nativeCi:0.058, mine:0.913, mineCi:0.063, c:C.claude },
+        { name:'Claude Opus 4.7',   native:0.878, nativeCi:0.064, mine:0.899, mineCi:0.063, c:C.claude },
+        { name:'Claude Sonnet 4.6', native:0.890, nativeCi:0.062, mine:0.881, mineCi:0.084, c:C.claude },
+        { name:'Gemini 3.1 Pro',    native:0.908, nativeCi:0.057, mine:0.878, mineCi:0.096, c:C.gemini },
+        { name:'Gemini 3.5 Flash',  native:0.879, nativeCi:0.064, mine:0.906, mineCi:0.071, c:C.gemini },
+        { name:'Qwen3.7-Plus',      native:0.394, nativeCi:0.299, mine:0.111, mineCi:0.164, c:C.open   },
+        { name:'GLM-5V-Turbo',      native:0.478, nativeCi:0.403, mine:0.241, mineCi:0.243, c:C.open   },
       ];
 
       // Reasoning level: low vs high effort on the native harness, same 3-task slice.
       // Differences are minimal and below the noise threshold (see §B of the study).
       var REASON = [
-        { name:'GPT-5.5',           native:0.871, mine:0.877, c:C.gpt    },
-        { name:'Claude Opus 4.8',   native:0.910, mine:0.917, c:C.claude },
-        { name:'Claude Opus 4.7',   native:0.877, mine:0.879, c:C.claude },
-        { name:'Claude Sonnet 4.6', native:0.882, mine:0.898, c:C.claude },
-        { name:'Gemini 3.1 Pro',    native:0.899, mine:0.916, c:C.gemini },
-        { name:'Gemini 3.5 Flash',  native:0.874, mine:0.884, c:C.gemini },
+        { name:'GPT-5.5',           native:0.871, nativeCi:0.092, mine:0.877, mineCi:0.109, c:C.gpt    },
+        { name:'Claude Opus 4.8',   native:0.910, nativeCi:0.107, mine:0.917, mineCi:0.094, c:C.claude },
+        { name:'Claude Opus 4.7',   native:0.877, nativeCi:0.109, mine:0.879, mineCi:0.111, c:C.claude },
+        { name:'Claude Sonnet 4.6', native:0.882, nativeCi:0.114, mine:0.898, mineCi:0.098, c:C.claude },
+        { name:'Gemini 3.1 Pro',    native:0.899, nativeCi:0.101, mine:0.916, mineCi:0.096, c:C.gemini },
+        { name:'Gemini 3.5 Flash',  native:0.874, nativeCi:0.108, mine:0.884, mineCi:0.115, c:C.gemini },
       ];
 
       function esc(s){ var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
@@ -822,6 +837,13 @@
         var html = '<div class="xh-legend">' +
           '<span><i class="xh-swatch"></i>' + esc(legA) + '</span>' +
           '<span><i class="xh-swatch mine"></i>' + esc(legB) + '</span></div>';
+        function errBar(v, ci, cls){
+          if (!ci) return '';
+          var lo = Math.max(0, v - ci) / max * 100;
+          var hi = Math.min(max, v + ci) / max * 100;
+          return '<div class="xh-err ' + cls + '" style="left:' + lo.toFixed(1) +
+                 '%;width:' + (hi - lo).toFixed(1) + '%"></div>';
+        }
         rows.forEach(function(d){
           var wn = (d.native / max * 100).toFixed(1) + '%';
           var wm = (d.mine / max * 100).toFixed(1) + '%';
@@ -831,6 +853,8 @@
             '<div class="chart-track xh-track">' +
               '<div class="xh-bar native" style="--w:' + wn + ';background-color:' + d.c + '"></div>' +
               '<div class="xh-bar mine" style="--w:' + wm + ';background-color:' + d.c + '"></div>' +
+              errBar(d.native, d.nativeCi, 'native') +
+              errBar(d.mine, d.mineCi, 'mine') +
             '</div>' +
             '<div class="chart-val">Δ ' + dstr + '</div>' +
             '</div>';
