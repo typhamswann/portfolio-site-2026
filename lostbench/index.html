@@ -289,6 +289,33 @@
         transform: translateY(-50%);
       }
       .chart.shown .chart-err { opacity: 1; }
+      /* cross-harness paired bars: native CLI (solid) vs my harness (hatched).
+         Flow blocks (not absolute) so percentage widths resolve like .chart-fill. */
+      .xh-track {
+        height: 30px; background: transparent;
+        display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: 4px;
+      }
+      .xh-bar {
+        height: 12px; width: 0; border-radius: 3px;
+        transition: width 1.05s cubic-bezier(0.22, 1, 0.36, 1);
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+      }
+      .xh-bar.mine {
+        opacity: 0.5;
+        background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.22) 0 3px, transparent 3px 6px);
+      }
+      .chart.shown .xh-bar { width: var(--w); }
+      .xh-legend {
+        display: flex; gap: 18px; justify-content: flex-end; align-items: center;
+        max-width: 720px; margin: 2px 0 12px;
+        font-family: 'JetBrains Mono', monospace; font-size: 0.64rem; color: #9a9a9a;
+      }
+      .xh-legend span { display: inline-flex; align-items: center; gap: 6px; }
+      .xh-swatch { width: 14px; height: 10px; border-radius: 2px; display: inline-block; background: #8a8a8a; }
+      .xh-swatch.mine {
+        opacity: 0.5;
+        background-image: repeating-linear-gradient(45deg, rgba(255,255,255,0.35) 0 3px, transparent 3px 6px);
+      }
       .chart-axis {
         grid-column: 2;
         display: flex;
@@ -362,7 +389,7 @@
         <section id="leaderboard" class="prose">
             <h2>Leaderboard</h2>
             <p>
-                Twelve-task validation subset (4 easy / 4 medium / 4 hard) of the 59-task public benchmark, default-mode, haversine scoring (closer to goal = higher). Each model ran all 12 tasks &times; 3 seeds through its <strong>native agentic harness</strong> &mdash; Claude Code, Codex, Antigravity, or Qwen Code &mdash; observing a 1024 × 768 viewport image with a one-line HUD each turn. Per-task turn budget = 3 &times; the optimal route length, a budget a real human completed every task within.
+                Twelve-task validation subset (4 easy / 4 medium / 4 hard) of the 57-task public benchmark, default-mode, haversine scoring (closer to goal = higher). Each model ran all 12 tasks &times; 3 seeds through its <strong>native agentic harness</strong> &mdash; Claude Code, Codex, Antigravity, or Qwen Code &mdash; observing a 1024 × 768 viewport image with a one-line HUD each turn. Per-task turn budget = 3 &times; the optimal route length, a budget a real human completed every task within.
             </p>
             <figure id="chart-pp" class="chart" aria-label="Mean path-progress by model"></figure>
             <p class="caption">Mean path-progress across the 12-task subset, 3 seeds each (1.0 = arrived at the goal). Error bars are 95% confidence intervals from the 3 seeds (measurement precision on this task set). Bars show the human ceiling, six frontier models across four native harnesses, and the open-model field.</p>
@@ -405,7 +432,7 @@
                 Each task is 100% distinct. While the panorama and geospatial data used to build the worlds are open source, they are integrated in a way that prevents contamination. Each task world is consistent between runs, but uses data from many different panoramic captures algorithmically bridged to create a continuous and coherent world. Start and end locations are picked based on the desired task difficulty and time horizon, enabling significant scaling and uniqueness even within a single geographic location.
             </p>
             <p>
-                Tasks in the public benchmark set span <strong>50 cities across 59 tasks</strong>, ensuring diverse scene characteristics. The private RL environment spans <strong>1,122 cities across 6,324 tasks</strong>, and there is scant overlap between any given pair of tasks within the same city due to the variety of length and size of each task area.
+                Tasks in the public benchmark set span <strong>50 cities across 57 tasks</strong>, ensuring diverse scene characteristics. The private RL environment spans <strong>1,122 cities across 6,324 tasks</strong>, and there is scant overlap between any given pair of tasks within the same city due to the variety of length and size of each task area.
             </p>
         </section>
 
@@ -447,20 +474,26 @@
                 The benchmark is structured as a Harbor-compatible repository where each model assessed used a simple custom completion loop. The Claude Opus 4.8 and GPT-5.5 runs, however, were conducted via the Claude Code and Codex harnesses. This was driven by cost limitations and likely impacted performance, though their harnesses enabled them no exclusive information access that would contaminate the task.
             </p>
             <p>
-                The scores above represent performance on only twelve select tasks with difficulty breakdown <strong>4 easy / 4 medium / 4 hard</strong>, each run with 3 seeds. This was due to cost constraints; a run on the entire 59 tasks would provide a stronger baseline and tighter confidence intervals. Additionally, runs were only conducted in default mode, not strict. Small-scale tests indicate that frontier models remain incapable of completing all but the simplest tasks in strict mode. On all runs, turn budgets were set at <strong>3 &times; the optimal (shortest-path) route length</strong> &mdash; a budget the human tester completed every task within. Longer exploration would likely have increased performance, but cost constraints again proved a limiting factor.
+                The scores above represent performance on only twelve select tasks with difficulty breakdown <strong>4 easy / 4 medium / 4 hard</strong>, each run with 3 seeds. This was due to cost constraints; a run on the entire 57 tasks would provide a stronger baseline and tighter confidence intervals. Additionally, runs were only conducted in default mode, not strict. Small-scale tests indicate that frontier models remain incapable of completing all but the simplest tasks in strict mode. On all runs, turn budgets were set at <strong>3 &times; the optimal (shortest-path) route length</strong> &mdash; a budget the human tester completed every task within. Longer exploration would likely have increased performance, but cost constraints again proved a limiting factor.
             </p>
         </section>
 
         <section id="rigor" class="prose">
-            <h2>The noise floor</h2>
+            <h2>Robustness</h2>
             <p>
                 A benchmark is a measurement instrument, and in 2026 the hardest part of measuring an agent is no longer the model &mdash; it&apos;s everything wrapped around it. The same weights score differently depending on the scaffold they run in, the harness they were post-trained against, the provider route that serves them, and how much reasoning budget they&apos;re allowed to spend. Those choices stack into a <em>noise floor</em>: a band of variance that has nothing to do with capability. When the floor is wide, a headline number says more about the harness than the model, and a benchmark that never measures its own floor is quietly reporting a single draw from a distribution whose width it never checked. Much of the work of making LostBench trustworthy is keeping that floor low and being honest about where it isn&apos;t.
             </p>
             <p>
                 Some of it is settled by design. Scoring is a closed-form distance, not a model grading another model, so the failures that haunt judge-based evals &mdash; a grader favoring its own family, scores that drift when you replay them, rubric ambiguity &mdash; never enter the picture. The world is deterministic, and the goal is shown only as a pin on the map, never written as a coordinate the agent can read: across all 57 tasks the target location appears nowhere in the prompt, so a model can&apos;t skip the navigation by recognizing a memorized answer. And because the worlds are stitched from live Mapillary and OpenStreetMap data, the task pool stays refreshable &mdash; realism here is a street a person actually walked, not a scenario an annotator was asked to invent.
             </p>
+            <h3>Cross-harness: the scaffold is part of the score</h3>
+            <figure id="chart-xh" class="chart" aria-label="Native CLI versus my custom harness, same model and route"></figure>
+            <p class="caption">Same weights, same provider route, only the harness swapped, over a fixed easy / medium / hard slice. Solid bar = the model&apos;s production agentic CLI; hatched bar = my generic image&rarr;action loop. Frontier models barely move (&Delta; &le; 0.03); the open models swing 2&ndash;4&times;.</p>
             <p>
-                What design doesn&apos;t settle, I measured. I re-ran a small slice of the benchmark many times over, and once more after a single change to the scaffold, to separate how much of a score is the model from how much is the setup. Three things stood out. The same model gives different answers to the same task: run repeatedly against an identical world, Qwen3.7-Plus reaches a consistent outcome &mdash; arrived or not &mdash; on only <strong>40%</strong> of tasks and GLM-5V-Turbo on <strong>60%</strong>, succeeding on some attempts and failing on others for the rest. The averages also hide their own shape &mdash; GLM&apos;s mean of <strong>0.20</strong> is bimodal underneath, most rollouts near zero and a fifth near solved, so the mean describes no rollout that actually happened. And most telling, when I shrank the observation window the agent carries from four frames to one &mdash; one scaffolding knob, the model untouched &mdash; per-task scores moved by as much as <strong>0.32</strong>, with four of five tasks shifting by more than five points. A single setup choice was worth an entire tier of apparent capability. I also built the handling for the case where a model returns an empty turn and a naive harness scores it zero outright; these two models never tripped it, so their raw and reprompted numbers agree &mdash; but the instrument is ready for the ones that don&apos;t.
+                The sharpest source of noise isn&apos;t randomness &mdash; it&apos;s the scaffold. Holding the model and its serving route fixed and swapping only the harness, every frontier model lands within <strong>0.03</strong> of itself whether it runs in its own production CLI or my plain completion loop: a strong model drives a generic loop about as well as its bespoke one. The open models are a different story. The native Qwen Code CLI scored Qwen3.7-Plus at <strong>0.39</strong> and GLM-5V-Turbo at <strong>0.48</strong>; dropped into my generic loop, the same weights fell to <strong>0.11</strong> and <strong>0.24</strong> &mdash; a 2&ndash;4&times; swing from the harness alone. A large share of what an open-model leaderboard reads as &ldquo;capability&rdquo; is really harness fit, which is why a number from one harness can never be set against a number from another. (The native CLIs are coding tools, so part of that gap is how well each model drives an unfamiliar image-and-tool loop rather than navigation skill as such.)
+            </p>
+            <p>
+                Determinism is the other half of the floor. I re-ran a small slice of the benchmark many times over, and once more after a single change to the scaffold, to separate how much of a score is the model from how much is the setup. Three things stood out. The same model gives different answers to the same task: run repeatedly against an identical world, Qwen3.7-Plus reaches a consistent outcome &mdash; arrived or not &mdash; on only <strong>40%</strong> of tasks and GLM-5V-Turbo on <strong>60%</strong>, succeeding on some attempts and failing on others for the rest. The averages also hide their own shape &mdash; GLM&apos;s mean of <strong>0.20</strong> is bimodal underneath, most rollouts near zero and a fifth near solved, so the mean describes no rollout that actually happened. And most telling, when I shrank the observation window the agent carries from four frames to one &mdash; one scaffolding knob, the model untouched &mdash; per-task scores moved by as much as <strong>0.32</strong>, with four of five tasks shifting by more than five points. A single setup choice was worth an entire tier of apparent capability. I also built the handling for the case where a model returns an empty turn and a naive harness scores it zero outright; these two models never tripped it, so their raw and reprompted numbers agree &mdash; but the instrument is ready for the ones that don&apos;t.
             </p>
             <p>
                 None of this is exotic. It&apos;s the difference between a number and a measurement, and it&apos;s the bar I think a benchmark has to clear before its leaderboard means anything. The reproducible details &mdash; full per-model distributions, the per-task scaffold spreads, and the sandbox and provider-route manifest a buyer would need to re-run all of it &mdash; live alongside the benchmark in <a href="https://github.com/typhamswann/lostbench/blob/main/METHODOLOGY.md"><code>METHODOLOGY.md</code></a>.
@@ -475,9 +508,9 @@
 
             <h3>Turn efficiency</h3>
             <figure id="chart-turns" class="chart" aria-label="Turns taken relative to the human"></figure>
-            <p class="caption">Turns taken per task, as a multiple of the human tester. The dashed line marks human pace (1&times;). Every model spends 2&ndash;3&times; the human's turns; the more accurate the model, the closer it gets.</p>
+            <p class="caption">Turns taken per task, as a multiple of the human tester. The dashed line marks human pace (1&times;). Turn counts span 0.7&ndash;2.0&times; the human&apos;s; the more accurate models are the more economical.</p>
             <p>
-                Models were subsequently less turn-efficient than the human tester. They were less precise in their navigation of the world and would frequently travel far down the wrong path before correcting. Even though models were allocated a turn budget of three times the turns taken by the human, they were often guessing with their final or one of their final available turns. The more accurate the model, the more turn-efficient it was as well: Claude Code was the most efficient at <strong>1.99&times;</strong> the human&apos;s turn count, compared to the overall agent average of <strong>2.64&times;</strong>.
+                Turn counts ranged from <strong>0.74&times;</strong> the human&apos;s (GPT-5.5) to <strong>1.98&times;</strong> (Qwen3.7-Plus), averaging <strong>1.24&times;</strong> across the agents. The pattern is that the more accurate models are also the more turn-economical: GPT-5.5 and Claude Opus 4.8 actually finished in <em>fewer</em> turns than the human tester (0.74&times; and 0.94&times;), while the weakest model wandered for nearly twice as many. That said, the lowest turn counts partly reflect earlier guessing rather than pure efficiency &mdash; the human spent more turns but closed to within a meter, whereas the faster models committed to a guess sooner and less accurately. On the hardest tasks several models were still guessing on one of their final allowed turns, frequently travelling far down a wrong path before correcting.
             </p>
         </section>
 
@@ -494,7 +527,7 @@
         <section class="prose">
             <h2>Future Work</h2>
             <p>
-                This project was significantly budget-constrained, serving as a barrier to running the full 59 tasks, running the benchmark in strict mode, and running it with higher turn limits (or without any cap). The full RL environment contains many more diverse tasks with higher difficulty and longer time horizons. The data pipeline allows trivially creating tasks with orders-of-magnitude longer time horizons. As frontier models progress, it will be interesting to track their progression on benchmark performance.
+                This project was significantly budget-constrained, serving as a barrier to running the full 57 tasks, running the benchmark in strict mode, and running it with higher turn limits (or without any cap). The full RL environment contains many more diverse tasks with higher difficulty and longer time horizons. The data pipeline allows trivially creating tasks with orders-of-magnitude longer time horizons. As frontier models progress, it will be interesting to track their progression on benchmark performance.
             </p>
             <p>
                 The variance study also maps what a full-coverage run would take, most of it a question of compute rather than method. The honest version of the scaffold test runs every model under at least two harnesses, one of them the harness it was actually post-trained against &mdash; Claude Code for Anthropic, Codex for OpenAI, the Gemini CLI for Google &mdash; because a model tuned to its own tool surface and then scored under a foreign one is being measured on the gap, not the capability. The serving route matters for the same reason: identical weights behind Bedrock or Vertex meet different content filters and tool schemas than served direct, so a complete run reports a provider-route matrix rather than a single endpoint. The rest is scale &mdash; every one of the 57 tasks repeated enough times for the distributions to settle, strict mode across the full set instead of spot checks, and a task pool refreshed continuously from the live pipeline so the benchmark stays ahead of contamination rather than freezing into it. I demonstrated each of these on a handful of tasks; running them across the whole field is the part the budget gates.
@@ -560,6 +593,21 @@
         { name:'Claude Opus 4.7',   sub:'99 turns',  v:1.25, c:C.claude },
         { name:'Gemini 3.1 Pro',    sub:'102 turns', v:1.29, c:C.gemini },
         { name:'Qwen3.7-Plus',      sub:'157 turns', v:1.98, c:C.open },
+      ];
+
+      // Cross-harness: same model + provider route, only the harness swapped, over a
+      // fixed 3-task slice (easy/medium/hard). native = each model's production agentic
+      // CLI; mine = my generic image→action completion loop. Frontier gaps are noise
+      // (≤0.03); the open models swing 2–4× on the harness alone.
+      var XH = [
+        { name:'GPT-5.5',           native:0.874, mine:0.900, c:C.gpt    },
+        { name:'Claude Opus 4.8',   native:0.914, mine:0.913, c:C.claude },
+        { name:'Claude Opus 4.7',   native:0.878, mine:0.899, c:C.claude },
+        { name:'Claude Sonnet 4.6', native:0.890, mine:0.881, c:C.claude },
+        { name:'Gemini 3.1 Pro',    native:0.908, mine:0.878, c:C.gemini },
+        { name:'Gemini 3.5 Flash',  native:0.879, mine:0.906, c:C.gemini },
+        { name:'Qwen3.7-Plus',      native:0.394, mine:0.111, c:C.open   },
+        { name:'GLM-5V-Turbo',      native:0.478, mine:0.241, c:C.open   },
       ];
 
       function esc(s){ var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
@@ -631,6 +679,30 @@
         el.innerHTML = html;
       }
 
+      // Cross-harness paired-bar chart: native CLI vs my harness, domain 0..1.
+      function renderXH(el){
+        var max = 1.0;
+        var html = '<div class="xh-legend">' +
+          '<span><i class="xh-swatch"></i>native CLI</span>' +
+          '<span><i class="xh-swatch mine"></i>my harness</span></div>';
+        XH.forEach(function(d){
+          var wn = (d.native / max * 100).toFixed(1) + '%';
+          var wm = (d.mine / max * 100).toFixed(1) + '%';
+          var dl = d.mine - d.native;
+          var dstr = (dl >= 0 ? '+' : '−') + Math.abs(dl).toFixed(2);
+          html += '<div class="chart-row">' + nameCell(d, false) +
+            '<div class="chart-track xh-track">' +
+              '<div class="xh-bar native" style="--w:' + wn + ';background:' + d.c + '"></div>' +
+              '<div class="xh-bar mine" style="--w:' + wm + ';background:' + d.c + '"></div>' +
+            '</div>' +
+            '<div class="chart-val">Δ ' + dstr + '</div>' +
+            '</div>';
+        });
+        html += '<div class="chart-row" style="height:auto"><div></div>' +
+                '<div class="chart-axis"><span>0</span><span>0.5</span><span>1.0</span></div><div></div></div>';
+        el.innerHTML = html;
+      }
+
       // The player reports its exact content height; size the iframe to it so the
       // box fits snugly (no empty space below Submit) at any width.
       window.addEventListener('message', function (ev) {
@@ -668,17 +740,19 @@
 
       var pp = document.getElementById('chart-pp');
       var tn = document.getElementById('chart-turns');
+      var xh = document.getElementById('chart-xh');
       if (pp) renderPP(pp);
       if (tn) renderTurns(tn);
+      if (xh) renderXH(xh);
 
       // Animate bars in when each chart scrolls into view.
       if ('IntersectionObserver' in window) {
         var io = new IntersectionObserver(function(entries){
           entries.forEach(function(e){ if (e.isIntersecting){ e.target.classList.add('shown'); io.unobserve(e.target); } });
         }, { threshold: 0.25 });
-        [pp, tn].forEach(function(c){ if (c) io.observe(c); });
+        [pp, tn, xh].forEach(function(c){ if (c) io.observe(c); });
       } else {
-        [pp, tn].forEach(function(c){ if (c) c.classList.add('shown'); });
+        [pp, tn, xh].forEach(function(c){ if (c) c.classList.add('shown'); });
       }
     })();
     </script>
