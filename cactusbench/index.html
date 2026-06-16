@@ -480,7 +480,7 @@
                     <figcaption>2023 field sheet — per-arm direction, heights, and recorder notes</figcaption>
                 </figure>
                 <figure>
-                    <img src="images/28-02A__2026_02.jpg" alt="Field photo of a saguaro being measured">
+                    <img src="images/28-02A__2026_01.jpg" alt="Field photo of a saguaro being measured by a crew">
                     <figcaption>The same saguaro (tag 2A) in the field</figcaption>
                 </figure>
             </div>
@@ -535,10 +535,16 @@
             <p>
                 Significant work was put towards ensuring the benchmark was accurate, didn&apos;t give away extra information that exposed solutions, and was fair to the model given the information it was provided. One issue that came up was that many scorer sheets had hand-written notes made by the human data curator exposing their corrections and reasoning to the model. To hide these notes, manual redactions were applied to all sheets. To prevent models from using the redactions to understand that a value may be wrong or arms need to be reordered (and especially to prevent reward hacking on a training environment), realistic fake redactions were carefully applied to sheets which needed no corrections.
             </p>
-            <figure class="fig">
-                <img src="images/28-02A__sheet_A.png" alt="A field sheet as presented to the model, with curator notes redacted">
-                <figcaption>A 2026 field sheet as the model receives it — the curator&apos;s QA notes are manually redacted, and realistic decoy redactions are added to sheets that needed no corrections, so a redaction can&apos;t leak which values are wrong.</figcaption>
-            </figure>
+            <div class="figrow">
+                <figure>
+                    <img src="images/redaction_before.png" alt="Original field sheet with the curator's handwritten QA correction notes">
+                    <figcaption>Before — the original scan. The curator&apos;s handwritten QA notes (bottom) spell out the corrections, e.g. &ldquo;should be &minus;0.89 for A.&rdquo;</figcaption>
+                </figure>
+                <figure>
+                    <img src="images/redaction_after.png" alt="The same field sheet with the curator's notes redacted out">
+                    <figcaption>After — as the model receives it. The answer-leaking notes are redacted; decoy redactions are also added to clean sheets so a redaction can&apos;t signal which values are wrong.</figcaption>
+                </figure>
+            </div>
             <p>
                 To ensure the benchmark reflects real-world performance, the ground truth was created by the domain expert who curated the dataset. It was carefully checked by a second human to ensure quality. All responses from all frontier models were carefully audited to ensure no scoring mistakes slipped through. All potential errors and cases where the ground truth was unclear or complex involved a discussion with the domain expert and careful deliberation about what would be fair to the model given the information available.
             </p>
@@ -621,6 +627,8 @@
             </p>
 
             <h3>Failure Analysis</h3>
+            <figure id="chart-fail" class="chart" aria-label="Logical versus OCR failures by frontier model"></figure>
+            <p class="caption">Wrong cells per frontier model on the 46-task set, split into OCR / transcription misreads and logical (QA-reasoning) failures. OCR dominates every model (70&ndash;87&#37;) and scales sharply with overall quality, while logical failures stay roughly flat (9&ndash;17) &mdash; a floor set by the sparse logic challenges in the task set.</p>
             <p>
                 Somewhat surprisingly, cell failures were dominated by OCR errors among frontier models. Qualitative analysis shows that even the best multimodal models still are substantially worse than humans at reading handwritten notes. Still, the frontier models were able to properly record most cells accurately. On the other hand, logical failures were made much more frequently with respect to the number of logic challenges presented in the tasks, sharing a small proportion of total errors due to relative sparsity in the task set.
             </p>
@@ -699,6 +707,16 @@
         { name:'Claude Opus 4.7',   native:0.865, nativeCi:0.139, mine:0.941, mineCi:0.030, c:C.claude },
       ];
 
+      // Failure analysis: wrong cells per frontier model over the 46-task set, split into
+      // OCR/transcription misreads vs logical (failed-QA-correction + missing/hallucinated arm).
+      var FAIL = [
+        { name:'Gemini 3.1 Pro',   ocr:22,  logical:9,  c:C.gemini },
+        { name:'Gemini 3.5 Flash', ocr:31,  logical:9,  c:C.gemini },
+        { name:'GPT-5.5',          ocr:35,  logical:16, c:C.gpt    },
+        { name:'Claude Opus 4.8',  ocr:71,  logical:15, c:C.claude },
+        { name:'Claude Opus 4.7',  ocr:100, logical:17, c:C.claude },
+      ];
+
       function esc(s){ var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
 
       var LOGOS = {
@@ -775,22 +793,45 @@
         el.innerHTML = html;
       }
 
+      // Stacked-bar failure chart (count domain): OCR segment + logical segment per model.
+      function renderFailure(el){
+        var max = 120, OCR = '#646b7a', LOG = '#e9c46a';
+        var html = '<div class="xh-legend">' +
+          '<span><i class="xh-swatch" style="background:' + OCR + '"></i>OCR / transcription</span>' +
+          '<span><i class="xh-swatch" style="background:' + LOG + '"></i>logical</span></div>';
+        FAIL.forEach(function(d){
+          var ocrW = (d.ocr / max * 100).toFixed(1), logW = (d.logical / max * 100).toFixed(1);
+          html += '<div class="chart-row">' + nameCell(d) +
+            '<div class="chart-track">' +
+              '<div class="fseg" style="left:0;--w:' + ocrW + '%;background:' + OCR + '"></div>' +
+              '<div class="fseg" style="left:' + ocrW + '%;--w:' + logW + '%;background:' + LOG + '"></div>' +
+            '</div>' +
+            '<div class="chart-val">' + (d.ocr + d.logical) + '<span class="unit"> cells</span></div>' +
+            '</div>';
+        });
+        html += '<div class="chart-row" style="height:auto"><div></div>' +
+                '<div class="chart-axis"><span>0</span><span>60</span><span>120 cells</span></div><div></div></div>';
+        el.innerHTML = html;
+      }
+
       var lb  = document.getElementById('chart-lb');
       var lb2 = document.getElementById('chart-lb2');
       var xh  = document.getElementById('chart-xh');
       var rs  = document.getElementById('chart-reason');
+      var ff  = document.getElementById('chart-fail');
       if (lb)  renderAcc(lb);
       if (lb2) renderAcc(lb2);
       if (xh)  renderPaired(xh, XH, 'native CLI', 'completion loop');
       if (rs)  renderPaired(rs, REASON, 'low effort', 'high effort');
+      if (ff)  renderFailure(ff);
 
       if ('IntersectionObserver' in window) {
         var io = new IntersectionObserver(function(entries){
           entries.forEach(function(e){ if (e.isIntersecting){ e.target.classList.add('shown'); io.unobserve(e.target); } });
         }, { threshold: 0.25 });
-        [lb, lb2, xh, rs].forEach(function(c){ if (c) io.observe(c); });
+        [lb, lb2, xh, rs, ff].forEach(function(c){ if (c) io.observe(c); });
       } else {
-        [lb, lb2, xh, rs].forEach(function(c){ if (c) c.classList.add('shown'); });
+        [lb, lb2, xh, rs, ff].forEach(function(c){ if (c) c.classList.add('shown'); });
       }
 
       // Scroll-spy: highlight the nav link for the section currently in view.
