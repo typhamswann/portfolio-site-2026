@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CactusBench — Ty Pham-Swann</title>
+    <meta name="description" content="Measuring frontier models' ability to carry out quality-assurance tasks on real scientific data using complex visual reasoning. An open Harbor-compatible benchmark of saguaro-cactus field data.">
+    <link rel="stylesheet" type="text/css" href="styles.css?v=3">
+    <!-- Inline override for the runner badge so it can't be cache-poisoned by
+         a stale styles.css at the CDN edge. These rules win because they're
+         in the same response document as the page itself. -->
+    <style>
+      /* DARK badge plate. Model name in white. The logo sits in its own small
+         WHITE square, with the mark sized small inside it so the square reads
+         as a clean white chip (not a dark mark filling the square edge-to-edge). */
+      .runner-badge {
+        position: absolute !important;
+        right: 14px !important;
+        bottom: 14px !important;
+        display: inline-flex !important;
+        align-items: center !important;
+        gap: 8px !important;
+        padding: 5px 11px 5px 5px !important;
+        background: rgba(10,10,10,0.86) !important;
+        border: 0 !important;
+        border-radius: 5px !important;
+        z-index: 5 !important;
+        pointer-events: none !important;
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+      }
+      .runner-icon {
+        width: 26px !important;
+        height: 26px !important;
+        flex-shrink: 0 !important;
+        display: block !important;
+        background: #ffffff !important;
+        border: 0 !important;
+        border-radius: 4px !important;
+        overflow: hidden !important;
+        color: #0a0a0a !important;
+      }
+      /* anthropic_chip.png is already a solid-white square with the black mark
+         baked in and padded — so it just fills the chip 100%. No transparency,
+         no filter, nothing that can read as grey. */
+      .runner-icon img {
+        width: 100% !important;
+        height: 100% !important;
+        object-fit: cover !important;
+        display: block !important;
+        filter: none !important;
+      }
+      /* The human runner still uses an inline SVG, so center + size it. */
+      .runner-icon svg {
+        width: 64% !important;
+        height: 64% !important;
+        margin: 18% !important;
+        fill: currentColor !important;
+      }
+      .runner-badge.runner-human  .runner-icon { color: #1e8b54 !important; }
+      .runner-badge.runner-gemini .runner-icon { color: #1a73e8 !important; }
+      .runner-name {
+        font-size: 12.5px !important;
+        font-weight: 500 !important;
+        color: #f5f5f5 !important;
+        letter-spacing: 0.02em !important;
+        line-height: 1 !important;
+      }
+
+      /* ---------- HERO REPLAY LOADING SPINNER ---------- */
+      .stage-spinner {
+        position: absolute; top: 50%; left: 50%;
+        width: 38px; height: 38px; margin: -19px 0 0 -19px; z-index: 3;
+        border-radius: 50%;
+        border: 3px solid rgba(255,255,255,0.16);
+        border-top-color: #65d697;
+        animation: lb-hero-spin 0.75s linear infinite;
+      }
+      .stage-spinner.hidden { display: none; }
+      @keyframes lb-hero-spin { to { transform: rotate(360deg); } }
+
+      /* ---------- MODEL THINKING (hero replay, in-frame caption) ----------
+         An editorial aside, not an AI-product widget: a quiet glass plate set
+         in the calm sky band, the recovered reasoning in italic prose. No status
+         dot, no caps label, no accent bar — the first-person voice and the model
+         badge make the attribution self-evident. Clamped to two lines; the full
+         thought reveals on hover. Cross-fades only on a genuine change. */
+      .stage-thought {
+        position: absolute;
+        /* clear the burned-in compass (top-left) and turn/step HUD (top-right);
+           the calm sky band between them is the only uncluttered zone */
+        top: 14px; left: 13.5%;
+        max-width: 54%;
+        z-index: 4;
+        padding: 9px 14px 10px;
+        background: rgba(8,8,8,0.62);
+        backdrop-filter: blur(9px);
+        -webkit-backdrop-filter: blur(9px);
+        border-radius: 3px;
+        color: #d4d4d4;
+        font-family: inherit;
+        font-style: italic;
+        font-size: 13px;
+        line-height: 1.55;
+        letter-spacing: 0.005em;
+        pointer-events: auto;
+      }
+      .stage-thought.empty { display: none; }
+      .stage-thought .txt {
+        display: -webkit-box;
+        -webkit-line-clamp: 2; -webkit-box-orient: vertical;
+        overflow: hidden;
+      }
+      .stage-thought:hover .txt { -webkit-line-clamp: 12; }
+      .stage-thought.fade .txt { animation: lb-think-fade 0.5s ease; }
+      @keyframes lb-think-fade { from { opacity: 0.1; } to { opacity: 1; } }
+      @media (max-width: 640px) {
+        .stage-thought { left: 13.5%; max-width: 64%; font-size: 11.5px; padding: 7px 11px 8px; }
+      }
+
+      /* ---------- GET STARTED ---------- */
+      /* Open, spaced layout (no boxed card): a mono section label, the site's
+         standard buttons with the primary leading, then a single hairline
+         separating a quieter contact footnote. Hierarchy comes from spacing. */
+      .intro-cta {
+        max-width: 720px;
+        margin: 46px 0 18px;
+      }
+      .intro-cta .cta-eyebrow {
+        font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
+        font-size: 0.7rem; letter-spacing: 0.22em; text-transform: uppercase;
+        color: var(--muted); margin: 0 0 20px;
+      }
+      .intro-cta .cta-row {            /* override the hero's centered row → left, roomy */
+        display: flex; flex-wrap: wrap; gap: 12px;
+        justify-content: flex-start; margin: 0 0 30px;
+      }
+      .intro-cta .contact-note {       /* quieter footnote, set off by one hairline */
+        margin: 0; padding-top: 24px;
+        border-top: 1px solid var(--rule); max-width: none;
+        color: var(--muted); font-size: 0.9rem; line-height: 1.7; font-weight: 300;
+      }
+      .intro-cta .contact-note strong { color: #d8d8d8; font-weight: 500; }
+      @media (max-width: 600px) {
+        .intro-cta .cta { flex: 1 1 100%; text-align: center; }
+      }
+
+      /* ---------- PLAY EMBED ---------- */
+      .play-embed {
+        width: 100%;
+        max-width: 720px;           /* full text-column width — a touch more dominant */
+        margin: 16px 0 8px;
+        border: 1px solid var(--rule);
+        border-radius: 6px;
+        overflow: hidden;
+        background: #111;
+        /* height is set by JS to the player's reported content height (auto-fit) */
+      }
+      .play-embed iframe { width: 100%; height: 660px; border: 0; display: block; }
+      .play-poster {
+        width: 100%; height: 100%;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 8px; cursor: pointer;
+        background:
+          radial-gradient(120% 120% at 50% 0%, rgba(101,214,151,0.06), transparent 60%),
+          #0d0d0d;
+        border: 0; color: #f5f5f5;
+        font-family: 'Inter', -apple-system, sans-serif;
+        transition: background 0.2s ease;
+      }
+      .play-poster:hover { background: radial-gradient(120% 120% at 50% 0%, rgba(101,214,151,0.10), transparent 60%), #101010; }
+      .play-poster-icon {
+        width: 56px; height: 56px; border-radius: 50%;
+        display: inline-flex; align-items: center; justify-content: center;
+        background: #f5f5f5; color: #0a0a0a; font-size: 1.3rem; padding-left: 4px;
+      }
+      .play-poster-label { font-size: 1.05rem; font-weight: 400; letter-spacing: 0.01em; }
+      .play-poster-sub { font-size: 0.78rem; color: var(--muted); letter-spacing: 0.02em; }
+
+      /* ---------- DATA-VIZ CHARTS ---------- */
+      /* Google-Docs-style fixed outline rail — always visible in the left margin */
+      .doc-outline {
+        position: fixed; left: 30px; top: 50%; transform: translateY(-50%);
+        z-index: 40; display: flex; flex-direction: column; gap: 11px;
+        max-height: 86vh; overflow-y: auto; scrollbar-width: none; padding: 4px 0;
+      }
+      .doc-outline::-webkit-scrollbar { display: none; }
+      .doc-outline a {
+        display: flex; align-items: center; gap: 10px;
+        font-family: 'JetBrains Mono', monospace; font-size: 0.66rem;
+        letter-spacing: 0.02em; color: #6b6b6b; text-decoration: none;
+        white-space: nowrap; transition: color 0.2s ease;
+      }
+      .doc-outline a::before {
+        content: ''; width: 16px; height: 1.5px; background: currentColor;
+        flex-shrink: 0; transition: width 0.2s ease, background 0.2s ease;
+      }
+      .doc-outline a:hover { color: #b8b8b8; }
+      .doc-outline a.active { color: #f2f2f2; }
+      .doc-outline a.active::before { width: 30px; background: #f2f2f2; }
+      main section[id] { scroll-margin-top: 24px; }
+      /* hide the rail when there isn't room beside the centered content */
+      @media (max-width: 1180px) { .doc-outline { display: none; } }
+      .chart {
+        max-width: 720px;
+        margin: 8px 0 4px;
+        font-family: 'Inter', -apple-system, sans-serif;
+      }
+      .chart-row {
+        display: grid;
+        grid-template-columns: 186px 1fr 150px;
+        align-items: center;
+        column-gap: 14px;
+        height: 38px;
+      }
+      .chart-name {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 9px;
+        overflow: hidden;
+      }
+      .chart-nametext {
+        font-size: 0.84rem;
+        font-weight: 400;
+        color: #dcdcdc;
+        text-align: right;
+        line-height: 1.1;
+        min-width: 0;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .chart-nametext .sub {
+        display: block;
+        font-size: 0.62rem;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: #6f6f6f;
+        margin-top: 1px;
+      }
+      .chart-logo {
+        width: 17px;
+        height: 17px;
+        flex-shrink: 0;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        color: #ededed;
+      }
+      .chart-logo svg { width: 100%; height: 100%; fill: currentColor; }
+      /* Anthropic mark ships dark-on-transparent — flip to white for the dark page. */
+      .chart-logo img { width: 100%; height: 100%; object-fit: contain; filter: brightness(0) invert(1); }
+      .chart-track {
+        position: relative;
+        height: 20px;
+        background: rgba(255,255,255,0.035);
+        border-radius: 3px;
+        overflow: visible;
+      }
+      .chart-fill {
+        height: 100%;
+        width: 0;
+        border-radius: 3px;
+        transition: width 1.05s cubic-bezier(0.22, 1, 0.36, 1);
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+      }
+      .chart.shown .chart-fill { width: var(--w); }
+      .chart-val {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.78rem;
+        color: #f0f0f0;
+        white-space: nowrap;
+      }
+      .chart-val .unit { color: #7a7a7a; }
+      /* dashed reference line (human pace on the efficiency chart) */
+      .chart-ref {
+        position: absolute;
+        top: -6px; bottom: -6px;
+        width: 0;
+        border-left: 1px dashed rgba(233, 196, 106, 0.55);
+        z-index: 2;
+      }
+      .chart-ref-label {
+        position: absolute;
+        top: -20px;
+        transform: translateX(-50%);
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.62rem;
+        letter-spacing: 0.04em;
+        color: #e9c46a;
+        white-space: nowrap;
+      }
+      /* 95% CI error bar (I-beam) overlaid on the path-progress bars */
+      .chart-err {
+        position: absolute;
+        top: 50%;
+        height: 9px;
+        transform: translateY(-50%);
+        border-left: 1.5px solid rgba(255,255,255,0.85);
+        border-right: 1.5px solid rgba(255,255,255,0.85);
+        z-index: 3;
+        opacity: 0;
+        transition: opacity 0.5s ease 1s;
+      }
+      .chart-err::before {
+        content: '';
+        position: absolute;
+        top: 50%; left: 0; right: 0;
+        height: 1.5px;
+        background: rgba(255,255,255,0.85);
+        transform: translateY(-50%);
+      }
+      .chart.shown .chart-err { opacity: 1; }
+      /* cross-harness paired bars: native CLI (solid) vs my harness (lighter tint).
+         Absolutely positioned so the 95% CI whiskers can centre on each bar. */
+      .xh-track { position: relative; height: 30px; background: transparent; }
+      .xh-bar {
+        position: absolute; height: 11px; width: 0; border-radius: 3px;
+        transition: width 1.05s cubic-bezier(0.22, 1, 0.36, 1);
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+      }
+      .xh-bar.native { top: 3px; }
+      .xh-bar.mine {
+        top: 16px;
+        /* same hue, lightened — a softer tint of the native bar */
+        background-image: linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5));
+      }
+      .chart.shown .xh-bar { width: var(--w); }
+      /* 95% CI whisker (I-beam), centred on each bar */
+      .xh-err {
+        position: absolute; height: 7px; transform: translateY(-50%);
+        border-left: 1.5px solid rgba(255,255,255,0.8);
+        border-right: 1.5px solid rgba(255,255,255,0.8);
+        z-index: 3; opacity: 0; transition: opacity 0.5s ease 0.9s;
+      }
+      .xh-err::before {
+        content: ''; position: absolute; top: 50%; left: 0; right: 0;
+        height: 1.5px; background: rgba(255,255,255,0.8); transform: translateY(-50%);
+      }
+      .xh-err.native { top: 8.5px; }
+      .xh-err.mine { top: 21.5px; }
+      .chart.shown .xh-err { opacity: 1; }
+      .xh-legend {
+        display: flex; gap: 18px; justify-content: flex-end; align-items: center;
+        max-width: 720px; margin: 2px 0 12px;
+        font-family: 'JetBrains Mono', monospace; font-size: 0.64rem; color: #9a9a9a;
+      }
+      .xh-legend span { display: inline-flex; align-items: center; gap: 6px; }
+      .xh-swatch { width: 14px; height: 10px; border-radius: 2px; display: inline-block; background-color: #8a8a8a; }
+      .xh-swatch.mine {
+        background-image: linear-gradient(rgba(255,255,255,0.5), rgba(255,255,255,0.5));
+      }
+      /* reproducibility table + task lists */
+      .table-label {
+        font-size: 0.92rem; color: #e4e4e4; font-weight: 600;
+        margin: 26px 0 8px;
+      }
+      table.repro td code {
+        font-family: 'JetBrains Mono', monospace; font-size: 0.72rem; color: #b8b8b8;
+      }
+      .table-wrap { max-width: 720px; overflow-x: auto; margin: 6px 0 10px; }
+      table.repro {
+        width: 100%; border-collapse: collapse;
+        font-family: 'Inter', -apple-system, sans-serif; font-size: 0.8rem;
+      }
+      table.repro th, table.repro td {
+        text-align: left; padding: 8px 14px 8px 0;
+        border-bottom: 1px solid #1d1d1d; white-space: nowrap;
+      }
+      table.repro th {
+        font-size: 0.62rem; letter-spacing: 0.05em; text-transform: uppercase;
+        color: #8a8a8a; font-weight: 500;
+      }
+      table.repro td { color: #cfcfcf; }
+      .repro-list { font-size: 0.84rem; line-height: 1.7; }
+      .repro-list code {
+        font-family: 'JetBrains Mono', monospace; font-size: 0.72rem;
+        color: #b8b8b8; background: rgba(255,255,255,0.04);
+        padding: 1px 5px; border-radius: 3px;
+      }
+      .chart-axis {
+        grid-column: 2;
+        display: flex;
+        justify-content: space-between;
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 0.64rem;
+        color: #5c5c5c;
+        margin-top: 6px;
+        border-top: 1px solid #1a1a1a;
+        padding-top: 5px;
+      }
+      @media (max-width: 600px) {
+        .chart-row { grid-template-columns: 124px 1fr 96px; column-gap: 9px; height: 36px; }
+        .chart-nametext { font-size: 0.72rem; }
+        .chart-logo { width: 15px; height: 15px; }
+        .chart-val { font-size: 0.7rem; }
+      }
+    </style>
+</head>
+<body>
+    <header class="hero">
+        <p class="eyebrow">VLM · Scientific QA · Benchmark · 2026</p>
+        <h1>CactusBench</h1>
+        <p class="tagline">Measuring frontier models&apos; ability to carry out quality-assurance tasks on scientific data using complex visual reasoning.</p>
+
+        <!-- TODO: hero demo of model task completion (animation) -->
+    </header>
+
+    <nav id="section-nav" class="doc-outline" aria-label="Document outline">
+        <a href="#leaderboard">Leaderboard</a>
+        <a href="#overview">Overview</a>
+        <a href="#play">Play</a>
+        <a href="#methodology">Methodology</a>
+        <a href="#rigor">Robustness</a>
+        <a href="#results">Results</a>
+        <a href="#discussion">Discussion</a>
+    </nav>
+
+    <main>
+        <section id="intro" class="prose">
+            <h2>Introduction</h2>
+            <p>
+                CactusBench is built to assess the ability of frontier models to complete complex quality-assurance tasks with a very high precision bar on real scientific data collected by biologists at Saguaro National Park. These tasks involve complex visual reasoning, accurate OCR of messy handwriting, analyzing field photographs, and identifying mistakes and anomalies in the data, in order to carry out the work of a biologist maintaining the real cactus dataset. Results indicate that current frontier models lack the precision to carry out the tasks as accurately as human biologists and are not yet equipped to fully automate the quality-assurance task. The public benchmark is available as a Harbor-compatible repository <a href="#">here</a>.
+            </p>
+
+            <div class="intro-cta">
+                <p class="cta-eyebrow">Get started</p>
+                <div class="cta-row">
+                    <!-- TODO: public benchmark repo URL -->
+                    <a class="cta primary" href="#">Run the Public Benchmark</a>
+                    <a class="cta" href="#play">Play the Benchmark</a>
+                    <a class="cta" href="#intro">Read the Blog</a>
+                </div>
+                <p class="contact-note">
+                    Contact <a href="mailto:phamswannty@gmail.com">phamswannty@gmail.com</a> to fund benchmarking on an expanded private holdout set.
+                </p>
+            </div>
+        </section>
+
+        <section id="leaderboard" class="prose">
+            <h2>Leaderboard</h2>
+            <p>
+                46-task public benchmark set with default/low reasoning levels, native model harnesses; scoring is per-cell table accuracy with notes excluded. Each model received access to two anonymized data-sheet images and year-titled saguaro-cactus photos. Models ran three times per task in their native harnesses; see cross-harness analysis below.
+            </p>
+            <figure id="chart-lb" class="chart" aria-label="Per-cell table accuracy by model"></figure>
+            <p class="caption">Mean per-cell table accuracy across the 46-task public set (3 seeds per task; notes excluded). Frontier models ran on their native CLIs; the open models (Qwen, MiniMax) ran on the completion-loop harness. Error bars are 95&#37; generalization confidence intervals (task-level bootstrap, n=46).</p>
+        </section>
+
+        <section id="overview" class="prose">
+            <h2>Overview</h2>
+            <p>
+                The saguaro cactus is an iconic cactus that serves as a keystone species in the Sonoran desert ecosystem. As such, it is studied by biologists at Saguaro National Park to understand the effects of climate change on life in the desert. As part of this effort, every few years, biologists and volunteers carefully collect field data on every saguaro arm within the same plot, measuring various size attributes including their direction on the saguaro, distance from the ground, height, etc. in order to build a dataset to measure saguaro growth and health over long time periods. Biologists then curate and maintain this dataset by looking across hand-written measurement forms and saguaro images in order to standardize the arm data, map measurements of the same saguaro arms between years, and identify anomalies and data-collection mistakes to create a clean dataset that can be analyzed.
+            </p>
+            <!-- TODO: images of datasheet + saguaro -->
+            <p>
+                This benchmark attempts to assess frontier multimodal models&apos; abilities at doing this complex work by providing them the real raw datasheets and photos from a number of plots measured in 2023 and 2026 and seeing their capabilities at producing clean data.
+            </p>
+
+            <h3>Real scientific data and tasks</h3>
+            <p>
+                This benchmark uses real raw data collected in the field in the form of datasheets recording measurements and photos of the saguaros. Datasheets are often messy, ambiguous, and contain measurement errors, forcing the model to use the same reasoning and scrutiny beyond simple OCR. The tasks constructed match exactly what a real biologist had done to curate the dataset. Additionally, the ground truth has been carefully curated to identify ambiguous values to ensure models are held to a fair standard.
+            </p>
+
+            <h3>Cell-based scoring</h3>
+            <p>
+                Each task requires the model to produce a table containing measurements for each arm on the saguaro. There are eight total fields that record different measurements capturing each arm&apos;s size and positioning as well as additional notes that the field recorder wrote down with any helpful information. Scoring is based on per-cell accuracy, so a saguaro with five arms would be scored on accuracy across the 40 cells. For this leaderboard, note values were excluded from scoring as many notes were partially accurate and measurement-value accuracy holds greater importance to the biologists, but their accuracies were also noted.
+            </p>
+        </section>
+
+        <section id="play" class="prose">
+            <h2>Play the benchmark</h2>
+            <p>
+                Try it yourself &mdash; this is the same task the models were given: read the two years&apos; field sheets and photos, then produce the cleaned cross-year arm table.
+            </p>
+            <!-- TODO: interactive play embed -->
+        </section>
+
+        <section id="methodology" class="prose">
+            <h2>Methodology</h2>
+
+            <h3>Data Collection</h3>
+            <p>
+                Data was from two years, 2023 and 2026, of arm measurements across a number of randomly selected saguaro plots. Biologists and volunteers would walk through the plot, carefully measuring each saguaro&apos;s arms&apos; features with long measuring sticks and compasses. They would then note the values of each measurement and record them on the printed sheets. Additionally, they would take photos of the saguaro from all four cardinal directions to capture all the arms.
+            </p>
+            <!-- TODO: photo of field sheet + saguaro photo -->
+            <p>
+                A single task was assembled by taking the sheet photo and saguaro photos from each year for a single saguaro and placing them in directories the model being assessed could access. Saguaro photos had the year they were taken in the title while the sheets had anonymized file names and cleared metadata, as the year is written on the sheet and thus the model is expected to derive it.
+            </p>
+            <p>
+                Future work may involve creating a single task with all saguaros, as this would allow pattern recognition and long-horizon reasoning not expected in the current setup. For instance, a single field biologist recording a plot in 2026 had a compass which was off by 10&deg;. The human scorer noticed this as they spotted 10&deg; differences in the same direction between 2023 and 2026 data, leading them to correct all values for this scorer. The benchmark did not expect the model to deduce this, as seeing this pattern on a single saguaro would be within the standard variation and memory isn&apos;t carried over across tasks.
+            </p>
+
+            <h3>Quality Assurance</h3>
+            <p>
+                Significant work was put towards ensuring the benchmark was accurate, didn&apos;t give away extra information that exposed solutions, and was fair to the model given the information it was provided. One issue that came up was that many scorer sheets had hand-written notes made by the human data curator exposing their corrections and reasoning to the model. To hide these notes, manual redactions were applied to all sheets. To prevent models from using the redactions to understand that a value may be wrong or arms need to be reordered (and especially to prevent reward hacking on a training environment), realistic fake redactions were carefully applied to sheets which needed no corrections.
+            </p>
+            <!-- TODO: redaction example image -->
+            <p>
+                To ensure the benchmark reflects real-world performance, the ground truth was created by the domain expert who curated the dataset. It was carefully checked by a second human to ensure quality. All responses from all frontier models were carefully audited to ensure no scoring mistakes slipped through. All potential errors and cases where the ground truth was unclear or complex involved a discussion with the domain expert and careful deliberation about what would be fair to the model given the information available.
+            </p>
+
+            <h3>Handling Ambiguity</h3>
+            <p>
+                As alluded to, the task is quite complex and requires significant tacit knowledge to complete fully. The ambiguity of many decisions and values posed the largest challenge in constructing the benchmark. For instance, some measurements were inaccurate and required a guess on what was meant to be recorded. In the real world, the dataset curator would travel to the physical saguaro and re-measure to determine the actual value, something an LLM is unable to do. Given this, careful thought was put into each ambiguous decision and what would be reasonable scoring for each cell. The model was guided to output what it believed was accurate to the real world, not the sheet, and expected to reason based on that. Some models were indeed penalized for copying a value literally when reasoning and viewing saguaro photos indicated that the field biologist clearly made an error. However, in practice, models were given leniency on cases where the correct value was clearly ambiguous and many cells had multiple accepted answers to account for this.
+            </p>
+        </section>
+
+        <section id="rigor" class="prose">
+            <h2>Robustness</h2>
+
+            <h3>Cross-Harness Testing</h3>
+            <p>
+                Recent benchmark results have indicated that the harnesses used in assessment significantly impact model performance. As such, each model was tested on the simple completion-loop harness created for the tasks and its native harness over a three-task noise-floor slice, five seeds with each harness.
+            </p>
+            <figure id="chart-xh" class="chart" aria-label="Native harness versus the custom completion loop, by model"></figure>
+            <p class="caption">Mean per-cell accuracy on each frontier model&apos;s native CLI versus the custom completion loop on first-party APIs (Claude via Bedrock, GPT via OpenAI, Gemini via Google), over the three-task slice (n=15 per bar). Solid bar = native CLI; lighter bar = completion loop; whiskers are 95&#37; confidence intervals.</p>
+            <p>
+                The results indicate that for CactusBench tasks, frontier models are largely robust across harnesses: on first-party APIs, each model&apos;s completion-loop score lands within a few points of its native CLI, with Gemini 3.5 Flash the lone exception (dropping ~0.25). The open models tell the opposite story &mdash; they are sharply harness-dependent, performing substantially <em>better</em> on the completion loop than on their native Qwen Code CLI (MiniMax-M3 more than doubled, 0.33&rarr;0.85). One important caveat: routing the frontier models through OpenRouter rather than first-party APIs collapsed their scores by 0.3&ndash;0.6, so the completion loop itself is sound &mdash; the provider pathway is what matters. Given this, the production benchmark ran frontier models on their native CLIs and the open models on the completion loop, each on its stronger configuration.
+            </p>
+
+            <h3>Reasoning Level</h3>
+            <p>
+                Models were also tested at low versus high reasoning effort on their native harnesses, over the same three-task noise-floor slice with five seeds at each level.
+            </p>
+            <figure id="chart-reason" class="chart" aria-label="Low versus high reasoning effort, by model"></figure>
+            <p class="caption">Mean per-cell accuracy at low versus high reasoning effort on the native harness, over the three-task slice (n=15 per bar). Solid bar = low effort; lighter bar = high effort; whiskers are 95&#37; confidence intervals. The intervals overlap heavily &mdash; the reasoning effect sits within the noise, and its sign is model-dependent.</p>
+            <p>
+                Reasoning levels did not appear to have a significant impact on performance in these tasks. Point estimates moved by up to ~0.08 in either direction &mdash; the Anthropic models edged up with more effort while Gemini 3.1 Pro edged down &mdash; but every difference sits within the (wide) confidence intervals, below the noise threshold at this sample size.
+            </p>
+
+            <h3>Reproducibility</h3>
+            <p>
+                Every run &mdash; model, harness, provider route, reasoning level, and temperature &mdash; is recorded in the run manifest, with the full per-rollout trajectory, transcript, and config captured alongside.
+            </p>
+            <p class="table-label">Production benchmark &mdash; 46 tasks &times; 3 seeds</p>
+            <div class="table-wrap">
+            <table class="repro">
+                <thead><tr><th>Model</th><th>Harness</th><th>Provider route</th><th>Reasoning</th><th>Temperature</th></tr></thead>
+                <tbody>
+                    <tr><td>Gemini 3.1 Pro</td><td>Antigravity</td><td>Google (Antigravity)</td><td>low</td><td>default</td></tr>
+                    <tr><td>Gemini 3.5 Flash</td><td>Antigravity</td><td>Google (Antigravity)</td><td>low</td><td>default</td></tr>
+                    <tr><td>GPT-5.5</td><td>Codex</td><td>OpenAI (Codex)</td><td>default</td><td>default</td></tr>
+                    <tr><td>Claude Opus 4.8</td><td>Claude Code</td><td>Anthropic (Claude Code)</td><td>default</td><td>default</td></tr>
+                    <tr><td>Claude Opus 4.7</td><td>Claude Code</td><td>Anthropic (Claude Code)</td><td>default</td><td>default</td></tr>
+                    <tr><td>Qwen3-VL-Plus</td><td>Completion loop</td><td>OpenRouter &mdash; <code>qwen3-vl-plus</code></td><td>n/a</td><td>0.6</td></tr>
+                    <tr><td>MiniMax-M3</td><td>Completion loop</td><td>OpenRouter &mdash; <code>minimax/minimax-m3</code></td><td>n/a</td><td>0.6</td></tr>
+                </tbody>
+            </table>
+            </div>
+            <p class="caption">Frontier models ran on their native CLIs at the vendor default reasoning level (Gemini at low effort, which it favors); the open models ran on the custom completion loop via OpenRouter at temperature 0.6. Native CLIs do not expose a temperature knob, so they used the vendor default.</p>
+
+            <p class="table-label">Robustness studies &mdash; 3 noise-floor tasks &times; 5 seeds</p>
+            <div class="table-wrap">
+            <table class="repro">
+                <thead><tr><th>Model</th><th>Harness</th><th>Provider route</th><th>Reasoning</th><th>Temperature</th></tr></thead>
+                <tbody>
+                    <tr><td>Gemini 3.1 Pro</td><td>Antigravity / loop</td><td>Google · first-party · OpenRouter</td><td>low · high</td><td>default · 0.6</td></tr>
+                    <tr><td>Gemini 3.5 Flash</td><td>Antigravity / loop</td><td>Google · first-party · OpenRouter</td><td>low · high</td><td>default · 0.6</td></tr>
+                    <tr><td>GPT-5.5</td><td>Codex / loop</td><td>OpenAI · first-party · OpenRouter</td><td>default · low · high</td><td>default · 0.6</td></tr>
+                    <tr><td>Claude Opus 4.8</td><td>Claude Code / loop</td><td>Anthropic · Bedrock · OpenRouter</td><td>default · low · high</td><td>default · 0.6</td></tr>
+                    <tr><td>Claude Opus 4.7</td><td>Claude Code / loop</td><td>Anthropic · Bedrock · OpenRouter</td><td>default · low · high</td><td>default · 0.6</td></tr>
+                    <tr><td>Qwen3-VL-Plus</td><td>Qwen Code / loop</td><td>OpenRouter</td><td>n/a</td><td>0.6</td></tr>
+                    <tr><td>MiniMax-M3</td><td>Qwen Code / loop</td><td>OpenRouter</td><td>n/a</td><td>0.6</td></tr>
+                </tbody>
+            </table>
+            </div>
+            <p class="caption">The cross-harness and reasoning studies swept each model across its native CLI and the completion loop, and (for the frontier models) across first-party and OpenRouter provider routes, over the same three-task slice. The cross-harness chart above uses the first-party route; the OpenRouter route is reported in-text.</p>
+            <p class="repro-list"><strong>Manifest:</strong> <a href="manifest.json"><code>manifest.json</code></a></p>
+        </section>
+
+        <section id="results" class="prose">
+            <h2>Results</h2>
+            <figure id="chart-lb2" class="chart" aria-label="Per-cell table accuracy by model"></figure>
+            <p class="caption">Mean per-cell table accuracy across the 46-task public set. Frontier models lead in a tight band (0.93&ndash;0.97); the open models trail. Error bars are 95&#37; generalization confidence intervals (task-level bootstrap, n=46).</p>
+            <p>
+                Google&apos;s Gemini models appeared to perform the best across the public benchmark set. While the headline cell-accuracy numbers <em>appear</em> to be high, all models are actually far below the accuracy threshold to fully automate or provide value without significant human-in-the-loop checks. This is a task which requires very high precision, and the headline score actually masks model deficiencies. Specifically, besides simple OCR errors, models performed poorly at identifying anomalies and human errors and instead had a strong bias towards being faithful to the field scientists&apos; measurements, even though the instructions specifically prompted them to have a more discerning eye and make changes to anomalous values.
+            </p>
+
+            <h3>Failure Analysis</h3>
+            <p>
+                Somewhat surprisingly, cell failures were dominated by OCR errors among frontier models. Qualitative analysis shows that even the best multimodal models still are substantially worse than humans at reading handwritten notes. Still, the frontier models were able to properly record most cells accurately. On the other hand, logical failures were made much more frequently with respect to the number of logic challenges presented in the tasks, sharing a small proportion of total errors due to relative sparsity in the task set.
+            </p>
+        </section>
+
+        <section id="discussion" class="prose">
+            <h2>Discussion</h2>
+            <p>
+                Multimodal models show increasing capabilities at visual reasoning tasks, but still lack the precision to carry out CactusBench autonomously at the level of a human biologist curating the dataset. Google&apos;s Gemini models and GPT-5.5 showed strong performance, with Anthropic&apos;s models trailing closely behind. Cross-harness and reasoning testing showed that while reasoning levels did not make an impact on performance, models performed substantially better in their native harnesses than a naive completion and tool-calling loop. This finding reinforces the need for cross-harness analysis when creating benchmarks.
+            </p>
+            <p>
+                Due to cost constraints, only a public 46-task subset was run. To fund a full assessment on a larger set, or hire me, contact <a href="mailto:phamswannty@gmail.com">phamswannty@gmail.com</a>. Special thanks to volunteers and biologists at Saguaro National Park for the data.
+            </p>
+        </section>
+
+        <section class="links">
+            <!-- TODO: public benchmark repo URL -->
+            <a class="link-card" href="#">
+                <span class="link-eyebrow">Github · public benchmark</span>
+                <span class="link-title">CactusBench</span>
+                <span class="link-arrow">→</span>
+            </a>
+            <a class="link-card" href="mailto:phamswannty@gmail.com">
+                <span class="link-eyebrow">Contact · expanded private holdout</span>
+                <span class="link-title">phamswannty@gmail.com</span>
+                <span class="link-arrow">→</span>
+            </a>
+        </section>
+
+        <footer class="page-footer">
+            <p>© 2026 Ty Pham-Swann</p>
+        </footer>
+    </main>
+
+    <!-- Inline chart renderer + scroll-spy. Numbers are from the real runs. -->
+    <script>
+    (function () {
+      'use strict';
+      var C = {
+        claude: '#cc785c',  // anthropic coral
+        gpt:    '#10a37f',  // openai green
+        gemini: '#4285f4',  // google blue
+        open:   '#646b7a',  // open-model field (muted slate)
+      };
+
+      // Leaderboard / Results: mean per-cell accuracy over the 46 public tasks (3 seeds
+      // each); ci = 95% generalization CI half-width (task-level bootstrap, n=46).
+      var LB = [
+        { name:'Gemini 3.1 Pro',    v:0.967,  ci:0.025, c:C.gemini },
+        { name:'GPT-5.5',           v:0.961,  ci:0.026, c:C.gpt    },
+        { name:'Gemini 3.5 Flash',  v:0.957,  ci:0.026, c:C.gemini },
+        { name:'Claude Opus 4.8',   v:0.942,  ci:0.030, c:C.claude },
+        { name:'Claude Opus 4.7',   v:0.928,  ci:0.032, c:C.claude },
+        { name:'Qwen3-VL-Plus',     v:0.879,  ci:0.038, c:C.open   },
+        { name:'MiniMax-M3',        v:0.728,  ci:0.072, c:C.open   },
+      ];
+
+      // Cross-harness: each model's native CLI vs the completion loop on FIRST-PARTY APIs
+      // (Claude->Bedrock, GPT->OpenAI, Gemini->Google), 3-task noise-floor slice (n=15/bar).
+      // native = native CLI; mine = completion loop; ci = 95% CI (t-based).
+      var XH = [
+        { name:'Gemini 3.1 Pro',    native:0.957, nativeCi:0.059, mine:0.930, mineCi:0.140, c:C.gemini },
+        { name:'GPT-5.5',           native:0.986, nativeCi:0.008, mine:0.986, mineCi:0.011, c:C.gpt    },
+        { name:'Gemini 3.5 Flash',  native:0.885, nativeCi:0.115, mine:0.640, mineCi:0.254, c:C.gemini },
+        { name:'Claude Opus 4.8',   native:0.974, nativeCi:0.009, mine:0.900, mineCi:0.142, c:C.claude },
+        { name:'Claude Opus 4.7',   native:0.960, nativeCi:0.015, mine:0.994, mineCi:0.006, c:C.claude },
+      ];
+
+      // Reasoning: low vs high effort on the native harness, 3-task noise-floor slice
+      // (n=15 per bar). native = low effort; mine = high effort; ci = 95% CI (t-based).
+      var REASON = [
+        { name:'Gemini 3.1 Pro',    native:0.957, nativeCi:0.059, mine:0.887, mineCi:0.149, c:C.gemini },
+        { name:'GPT-5.5',           native:0.975, nativeCi:0.039, mine:0.993, mineCi:0.004, c:C.gpt    },
+        { name:'Gemini 3.5 Flash',  native:0.885, nativeCi:0.115, mine:0.862, mineCi:0.194, c:C.gemini },
+        { name:'Claude Opus 4.8',   native:0.906, nativeCi:0.141, mine:0.982, mineCi:0.009, c:C.claude },
+        { name:'Claude Opus 4.7',   native:0.865, nativeCi:0.139, mine:0.941, mineCi:0.030, c:C.claude },
+      ];
+
+      function esc(s){ var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+      var LOGOS = {
+        claude: '<img src="images/anthropic.png?v=2" alt="" aria-hidden="true">',
+        gpt:    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22.28 9.82a5.98 5.98 0 0 0-.52-4.9 6.05 6.05 0 0 0-6.51-2.9A6.07 6.07 0 0 0 4.98 4.18a5.98 5.98 0 0 0-4 2.9 6.05 6.05 0 0 0 .74 7.1 5.98 5.98 0 0 0 .52 4.91 6.05 6.05 0 0 0 6.51 2.9 5.98 5.98 0 0 0 4.5 2.01 6.05 6.05 0 0 0 5.78-4.21 5.98 5.98 0 0 0 4-2.9 6.05 6.05 0 0 0-.75-7.07Zm-9.02 12.61a4.48 4.48 0 0 1-2.88-1.04l.14-.08 4.78-2.76a.78.78 0 0 0 .4-.68v-6.74l2.02 1.17a.07.07 0 0 1 .04.05v5.58a4.5 4.5 0 0 1-4.5 4.5ZM3.6 18.3a4.47 4.47 0 0 1-.54-3.01l.14.08 4.79 2.77a.77.77 0 0 0 .78 0l5.84-3.37v2.33a.08.08 0 0 1-.03.06l-4.83 2.79a4.5 4.5 0 0 1-6.14-1.65ZM2.34 7.9a4.49 4.49 0 0 1 2.37-1.98v5.69a.77.77 0 0 0 .39.67l5.81 3.36-2.02 1.17a.08.08 0 0 1-.07 0L4 14.01A4.5 4.5 0 0 1 2.34 7.9Zm16.6 3.85L13.1 8.37l2.02-1.17a.08.08 0 0 1 .07 0l4.83 2.79a4.49 4.49 0 0 1-.68 8.1v-5.67a.79.79 0 0 0-.4-.67ZM20.94 8.7l-.14-.08-4.78-2.79a.78.78 0 0 0-.78 0L9.4 9.23V6.9a.07.07 0 0 1 .03-.06l4.83-2.79a4.5 4.5 0 0 1 6.68 4.66ZM8.3 12.86l-2.02-1.16a.08.08 0 0 1-.04-.06V6.07a4.5 4.5 0 0 1 7.38-3.45l-.14.08L8.7 5.46a.79.79 0 0 0-.39.68Zm1.1-2.37 2.6-1.5 2.61 1.5v3l-2.6 1.5-2.6-1.5Z"/></svg>',
+        gemini: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c.4 5.4 4.2 9.2 9.6 9.6-5.4.4-9.2 4.2-9.6 9.6-.4-5.4-4.2-9.2-9.6-9.6C7.8 11.2 11.6 7.4 12 2Z"/></svg>',
+      };
+      function logoFor(name){
+        var n = name.toLowerCase();
+        if (n.indexOf('claude') >= 0) return LOGOS.claude;
+        if (n.indexOf('gpt') >= 0)    return LOGOS.gpt;
+        if (n.indexOf('gemini') >= 0) return LOGOS.gemini;
+        return '';  // open-model field: name only
+      }
+      function nameCell(d){
+        var logo = logoFor(d.name);
+        return '<div class="chart-name">' +
+          '<span class="chart-nametext">' + esc(d.name) + '</span>' +
+          (logo ? '<span class="chart-logo">' + logo + '</span>' : '') +
+          '</div>';
+      }
+
+      // Single-bar accuracy chart: domain 0..1, value label = accuracy.
+      function renderAcc(el){
+        var max = 1.0, html = '';
+        LB.forEach(function(d){
+          var w = (d.v / max * 100).toFixed(1) + '%';
+          var err = '';
+          if (d.ci) {
+            var lo = Math.max(0, d.v - d.ci) / max * 100;
+            var hi = Math.min(max, d.v + d.ci) / max * 100;
+            err = '<div class="chart-err" style="left:' + lo.toFixed(1) + '%;width:' + (hi - lo).toFixed(1) + '%"></div>';
+          }
+          html += '<div class="chart-row">' + nameCell(d) +
+            '<div class="chart-track"><div class="chart-fill" style="--w:' + w + ';background:' + d.c + '"></div>' + err + '</div>' +
+            '<div class="chart-val">' + d.v.toFixed(3) + '</div>' +
+            '</div>';
+        });
+        html += '<div class="chart-row" style="height:auto"><div></div>' +
+                '<div class="chart-axis"><span>0</span><span>0.5</span><span>1.0 · perfect</span></div><div></div></div>';
+        el.innerHTML = html;
+      }
+
+      // Paired-bar chart (domain 0..1): solid bar (.native) + lighter bar (.mine), with a
+      // Δ = mine − native readout. Used for the reasoning chart (low vs high effort).
+      function renderPaired(el, rows, legA, legB){
+        var max = 1.0;
+        var html = '<div class="xh-legend">' +
+          '<span><i class="xh-swatch"></i>' + esc(legA) + '</span>' +
+          '<span><i class="xh-swatch mine"></i>' + esc(legB) + '</span></div>';
+        function errBar(v, ci, cls){
+          if (!ci) return '';
+          var lo = Math.max(0, v - ci) / max * 100;
+          var hi = Math.min(max, v + ci) / max * 100;
+          return '<div class="xh-err ' + cls + '" style="left:' + lo.toFixed(1) + '%;width:' + (hi - lo).toFixed(1) + '%"></div>';
+        }
+        rows.forEach(function(d){
+          var wn = (d.native / max * 100).toFixed(1) + '%';
+          var wm = (d.mine / max * 100).toFixed(1) + '%';
+          var dl = d.mine - d.native;
+          var dstr = (dl >= 0 ? '+' : '−') + Math.abs(dl).toFixed(2);
+          html += '<div class="chart-row">' + nameCell(d) +
+            '<div class="chart-track xh-track">' +
+              '<div class="xh-bar native" style="--w:' + wn + ';background-color:' + d.c + '"></div>' +
+              '<div class="xh-bar mine" style="--w:' + wm + ';background-color:' + d.c + '"></div>' +
+              errBar(d.native, d.nativeCi, 'native') +
+              errBar(d.mine, d.mineCi, 'mine') +
+            '</div>' +
+            '<div class="chart-val">Δ ' + dstr + '</div>' +
+            '</div>';
+        });
+        html += '<div class="chart-row" style="height:auto"><div></div>' +
+                '<div class="chart-axis"><span>0</span><span>0.5</span><span>1.0</span></div><div></div></div>';
+        el.innerHTML = html;
+      }
+
+      var lb  = document.getElementById('chart-lb');
+      var lb2 = document.getElementById('chart-lb2');
+      var xh  = document.getElementById('chart-xh');
+      var rs  = document.getElementById('chart-reason');
+      if (lb)  renderAcc(lb);
+      if (lb2) renderAcc(lb2);
+      if (xh)  renderPaired(xh, XH, 'native CLI', 'completion loop');
+      if (rs)  renderPaired(rs, REASON, 'low effort', 'high effort');
+
+      if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function(entries){
+          entries.forEach(function(e){ if (e.isIntersecting){ e.target.classList.add('shown'); io.unobserve(e.target); } });
+        }, { threshold: 0.25 });
+        [lb, lb2, xh, rs].forEach(function(c){ if (c) io.observe(c); });
+      } else {
+        [lb, lb2, xh, rs].forEach(function(c){ if (c) c.classList.add('shown'); });
+      }
+
+      // Scroll-spy: highlight the nav link for the section currently in view.
+      (function(){
+        var nav = document.getElementById('section-nav');
+        if (!nav) return;
+        var links = Array.prototype.slice.call(nav.querySelectorAll('a'));
+        var map = {}, ids = [];
+        links.forEach(function(a){
+          var id = a.getAttribute('href').slice(1);
+          if (document.getElementById(id)) { map[id] = a; ids.push(id); }
+        });
+        if (!ids.length) return;
+        function onScroll(){
+          var pos = window.scrollY + 140;
+          var current = null;
+          ids.forEach(function(id){
+            var s = document.getElementById(id);
+            if (s && s.offsetTop <= pos) current = id;
+          });
+          links.forEach(function(a){ a.classList.remove('active'); });
+          if (current && map[current]) map[current].classList.add('active');
+        }
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', onScroll);
+        onScroll();
+      })();
+    })();
+    </script>
+</body>
+</html>
