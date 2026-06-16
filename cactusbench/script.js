@@ -66,7 +66,7 @@
     function mountSelect() {
         const groups = {};
         rollouts.forEach((r, i) => { (groups[r.runner] = groups[r.runner] || []).push({ i, r }); });
-        const order = ['Qwen3-VL-Plus', 'Claude Opus 4.8', 'GPT-5.5', 'Gemini 3.1 Pro'];
+        const order = ['Claude Opus 4.8', 'GPT-5.5', 'Gemini 3.5 Flash', 'Qwen3-VL-Plus'];
         const ordered = order.filter(k => groups[k]).concat(Object.keys(groups).filter(k => !order.includes(k)));
         els.select.innerHTML = ordered.map(g => {
             const opts = groups[g].map(({ i, r }) =>

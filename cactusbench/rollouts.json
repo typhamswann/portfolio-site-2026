@@ -2,257 +2,324 @@
  "rollouts": [
   {
    "task_id": "28-02A",
-   "runner": "Qwen3-VL-Plus",
-   "runner_slug": "open",
-   "label_color": "#646b7a",
-   "turns": 12,
-   "accuracy": 0.92,
+   "runner": "Claude Opus 4.8",
+   "runner_slug": "claude",
+   "label_color": "#cc785c",
+   "turns": 14,
+   "accuracy": 0.958,
    "steps": [
     {
-     "n": 0,
      "image": "28-02A__sheet_A.png",
      "view": "SHEET A",
      "action": "start",
-     "thought": "Now I need to examine the two datasheet images to identify which is from 2023 and which is from 2026, and extract the saguaro ID and measurements. Let me first view sheet_A.png:"
+     "n": 0
     },
     {
-     "n": 1,
      "image": "28-02A__sheet_B.png",
      "view": "SHEET B",
      "action": "view sheet_B.png",
-     "thought": "Let me examine sheet_B.png next to compare:"
+     "thought": "Sheet A is dated 3/25/26 = 2026. Plot 28, Saguaro No. 2A. 7 arms. Let me read sheet B.",
+     "n": 1
     },
     {
-     "n": 2,
-     "image": "28-02A__2023_01.jpg",
-     "view": "PHOTO \u00b7 2023",
-     "action": "view 2023_01.jpg",
-     "thought": "Now I need to determine which sheet is from 2023 and which is from 2026. Looking at the dates: - Sheet A: Date \"3/25/26\" (March 25, 2026) - Sheet B: Date \"3-30-22\" (March 30, 2022) Wait, that doesn't match the problem statement which says measurements were taken in 2023 and 2026. Let me re-examine the dates more carefully. Sheet A shows \"3/25/26\" which would be 2026, and Sheet B shows \"3-30-22\" which would be 2022. But the problem states one was in 2023 and one in 2026. Let me check if there might be a misreading. "
+     "image": "28-02A__sheet_B.png",
+     "view": "REASON",
+     "action": "analyze",
+     "thought": "Sheet B is dated 3-30-23 (2023), recorder Marcie, 5 arms. Sheet A is 2026, recorder Bri, 7 arms. So 2023 = Sheet B (5 arms, canonical numbers 1-5). 2026 = Sheet A (7 arms, must match to canonical). Let me lay out the data: **2023 (Sheet B) - canonical arm numbers:** - Arm 1: dir 31, A 5.48, B 1.01, C 5.60, D 1.03, E .2 - Arm 2: dir 124, A 4.58, B 1.03, C 5.00, D 1.02, E .6 - Arm 3: dir 163, A 3.32, B 1.02, C 3.71, D 1.01, E .4 - Arm 4: dir 224, A 2.67, B 1.06, C 4.08, D 1.06, E .8, note \"failed nubbin beneath arm\" ",
+     "n": 2
     },
     {
-     "n": 3,
-     "image": "28-02A__2023_02.jpg",
-     "view": "PHOTO \u00b7 2023",
-     "action": "view 2023_02.jpg",
-     "thought": "Let me check another 2023 photo to get more context:"
-    },
-    {
-     "n": 4,
-     "image": "28-02A__2026_01.jpg",
-     "view": "PHOTO \u00b7 2026",
-     "action": "view 2026_01.jpg",
-     "thought": "Let me check the 2026 photos to compare:"
-    },
-    {
-     "n": 5,
      "image": "28-02A__2026_02.jpg",
      "view": "PHOTO \u00b7 2026",
      "action": "view 2026_02.jpg",
-     "thought": "Let me check another 2026 photo to get more details:"
+     "thought": "Let me first reason about direction matching: 2023 directions: 31, 124, 163, 224, 339 2026 directions: 36, 78, 137, 169, 193, 216, 345 Matching by closest direction: - 2023 arm1 (31) \u2194 2026 arm1 (36) \u2192 canonical 1 - 2023 arm2 (124) \u2194 2026 arm3 (137) \u2192 canonical 2 - 2023 arm3 (163) \u2194 2026 arm4 (169) \u2192 canonical 3 - 2023 arm4 (224) \u2194 2026 arm6 (216) \u2192 canonical 4 - 2023 arm5 (339) \u2194 2026 arm7 (345) \u2192 canonical 5 New 2026 arms: arm2 (78), arm5 (193). These are new arms with no canonical match (new since 2023). I need ",
+     "n": 3
     },
     {
-     "n": 6,
-     "image": "28-02A__2026_02.jpg",
+     "image": "28-02A__2026_01.jpg",
+     "view": "PHOTO \u00b7 2026",
+     "action": "view 2026_01.jpg",
+     "thought": "This shows the saguaro 2A with people measuring. Let me look at more photos to understand the arm structure.",
+     "n": 4
+    },
+    {
+     "image": "28-02A__2026_03.jpg",
+     "view": "PHOTO \u00b7 2026",
+     "action": "view 2026_03.jpg",
+     "thought": "This is a clear photo of the full saguaro 2A. I can see arms emerging. Let me look at the other photos.",
+     "n": 5
+    },
+    {
+     "image": "28-02A__2026_04.jpg",
+     "view": "PHOTO \u00b7 2026",
+     "action": "view 2026_04.jpg",
+     "n": 6
+    },
+    {
+     "image": "28-02A__2023_01.jpg",
+     "view": "PHOTO \u00b7 2023",
+     "action": "view 2023_01.jpg",
+     "thought": "This view shows the saguaro from another angle. I can see multiple arms including a cluster low on the left side, a tall central stem, and arms on the right. Let me look at the 2023 photos to compare.",
+     "n": 7
+    },
+    {
+     "image": "28-02A__2023_02.jpg",
+     "view": "PHOTO \u00b7 2023",
+     "action": "view 2023_02.jpg",
+     "thought": "This 2023 photo (labeled \"2\") shows the saguaro. I can see a big arm curving up on the right, a smaller arm on the left near top, and lower arms. Let me view the remaining 2023 photos.",
+     "n": 8
+    },
+    {
+     "image": "28-02A__2023_03.jpg",
+     "view": "PHOTO \u00b7 2023",
+     "action": "view 2023_03.jpg",
+     "n": 9
+    },
+    {
+     "image": "28-02A__2023_04.jpg",
+     "view": "PHOTO \u00b7 2023",
+     "action": "view 2023_04.jpg",
+     "n": 10
+    },
+    {
+     "image": "28-02A__sheet_B.png",
+     "view": "SHEET B",
+     "action": "view sheet_B.png",
+     "thought": "Now I have a good understanding. Let me re-examine the datasheets closely to get precise values. Let me re-view sheet B (2023).",
+     "n": 11
+    },
+    {
+     "image": "28-02A__sheet_A.png",
+     "view": "SHEET A",
+     "action": "view sheet_A.png",
+     "thought": "2023 confirmed. Plot 28, Saguaro 2A. Date 3-30-23. 5 arms. The note for arm 4 is \"failed nubbin beneath arm\". The 2023 datum: B and D are ~1.0, meaning the \"1 meter mark\" was set at ground level basically (height to 1m mark \u2248 1.0). Good, datum is at ground. Now let me re-view sheet A (2026) closely.",
+     "n": 12
+    },
+    {
+     "image": "28-02A__sheet_A.png",
      "view": "REASON",
      "action": "analyze",
-     "thought": "Looking at the photos, I can see that both sets of photos show the same saguaro (with tag \"2A\" visible in multiple photos), which matches the \"Saguaro No. 2A\" written on both datasheets. Now I need to determine which datasheet corresponds to which year. Let me re-examine the dates more carefully: Sheet A: Date \"3/25/26\" - this is clearly March 25, 2026 Sheet B: Date \"3-30-22\" - this appears to be March 30, 2022, but the problem states measurements were in 2023 and 2026. Wait, let me look more closely at Sheet B's d"
-    },
-    {
-     "n": 7,
-     "image": "28-02A__2026_02.jpg",
-     "view": "TABLE",
-     "action": "write cleaned table",
-     "thought": "I need to finalize my analysis. Let me re-examine the datasheets to confirm the years and extract the data more carefully. Looking back at the datasheets: - Sheet A: Date \"3/25/26\" - this is March 25, 2026 - Sheet B: Date \"3-30-22\" - but the problem states measurements were in 2023 and 2026 Given the problem statement explicitly says \"one in 2023, one in 2026\", and Sheet A is clearly 2026, Sheet B must be 2023 despite the \"22\" appearing to be written. The handwriting might be misread - it could be \"3-30-23\" where t"
+     "thought": "Now I have all data clearly. Let me analyze the datum issue for 2026. The note at top-left of 2026: \"7.62 + .46 = 8.08\" \u2014 this is the Saguaro height calculation. The recorder Bri set datum differently. Most arms have B/D \u2248 1.0 (datum at ground, mark at 1.0m). But arm 2 (78\u00b0): A=-.47, B=-0.52, C=.61, D=-.42, E=.10, note \"below bungee\". The values are negative. The \"below bungee\" indicates the velcro/datum tape was placed differently here. The instruction notes: \"Make sure the bottom of the Velcro tape is at 1.0 mete",
+     "n": 13
     }
    ],
    "featured": true
   },
   {
    "task_id": "28-112",
-   "runner": "Qwen3-VL-Plus",
-   "runner_slug": "open",
-   "label_color": "#646b7a",
-   "turns": 16,
-   "accuracy": 0.95,
+   "runner": "GPT-5.5",
+   "runner_slug": "codex",
+   "label_color": "#10a37f",
+   "turns": 17,
+   "accuracy": 1.0,
    "steps": [
     {
-     "n": 0,
      "image": "28-112__sheet_A.png",
      "view": "SHEET A",
      "action": "start",
-     "thought": "Now I need to examine the two datasheet images to identify which is from 2023 and which is from 2026, and to extract the saguaro ID and arm measurements. Let me start by viewing sheet_A.png:"
+     "thought": "The instruction says 2023 paper arm numbers become canonical, and the 2026 sheet must be matched back to those. I\u2019m going to inspect the actual image files now so the final row numbering follows that rule rather than the later sheet\u2019s numbering.",
+     "n": 0
     },
     {
-     "n": 1,
      "image": "28-112__sheet_B.png",
      "view": "SHEET B",
      "action": "view sheet_B.png",
-     "thought": "Let me examine sheet_B.png now:"
+     "n": 1
     },
     {
-     "n": 2,
      "image": "28-112__2023_01.jpg",
      "view": "PHOTO \u00b7 2023",
      "action": "view 2023_01.jpg",
-     "thought": "Now I can identify the years and saguaro ID from the datasheets: From sheet_A.png: - Date appears to be \"4/5/24\" (April 5, 2024) or possibly \"4/5/21\" (April 5, 2021), but let me check more carefully - Plot: 28 - Saguaro No: 112 - The header shows \"E: 482075 N 3568652 Arm # 7 height 6.94 diameter .399\" From sheet_B.png: - Date: \"3-7-26\" (March 7, 2026) - Plot: 28 - Saguaro No: 112 - Recorder: G. Vestecqka - Easting: 482077, Northing: 3568652 - Saguaro Height: 7.15 - Diameter of main stem at 1 meter: .39 So sheet_B i"
+     "thought": "Sheet A is 2024-style date but the instruction says the pair represents the earlier survey versus 2026; Sheet B is clearly dated 3-7-26. I\u2019m using Sheet A as the canonical-number sheet and checking photos for whether the 2026 \u201cextra\u201d nubbing is a real new canonical arm.",
+     "n": 2
     },
     {
-     "n": 3,
      "image": "28-112__2023_02.jpg",
      "view": "PHOTO \u00b7 2023",
      "action": "view 2023_02.jpg",
-     "thought": "Let me check more photos to get a better understanding of the saguaro's arm structure. I'll look at 2023_02.jpg next."
+     "n": 3
     },
     {
-     "n": 4,
      "image": "28-112__2023_03.jpg",
      "view": "PHOTO \u00b7 2023",
      "action": "view 2023_03.jpg",
-     "thought": "Let me continue examining the photos to better understand the arm structure. I'll check 2023_03.jpg and 2023_04.jpg."
+     "n": 4
     },
     {
-     "n": 5,
      "image": "28-112__2023_04.jpg",
      "view": "PHOTO \u00b7 2023",
      "action": "view 2023_04.jpg",
-     "thought": "Let me check the last 2023 photo and then some 2026 photos to compare:"
+     "n": 5
     },
     {
-     "n": 6,
      "image": "28-112__2026_01.jpg",
      "view": "PHOTO \u00b7 2026",
      "action": "view 2026_01.jpg",
-     "thought": "Now let me check the 2026 photos to compare the saguaro structure:"
+     "n": 6
     },
     {
-     "n": 7,
      "image": "28-112__2026_02.jpg",
      "view": "PHOTO \u00b7 2026",
      "action": "view 2026_02.jpg",
-     "thought": "Let me continue with more 2026 photos to better understand the arm structure and match them between years:"
+     "n": 7
     },
     {
-     "n": 8,
      "image": "28-112__2026_03.jpg",
      "view": "PHOTO \u00b7 2026",
      "action": "view 2026_03.jpg",
-     "thought": "Let me check the remaining 2026 photos:"
+     "n": 8
     },
     {
-     "n": 9,
      "image": "28-112__2026_04.jpg",
      "view": "PHOTO \u00b7 2026",
      "action": "view 2026_04.jpg",
-     "thought": "Let me check the last 2026 photo:"
+     "n": 9
     },
     {
-     "n": 10,
-     "image": "28-112__2026_04.jpg",
-     "view": "REASON",
-     "action": "analyze",
-     "thought": "Now I have a good understanding of the saguaro from the photos. Looking at the photos, I can see the main saguaro with multiple arms. From the 2023 and 2026 photos, it appears to be the same saguaro (Plot 28, Saguaro 112) with similar arm structure. Let me re-examine the datasheets more carefully to extract accurate measurements. Since the images are large and I need precise data, let me focus on extracting the key information: From sheet_A (2023): - Saguaro ID: \"28-112\" - Arm 1: direction=2\u00b0, A=2.52, B=1.00, C=3.9"
+     "image": "28-112__sheet_B.png",
+     "view": "SHEET B",
+     "action": "view sheet_B_bottom.png",
+     "thought": "I\u2019m going to crop the bottom of the 2026 sheet into a temporary image so the off-table nubbing row is easier to read. This won\u2019t touch `submission.json`.",
+     "n": 10
     },
     {
-     "n": 11,
-     "image": "28-112__2026_04.jpg",
-     "view": "TABLE",
-     "action": "write cleaned table",
-     "thought": "Based on my analysis of the datasheets and photos, I have identified: 1. Saguaro ID: \"28-112\" (from both datasheets showing Plot 28, Saguaro No 112) 2. Sheet_A is from 2023 (date appears to be 4/5/23) and Sheet_B is from 2026 (date 3-7-26) 3. Canonical arm numbers are based on 2023 numbering (arms 1-7) 4. A new arm (arm 8) appeared in 2026 Let me create the cleaned table with all arms matched correctly: For arms 1-7: both 2023 and 2026 data, using canonical arm numbers from 2023 For arm 8: only 2026 data (new arm) "
+     "image": "28-112__sheet_B.png",
+     "view": "SHEET B",
+     "action": "view sheet_B_lower.png",
+     "thought": "`PIL` isn\u2019t usable in this sandbox because its binary wheel is the wrong architecture, so I\u2019m using `sips`\u2019 offset crop instead.",
+     "n": 11
+    },
+    {
+     "image": "28-112__sheet_B.png",
+     "view": "SHEET B",
+     "action": "view sheet_B_lower.png",
+     "thought": "The offset direction is inverted from what I expected; I\u2019ll flip it and inspect the lower row.",
+     "n": 12
+    },
+    {
+     "image": "28-112__sheet_B.png",
+     "view": "SHEET B",
+     "action": "view sheet_B_lower2.png",
+     "n": 13
+    },
+    {
+     "image": "28-112__sheet_B.png",
+     "view": "SHEET B",
+     "action": "view sheet_B_bottom2.png",
+     "n": 14
+    },
+    {
+     "image": "28-112__sheet_B.png",
+     "view": "SHEET B",
+     "action": "view sheet_B_bottom3.png",
+     "thought": "The 2026 table itself confirms rows 1-7; the added row is below the printed grid, so I\u2019m shifting the crop further down to capture the handwritten continuation.",
+     "n": 15
+    },
+    {
+     "image": "28-112__sheet_B.png",
+     "view": "SHEET B",
+     "action": "view sheet_B_bottom4.png",
+     "thought": "The continuation row is lower still; one more lower crop should capture it.",
+     "n": 16
     }
    ],
    "featured": true
   },
   {
-   "task_id": "28-100",
-   "runner": "Qwen3-VL-Plus",
-   "runner_slug": "open",
-   "label_color": "#646b7a",
-   "turns": 16,
-   "accuracy": 1.0,
+   "task_id": "28-112",
+   "runner": "Claude Opus 4.8",
+   "runner_slug": "claude",
+   "label_color": "#cc785c",
+   "turns": 13,
+   "accuracy": 0.983,
    "steps": [
     {
-     "n": 0,
-     "image": "28-100__sheet_A.png",
+     "image": "28-112__sheet_A.png",
      "view": "SHEET A",
      "action": "start",
-     "thought": "Now I need to examine the two datasheet images to identify which is from 2023 and which is from 2026, and to extract the saguaro ID and measurements. Let me start by viewing sheet_A.png:"
+     "n": 0
     },
     {
-     "n": 1,
-     "image": "28-100__sheet_B.png",
+     "image": "28-112__sheet_B.png",
      "view": "SHEET B",
      "action": "view sheet_B.png",
-     "thought": "Now let me view sheet_B.png to compare:"
+     "thought": "Sheet A: dated 4/5/24, plot 28, #112, Arm# 7, height 6.94, diameter .399. So this is likely the 2023 sheet (dated 2024 but covers 2023 measurements?). Let me read sheet B.",
+     "n": 1
     },
     {
-     "n": 2,
-     "image": "28-100__2023_01.jpg",
+     "image": "28-112__2023_01.jpg",
      "view": "PHOTO \u00b7 2023",
      "action": "view 2023_01.jpg",
-     "thought": "Now I have both datasheets. Let me analyze them: Sheet A: - Date: 4/5/23 (April 5, 2023) - Plot No: 28 - Saguaro Number: 100 - Recorder: Tania - 3 arms recorded - Arm 1: direction 195\u00b0, A=2.73, B=1.05, C=3.48, D=1.05, E=0.80 - Arm 2: direction 200\u00b0, A=2.91, B=1.03, C=4.12, D=1.02, E=0.4 - Arm 3: direction 343\u00b0, A=2.97, B=1.0, C=5.29, D=0.96, E=0.8 - Note for arm 3: \"nubbin beneath arm 2.91 height 1.02 1 meter mark\" Sheet B: - Date: 3/25/26 (March 25, 2026) - Plot No: 28 - Saguaro Number: 100 - Recorder: Barb - 4 ar"
+     "thought": "Now I have both sheets. Let me organize: **Sheet A** (dated 4/5/24, but covers earlier survey). Wait \u2014 sheet B is dated 3-7-26 (2026). Sheet A is dated 4/5/24. The task says one is 2023, one is 2026. Sheet A says \"4/5/24\" which is 2024, not 2023. But task says biologists measured in 2023 and 2026. The 2023 sheet must be Sheet A. Note: the date written might be when transcribed, but the task says \"2023\" sheet. Let me treat Sheet A = 2023 (the earlier one), Sheet B = 2026. Plot 28, Saguaro #112. saguaro_id = \"28-112\"",
+     "n": 2
     },
     {
-     "n": 3,
-     "image": "28-100__2023_02.jpg",
+     "image": "28-112__2023_02.jpg",
      "view": "PHOTO \u00b7 2023",
      "action": "view 2023_02.jpg",
-     "thought": "Let me check more photos to get a better view of the saguaro arms. I'll look at 2023_02.jpg next:"
+     "thought": "This confirms saguaro #112. Let me look at more photos to disambiguate arms.",
+     "n": 3
     },
     {
-     "n": 4,
-     "image": "28-100__2023_03.jpg",
+     "image": "28-112__2023_03.jpg",
      "view": "PHOTO \u00b7 2023",
      "action": "view 2023_03.jpg",
-     "thought": "Let me check 2023_03.jpg to get a better view of the arms:"
+     "thought": "This shows the saguaro from a different angle. I can see multiple arms. Let me look at remaining photos to understand the arm arrangement.",
+     "n": 4
     },
     {
-     "n": 5,
-     "image": "28-100__2023_04.jpg",
+     "image": "28-112__2023_04.jpg",
      "view": "PHOTO \u00b7 2023",
      "action": "view 2023_04.jpg",
-     "thought": "Let me check 2023_04.jpg to get a closer view of the arms:"
+     "thought": "Now I can see the arm structure clearly. There's a cluster of arms around the lower-middle (multiple arms emerging close together - these are the ~130\u00b0 arms and the \"hub\"). Let me check photo 2023_04 and the 2026 photos.",
+     "n": 5
     },
     {
-     "n": 6,
-     "image": "28-100__2026_01.jpg",
+     "image": "28-112__2026_01.jpg",
      "view": "PHOTO \u00b7 2026",
      "action": "view 2026_01.jpg",
-     "thought": "Now let me check the 2026 photos to compare. I'll start with 2026_01.jpg:"
+     "thought": "Now the 2026 photos.",
+     "n": 6
     },
     {
-     "n": 7,
-     "image": "28-100__2026_02.jpg",
+     "image": "28-112__2026_02.jpg",
      "view": "PHOTO \u00b7 2026",
      "action": "view 2026_02.jpg",
-     "thought": "Let me check 2026_02.jpg to get a better view of the arms:"
+     "thought": "Same saguaro in 2026. Let me view the remaining 2026 photos.",
+     "n": 7
     },
     {
-     "n": 8,
-     "image": "28-100__2026_03.jpg",
+     "image": "28-112__2026_03.jpg",
      "view": "PHOTO \u00b7 2026",
      "action": "view 2026_03.jpg",
-     "thought": "Let me check 2026_03.jpg to get a clearer view of the arms:"
+     "thought": "This 2026 view shows the arm cluster. I can see the multiple arms emerging from the hub area. Let me check 2026_03 and 2026_04 for the new nubbin arm.",
+     "n": 8
     },
     {
-     "n": 9,
-     "image": "28-100__2026_04.jpg",
+     "image": "28-112__2026_04.jpg",
      "view": "PHOTO \u00b7 2026",
      "action": "view 2026_04.jpg",
-     "thought": "Let me check 2026_04.jpg to get a better view of the arms:"
+     "n": 9
     },
     {
-     "n": 10,
-     "image": "28-100__2026_05.jpg",
-     "view": "PHOTO \u00b7 2026",
-     "action": "view 2026_05.jpg",
-     "thought": "Let me check the last photo, 2026_05.jpg:"
+     "image": "28-112__sheet_A.png",
+     "view": "SHEET A",
+     "action": "view sheet_A.png",
+     "n": 10
     },
     {
-     "n": 11,
-     "image": "28-100__2026_05.jpg",
-     "view": "TABLE",
-     "action": "write cleaned table",
-     "thought": "Based on the photos and datasheets, I can now confidently match the arms: From the datasheets: - 2023 (Sheet A): Plot 28, Saguaro 100, 3 arms - Arm 1: 195\u00b0, A=2.73, B=1.05, C=3.48, D=1.05, E=0.80 - Arm 2: 200\u00b0, A=2.91, B=1.03, C=4.12, D=1.02, E=0.4 - Arm 3: 343\u00b0, A=2.97, B=1.0, C=5.29, D=0.96, E=0.8, note: \"nubbin beneath arm 2.91 height 1.02 1 meter mark\" - 2026 (Sheet B): Plot 28, Saguaro 100, 4 arms - Arm 1: 198\u00b0, A=2.76, B=1.025, C=3.55, D=1.08, E=0.9 - Arm 2: 202\u00b0, A=2.92, B=1.025, C=4.36, D=1.05, E=0.35 - Arm"
+     "image": "28-112__sheet_B.png",
+     "view": "SHEET B",
+     "action": "view sheet_B.png",
+     "thought": "Sheet A confirmed (2023). Now let me re-examine sheet B carefully.",
+     "n": 11
+    },
+    {
+     "image": "28-112__sheet_B.png",
+     "view": "REASON",
+     "action": "analyze",
+     "thought": "Now I have clear data. Let me reconcile. **Sheet B (2026):** - 1: 5\u00b0, A=2.51, B=.97, C=3.98, D=.98, E=.85 - 2: 118\u00b0, A=2.80, B=.92, C=3.14, D=.91, E=.25 - 3: 130\u00b0, A=2.57, B=.97, C=2.66, D=.92, E=.15 - 4: 131\u00b0, A=2.70, B=.92, C=3.16, D=.92, E=.35 - 5: 174\u00b0, A=2.81, B=.91, C=3.23, D=.92, E=.35 - 6: 238\u00b0, A=3.03, B=.93, C=3.33, D=.93, E=.35 - 7: 248\u00b0, A=2.85, B=.94, C=3.19, D=.97, E=.40 - 8: 249\u00b0, A=3.13, B=.95, C/D/E blank, note \"Nubbin (Racket-ball size)\" **Matching 2023\u21922026 canonical arms:** 2023 arms (canonical)",
+     "n": 12
     }
    ],
    "featured": true
