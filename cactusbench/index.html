@@ -404,7 +404,29 @@
         <h1>CactusBench</h1>
         <p class="tagline">Measuring frontier models&apos; ability to carry out quality-assurance tasks on scientific data using complex visual reasoning.</p>
 
-        <!-- TODO: hero demo of model task completion (animation) -->
+        <div class="player-stage">
+            <div class="player-frame">
+                <div id="stage-spinner" class="stage-spinner" aria-hidden="true"></div>
+                <img id="stage-img" alt="cactusbench task viewport">
+                <div id="stage-thought" class="stage-thought empty" aria-live="polite"></div>
+                <div id="stage-overlay" class="stage-overlay"></div>
+                <div id="runner-badge" class="runner-badge">
+                    <span id="runner-icon" class="runner-icon" aria-hidden="true"></span>
+                    <span id="runner-name" class="runner-name"></span>
+                </div>
+            </div>
+            <div class="player-controls">
+                <button id="btn-prev" aria-label="Previous step">‹ Prev</button>
+                <button id="btn-play" class="play" aria-label="Play / Pause">▶ Play</button>
+                <button id="btn-next" aria-label="Next step">Next ›</button>
+                <input type="range" id="scrubber" class="scrubber" min="0" max="10" value="0" step="1" aria-label="Scrub through steps">
+                <span id="step-count" class="step-count">0 / 10</span>
+            </div>
+            <div class="player-meta">
+                <select id="rollout-select" aria-label="Select rollout"></select>
+                <span id="dist-chip" class="chip subtle"></span>
+            </div>
+        </div>
     </header>
 
     <nav id="section-nav" class="doc-outline" aria-label="Document outline">
@@ -452,7 +474,16 @@
             <p>
                 The saguaro cactus is an iconic cactus that serves as a keystone species in the Sonoran desert ecosystem. As such, it is studied by biologists at Saguaro National Park to understand the effects of climate change on life in the desert. As part of this effort, every few years, biologists and volunteers carefully collect field data on every saguaro arm within the same plot, measuring various size attributes including their direction on the saguaro, distance from the ground, height, etc. in order to build a dataset to measure saguaro growth and health over long time periods. Biologists then curate and maintain this dataset by looking across hand-written measurement forms and saguaro images in order to standardize the arm data, map measurements of the same saguaro arms between years, and identify anomalies and data-collection mistakes to create a clean dataset that can be analyzed.
             </p>
-            <!-- TODO: images of datasheet + saguaro -->
+            <div class="figrow">
+                <figure>
+                    <img src="images/28-02A__sheet_B.png" alt="A handwritten saguaro arm-measurement field sheet">
+                    <figcaption>2023 field sheet — per-arm direction, heights, and recorder notes</figcaption>
+                </figure>
+                <figure>
+                    <img src="images/28-02A__2026_02.jpg" alt="Field photo of a saguaro being measured">
+                    <figcaption>The same saguaro (tag 2A) in the field</figcaption>
+                </figure>
+            </div>
             <p>
                 This benchmark attempts to assess frontier multimodal models&apos; abilities at doing this complex work by providing them the real raw datasheets and photos from a number of plots measured in 2023 and 2026 and seeing their capabilities at producing clean data.
             </p>
@@ -483,7 +514,16 @@
             <p>
                 Data was from two years, 2023 and 2026, of arm measurements across a number of randomly selected saguaro plots. Biologists and volunteers would walk through the plot, carefully measuring each saguaro&apos;s arms&apos; features with long measuring sticks and compasses. They would then note the values of each measurement and record them on the printed sheets. Additionally, they would take photos of the saguaro from all four cardinal directions to capture all the arms.
             </p>
-            <!-- TODO: photo of field sheet + saguaro photo -->
+            <div class="figrow">
+                <figure>
+                    <img src="images/28-112__sheet_A.png" alt="A field form with the per-arm recording procedure and measurements">
+                    <figcaption>Printed field form — measurements and the recording procedure</figcaption>
+                </figure>
+                <figure>
+                    <img src="images/28-112__2023_01.jpg" alt="Field photo of a saguaro from one cardinal direction">
+                    <figcaption>One of the four cardinal-direction photos taken per saguaro</figcaption>
+                </figure>
+            </div>
             <p>
                 A single task was assembled by taking the sheet photo and saguaro photos from each year for a single saguaro and placing them in directories the model being assessed could access. Saguaro photos had the year they were taken in the title while the sheets had anonymized file names and cleared metadata, as the year is written on the sheet and thus the model is expected to derive it.
             </p>
@@ -495,7 +535,10 @@
             <p>
                 Significant work was put towards ensuring the benchmark was accurate, didn&apos;t give away extra information that exposed solutions, and was fair to the model given the information it was provided. One issue that came up was that many scorer sheets had hand-written notes made by the human data curator exposing their corrections and reasoning to the model. To hide these notes, manual redactions were applied to all sheets. To prevent models from using the redactions to understand that a value may be wrong or arms need to be reordered (and especially to prevent reward hacking on a training environment), realistic fake redactions were carefully applied to sheets which needed no corrections.
             </p>
-            <!-- TODO: redaction example image -->
+            <figure class="fig">
+                <img src="images/28-02A__sheet_A.png" alt="A field sheet as presented to the model, with curator notes redacted">
+                <figcaption>A 2026 field sheet as the model receives it — the curator&apos;s QA notes are manually redacted, and realistic decoy redactions are added to sheets that needed no corrections, so a redaction can&apos;t leak which values are wrong.</figcaption>
+            </figure>
             <p>
                 To ensure the benchmark reflects real-world performance, the ground truth was created by the domain expert who curated the dataset. It was carefully checked by a second human to ensure quality. All responses from all frontier models were carefully audited to ensure no scoring mistakes slipped through. All potential errors and cases where the ground truth was unclear or complex involved a discussion with the domain expert and careful deliberation about what would be fair to the model given the information available.
             </p>
@@ -777,5 +820,7 @@
       })();
     })();
     </script>
+
+    <script src="script.js?v=1"></script>
 </body>
 </html>

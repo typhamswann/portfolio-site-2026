@@ -550,3 +550,19 @@ table.data tbody tr:hover td { color: var(--fg); }
     .step-count { min-width: 50px; }
 }
 
+
+/* ---------- PROSE FIGURES (datasheets + field photos) ---------- */
+.figrow { display: flex; gap: 14px; flex-wrap: wrap; max-width: 720px; margin: 20px 0 8px; }
+.figrow figure { flex: 1 1 240px; margin: 0; }
+.figrow img {
+    width: 100%; height: 300px; object-fit: contain;
+    background: #0a0a0a; border: 1px solid var(--rule); border-radius: 6px; display: block;
+}
+.prose figure.fig { max-width: 720px; margin: 20px 0 8px; }
+.prose figure.fig img {
+    width: 100%; border: 1px solid var(--rule); border-radius: 6px; display: block; background: #0a0a0a;
+}
+figcaption {
+    font-size: 0.7rem; color: #8a8a8a; margin-top: 7px;
+    font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace; letter-spacing: 0.02em; line-height: 1.5;
+}
