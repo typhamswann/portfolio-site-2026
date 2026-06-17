@@ -79,7 +79,7 @@
 <body>
 <div class="wrap">
   <p class="lead">Curate Saguaro <b>15&ndash;66</b>: two volunteers measured it in 2023 and 2026. Read both field sheets and the photos, then produce one cleaned table &mdash; each arm matched across the two years under a single canonical number.</p>
-  <p class="tip"><b>The 2023 sheet&apos;s arm numbers are the canonical numbers.</b> They&apos;re pre-filled below. Your job: read the 2026 sheet, match each of its arms to the 2023 arm it is (by compass direction and size &mdash; arms grow, they rarely move far), and enter it under that same canonical arm number. Then submit to score against the curator&apos;s answer.</p>
+  <p class="tip"><b>The 2023 sheet&apos;s arm numbers are the canonical numbers.</b> Add a row for each 2023 arm and enter it as numbered. Then, for 2026, match each arm to its 2023 twin (by compass direction and size &mdash; arms grow, they rarely move far) and add it under that <b>same</b> canonical arm number. Submit to score against the curator&apos;s answer.</p>
 
   <h3>Field sheets — click to enlarge</h3>
   <div class="thumbs" id="sheets"></div>
@@ -87,16 +87,27 @@
   <h3>Photos — click to enlarge</h3>
   <div class="thumbs" id="photos"></div>
 
-  <h3>Your cleaned table</h3>
+  <h3>2023 survey — your rows</h3>
   <div class="tablewrap">
     <table>
       <thead><tr>
-        <th>Year</th><th>Arm&nbsp;#</th><th>Dir&deg;</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th></th>
+        <th>Arm&nbsp;#</th><th>Dir&deg;</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th></th>
       </tr></thead>
-      <tbody id="rows"></tbody>
+      <tbody id="rows23"></tbody>
     </table>
   </div>
-  <button class="addrow" id="add">+ Add row</button>
+  <button class="addrow" data-add="rows23">+ Add 2023 arm</button>
+
+  <h3>2026 survey — your rows</h3>
+  <div class="tablewrap">
+    <table>
+      <thead><tr>
+        <th>Arm&nbsp;#</th><th>Dir&deg;</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th></th>
+      </tr></thead>
+      <tbody id="rows26"></tbody>
+    </table>
+  </div>
+  <button class="addrow" data-add="rows26">+ Add 2026 arm</button>
 
   <div class="toolbar">
     <button class="btn primary" id="submit">Submit &amp; score</button>
@@ -129,19 +140,13 @@
     {y:2026,arm:5,d:190,A:3.82,B:0.89,C:5.75,D:0.98,E:0.65},
     {y:2026,arm:6,d:288,A:2.76,B:0.85,C:5.41,D:0.88,E:0.75}
   ];
-  // Pre-filled rows: the 2023 canonical rows are given; six blank 2026 rows to map.
-  var SEED = TRUTH.slice(0,6).map(function(t){return {y:2023,arm:t.arm,d:t.d,A:t.A,B:t.B,C:t.C,D:t.D,E:t.E};});
-  for (var i=0;i<6;i++) SEED.push({y:2026,arm:'',d:'',A:'',B:'',C:'',D:'',E:''});
-
-  var rowsEl = document.getElementById('rows');
+  var rows23 = document.getElementById('rows23');
+  var rows26 = document.getElementById('rows26');
 
   function cell(cls, inner){ var td=document.createElement('td'); if(cls)td.className=cls; td.innerHTML=inner; return td; }
   function makeRow(r){
+    r = r || {arm:'',d:'',A:'',B:'',C:'',D:'',E:''};
     var tr=document.createElement('tr');
-    if(String(r.y)==='2026') tr.className='y26';
-    var yc=cell('yearc','<select data-f="year"><option value="2023">2023</option><option value="2026">2026</option></select>');
-    yc.querySelector('select').value=String(r.y);
-    tr.appendChild(yc);
     tr.appendChild(cell('armc','<input data-f="arm" inputmode="numeric" value="'+r.arm+'">'));
     FIELDS.forEach(function(f){
       tr.appendChild(cell('','<input class="num" data-f="'+f+'" inputmode="decimal" value="'+r[f]+'">'));
@@ -149,11 +154,13 @@
     var dc=cell('','<button class="del" title="remove row">&times;</button>');
     dc.querySelector('.del').addEventListener('click',function(){ tr.remove(); ping(); });
     tr.appendChild(dc);
-    tr.querySelectorAll('select').forEach(function(s){ s.addEventListener('change',function(){
-      tr.className = (s.value==='2026')?'y26':''; }); });
     return tr;
   }
-  function render(seed){ rowsEl.innerHTML=''; seed.forEach(function(r){ rowsEl.appendChild(makeRow(r)); }); ping(); }
+  function reset(){
+    rows23.innerHTML=''; rows26.innerHTML='';
+    rows23.appendChild(makeRow()); rows26.appendChild(makeRow());
+    document.getElementById('result').classList.remove('show'); ping();
+  }
 
   function num(v){ if(v===''||v==null) return null; var n=parseFloat(v); return isNaN(n)?null:n; }
   function close(f,v,t){
@@ -163,12 +170,15 @@
   }
 
   function collect(){
-    return Array.prototype.map.call(rowsEl.querySelectorAll('tr'),function(tr){
-      var o={tr:tr,inp:{}};
-      tr.querySelectorAll('[data-f]').forEach(function(el){ o.inp[el.dataset.f]=el; });
-      o.year=o.inp.year.value; o.arm=(o.inp.arm.value||'').trim();
-      return o;
-    });
+    function from(tbody, year){
+      return Array.prototype.map.call(tbody.querySelectorAll('tr'),function(tr){
+        var o={tr:tr,inp:{},year:String(year)};
+        tr.querySelectorAll('[data-f]').forEach(function(el){ o.inp[el.dataset.f]=el; });
+        o.arm=(o.inp.arm.value||'').trim();
+        return o;
+      });
+    }
+    return from(rows23,2023).concat(from(rows26,2026));
   }
 
   function score(){
@@ -204,9 +214,11 @@
     res.classList.add('show'); ping();
   }
 
-  document.getElementById('add').addEventListener('click',function(){ rowsEl.appendChild(makeRow({y:2026,arm:'',d:'',A:'',B:'',C:'',D:'',E:''})); ping(); });
+  Array.prototype.forEach.call(document.querySelectorAll('.addrow'),function(b){
+    b.addEventListener('click',function(){ document.getElementById(b.dataset.add).appendChild(makeRow()); ping(); });
+  });
   document.getElementById('submit').addEventListener('click',score);
-  document.getElementById('reset').addEventListener('click',function(){ document.getElementById('result').classList.remove('show'); render(SEED); });
+  document.getElementById('reset').addEventListener('click',reset);
 
   // sheets + photos
   var sheets=[['images/sheet_2023.png','2023 field sheet'],['images/sheet_2026.png','2026 field sheet']];
@@ -233,7 +245,7 @@
   window.addEventListener('load',ping); window.addEventListener('resize',ping);
   document.querySelectorAll('img').forEach(function(im){ im.addEventListener('load',ping); });
 
-  render(SEED);
+  reset();
 })();
 </script>
 </body>
