@@ -241,14 +241,14 @@
     if(d.valueErr.length){
       var nf=d.valueErr.reduce(function(s,v){return s+v.fields.length;},0);
       var ve=d.valueErr.slice(0,2).map(function(v){ return v.t.y+' arm '+v.t.arm+' ('+v.fields.map(function(f){return FNAME[f];}).join(', ')+')'; });
-      items.push({cls:'err',ic:'✗',html:'<b>'+nf+' value'+(nf>1?'s':'')+' off.</b> Right arm, but a reading is outside tolerance — e.g. '+ve.join('; ')+'.'});
+      items.push({cls:'err',ic:'✗',html:'<b>'+nf+' value'+(nf>1?'s':'')+' off.</b> Right arm, but a reading doesn’t match the curator — e.g. '+ve.join('; ')+'.'});
     }
     if(d.missing.length) items.push({cls:'warn',ic:'○',html:'<b>'+d.missing.length+' arm'+(d.missing.length>1?'s':'')+' not entered yet.</b> Each survey has six arms.'});
     if(d.extra.length) items.push({cls:'warn',ic:'!',html:'<b>'+d.extra.length+' row'+(d.extra.length>1?'s':'')+'</b> don’t line up with any real arm.'});
-    if(!items.length) items.push({cls:'good',ic:'✓',html:'<b>Perfect.</b> Every arm matched across years and every value is within tolerance.'});
+    if(!items.length) items.push({cls:'good',ic:'✓',html:'<b>Perfect.</b> Every arm matched across years and every value matches the curator.'});
     document.getElementById('cardbody').innerHTML =
       '<div class="big"><span class="pct">'+pct+'%</span> <span class="cells">'+correct+' / '+total+' cells</span></div>'+
-      '<div class="breakdown">2026 mapping '+c26+'/'+t26+' cells &nbsp;&middot;&nbsp; tolerance: direction ±1°, heights ±0.011 m</div>'+
+      '<div class="breakdown">2026 mapping '+c26+'/'+t26+' cells</div>'+
       '<ul>'+items.map(function(it){return '<li class="'+it.cls+'"><span class="ic">'+it.ic+'</span>'+it.html+'</li>';}).join('')+'</ul>';
   }
 
