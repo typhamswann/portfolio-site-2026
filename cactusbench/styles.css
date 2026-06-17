@@ -569,8 +569,11 @@ figcaption {
 
 /* ---------- FAILURE-ANALYSIS STACKED BARS ---------- */
 .fseg {
-    position: absolute; top: 0; height: 100%; width: 0; border-radius: 3px;
+    position: absolute; top: 0; height: 100%; width: 0;
     box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
     transition: width 1.05s cubic-bezier(0.22, 1, 0.36, 1);
 }
+/* round only the outer ends; the OCR<->logical junction stays square */
+.fseg.seg-ocr { border-radius: 3px 0 0 3px; }
+.fseg.seg-log { border-radius: 0 3px 3px 0; }
 .chart.shown .fseg { width: var(--w); }

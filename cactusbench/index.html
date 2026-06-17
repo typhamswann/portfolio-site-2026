@@ -803,8 +803,8 @@
           var ocrW = (d.ocr / max * 100).toFixed(1), logW = (d.logical / max * 100).toFixed(1);
           html += '<div class="chart-row">' + nameCell(d) +
             '<div class="chart-track">' +
-              '<div class="fseg" style="left:0;--w:' + ocrW + '%;background:' + OCR + '"></div>' +
-              '<div class="fseg" style="left:' + ocrW + '%;--w:' + logW + '%;background:' + LOG + '"></div>' +
+              '<div class="fseg seg-ocr" style="left:0;--w:' + ocrW + '%;background:' + OCR + '"></div>' +
+              '<div class="fseg seg-log" style="left:' + ocrW + '%;--w:' + logW + '%;background:' + LOG + '"></div>' +
             '</div>' +
             '<div class="chart-val">' + (d.ocr + d.logical) + '<span class="unit"> cells</span></div>' +
             '</div>';
