@@ -60,13 +60,26 @@
        cursor:pointer;padding:8px 2px;}
   .addrow:hover{text-decoration:underline;}
 
-  .result{margin-top:16px;border:1px solid var(--rule);border-radius:8px;padding:14px 16px;display:none;
-       background:var(--panel);}
-  .result.show{display:block;}
-  .result .big{font-size:1.5rem;font-weight:600;font-family:var(--mono);}
-  .result .big .pct{color:var(--accent);}
-  .result .sub{font-size:0.82rem;color:#cfcfcf;margin-top:6px;line-height:1.6;}
-  .result .sub b{color:#fff;}
+  /* score popup */
+  .modal{position:fixed;inset:0;background:rgba(0,0,0,.8);display:none;align-items:center;justify-content:center;
+       z-index:60;padding:16px;}
+  .modal.show{display:flex;}
+  .card{position:relative;background:var(--panel);border:1px solid var(--rule);border-radius:12px;
+       max-width:470px;width:100%;padding:24px 22px 20px;box-shadow:0 18px 60px rgba(0,0,0,.6);}
+  .card .x{position:absolute;top:8px;right:12px;background:none;border:0;color:#888;font-size:1.4rem;
+       cursor:pointer;line-height:1;}
+  .card .x:hover{color:#fff;}
+  .card .big{font-size:2rem;font-weight:700;font-family:var(--mono);line-height:1;}
+  .card .big .pct{color:var(--accent);}
+  .card .big .cells{font-size:0.9rem;color:#9a9a9a;font-weight:400;}
+  .card .breakdown{font-size:0.74rem;color:#9a9a9a;font-family:var(--mono);margin:9px 0 15px;
+       border-bottom:1px solid var(--rule);padding-bottom:13px;}
+  .card ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:10px;}
+  .card li{font-size:0.84rem;line-height:1.5;padding-left:26px;position:relative;color:#d4d4d4;}
+  .card li .ic{position:absolute;left:0;top:-1px;font-family:var(--mono);font-weight:700;}
+  .card li.good{color:#a7e8c4;} .card li.good .ic{color:var(--accent);}
+  .card li.warn .ic{color:#e0b250;} .card li.err .ic{color:var(--bad);}
+  .card li b{color:#fff;font-weight:600;}
 
   /* lightbox */
   .lb{position:fixed;inset:0;background:rgba(0,0,0,.96);display:none;align-items:center;justify-content:center;
@@ -111,13 +124,13 @@
 
   <div class="toolbar">
     <button class="btn primary" id="submit">Submit &amp; score</button>
+    <button class="btn" id="reveal">Reveal answer</button>
     <button class="btn" id="reset">Reset</button>
   </div>
-
-  <div class="result" id="result"></div>
 </div>
 
 <div class="lb" id="lb"><span class="x">&times;</span><img id="lbimg" alt=""></div>
+<div class="modal" id="modal"><div class="card"><button class="x" id="modalx" aria-label="close">&times;</button><div id="cardbody"></div></div></div>
 
 <script>
 (function(){
@@ -159,7 +172,16 @@
   function reset(){
     rows23.innerHTML=''; rows26.innerHTML='';
     rows23.appendChild(makeRow()); rows26.appendChild(makeRow());
-    document.getElementById('result').classList.remove('show'); ping();
+    closeModal(); ping();
+  }
+  function reveal(){
+    rows23.innerHTML=''; rows26.innerHTML='';
+    TRUTH.forEach(function(t){
+      var tr=makeRow({arm:t.arm,d:t.d,A:t.A,B:t.B,C:t.C,D:t.D,E:t.E});
+      (t.y===2023?rows23:rows26).appendChild(tr);
+    });
+    collect().forEach(function(p){ p.inp.arm.classList.add('ok'); FIELDS.forEach(function(f){ p.inp[f].classList.add('ok'); }); });
+    closeModal(); ping();
   }
 
   function num(v){ if(v===''||v==null) return null; var n=parseFloat(v); return isNaN(n)?null:n; }
@@ -181,44 +203,85 @@
     return from(rows23,2023).concat(from(rows26,2026));
   }
 
+  function cdiff(a,b){ if(a==null||b==null) return 999; var d=Math.abs(((a-b)%360+360)%360); return Math.min(d,360-d); }
+  var FNAME={d:'direction',A:'A',B:'B',C:'C',D:'D',E:'E'};
+
+  function setFull(on){ msg({lbOpen:on}); }
+  function openModal(){ document.getElementById('modal').classList.add('show'); setFull(true); }
+  function closeModal(){ document.getElementById('modal').classList.remove('show'); setFull(false); }
+
+  // Physical match by direction (within year) so we can tell a mapping mistake
+  // (right measurements, wrong canonical number) from a single bad cell.
+  function diagnose(rows){
+    var misaligned=[], valueErr=[], missing=[], extra=[];
+    [2023,2026].forEach(function(Y){
+      var truthY=TRUTH.filter(function(t){return t.y===Y;});
+      var playY=rows.filter(function(p){return p.year===String(Y) && (num(p.inp.d.value)!==null || p.arm!=='');});
+      var used={};
+      playY.forEach(function(p){
+        var pd=num(p.inp.d.value), best=null, bd=999;
+        truthY.forEach(function(t){ if(used[t.arm]||pd===null) return; var dd=cdiff(pd,t.d); if(dd<bd){bd=dd;best=t;} });
+        if(best && bd<=20){
+          used[best.arm]=true;
+          if(String(best.arm)!==p.arm){ misaligned.push({p:p,t:best}); }
+          else { var bad=[]; FIELDS.forEach(function(f){ if(!close(f,p.inp[f].value,best[f])) bad.push(f); }); if(bad.length) valueErr.push({p:p,t:best,fields:bad}); }
+        } else { extra.push(p); }
+      });
+      truthY.forEach(function(t){ if(!used[t.arm]) missing.push({y:Y,t:t}); });
+    });
+    return {misaligned:misaligned, valueErr:valueErr, missing:missing, extra:extra};
+  }
+
+  function renderCard(correct,total,c26,t26,d){
+    var pct=Math.round(correct/total*100), items=[];
+    if(d.misaligned.length){
+      var eg=d.misaligned.slice(0,2).map(function(m){ return 'the '+m.t.y+' arm at '+m.t.d+'° is canonical #'+m.t.arm+' (you put #'+(m.p.arm||'—')+')'; });
+      items.push({cls:'warn',ic:'⇄',html:'<b>'+d.misaligned.length+' arm'+(d.misaligned.length>1?'s':'')+' mis-numbered.</b> Measured right, but matched to the wrong canonical arm — '+eg.join('; ')+'.'});
+    }
+    if(d.valueErr.length){
+      var nf=d.valueErr.reduce(function(s,v){return s+v.fields.length;},0);
+      var ve=d.valueErr.slice(0,2).map(function(v){ return v.t.y+' arm '+v.t.arm+' ('+v.fields.map(function(f){return FNAME[f];}).join(', ')+')'; });
+      items.push({cls:'err',ic:'✗',html:'<b>'+nf+' value'+(nf>1?'s':'')+' off.</b> Right arm, but a reading is outside tolerance — e.g. '+ve.join('; ')+'.'});
+    }
+    if(d.missing.length) items.push({cls:'warn',ic:'○',html:'<b>'+d.missing.length+' arm'+(d.missing.length>1?'s':'')+' not entered yet.</b> Each survey has six arms.'});
+    if(d.extra.length) items.push({cls:'warn',ic:'!',html:'<b>'+d.extra.length+' row'+(d.extra.length>1?'s':'')+'</b> don’t line up with any real arm.'});
+    if(!items.length) items.push({cls:'good',ic:'✓',html:'<b>Perfect.</b> Every arm matched across years and every value is within tolerance.'});
+    document.getElementById('cardbody').innerHTML =
+      '<div class="big"><span class="pct">'+pct+'%</span> <span class="cells">'+correct+' / '+total+' cells</span></div>'+
+      '<div class="breakdown">2026 mapping '+c26+'/'+t26+' cells &nbsp;&middot;&nbsp; tolerance: direction ±1°, heights ±0.011 m</div>'+
+      '<ul>'+items.map(function(it){return '<li class="'+it.cls+'"><span class="ic">'+it.ic+'</span>'+it.html+'</li>';}).join('')+'</ul>';
+  }
+
   function score(){
     var rows=collect();
     rows.forEach(function(p){ Object.keys(p.inp).forEach(function(k){ p.inp[k].classList.remove('ok','bad'); }); });
     var key={}; rows.forEach(function(p){ if(p.arm!=='') key[p.year+'-'+p.arm]=p; });
-    var correct=0,total=0, c26=0,t26=0, mapped=0;
+    var correct=0,total=0,c26=0,t26=0;
     TRUTH.forEach(function(t){
       var p=key[t.y+'-'+t.arm];
-      var rowOk = t.y===2026 ? true : true; var allOk=true;
       FIELDS.forEach(function(f){
-        total++; if(t.y===2026) t26++;
-        var ok = p ? close(f,p.inp[f].value,t[f]) : false;
-        if(ok){ correct++; if(t.y===2026) c26++; } else allOk=false;
-        if(p){ p.inp[f].classList.add(ok?'ok':'bad'); }
+        total++; if(t.y===2026)t26++;
+        var ok=p?close(f,p.inp[f].value,t[f]):false;
+        if(ok){correct++; if(t.y===2026)c26++;}
+        if(p) p.inp[f].classList.add(ok?'ok':'bad');
       });
-      if(t.y===2026 && p && allOk) mapped++;
     });
-    // flag rows whose (year,arm) is not a real arm
-    rows.forEach(function(p){
-      if(p.arm!=='' && !TRUTH.some(function(t){return String(t.y)===p.year && String(t.arm)===p.arm;})){
-        p.inp.arm.classList.add('bad');
-      }
-    });
-    var pct=Math.round(correct/total*100);
-    var res=document.getElementById('result');
-    var verdict = mapped===6 ? 'Perfect mapping — every 2026 arm matched and measured.'
-                : mapped>=4 ? 'Close. A couple of 2026 arms are mis-matched or off-tolerance.'
-                : 'The 2026 arms aren&apos;t lining up yet — match each to its 2023 twin by direction and size.';
-    res.innerHTML = '<div class="big"><span class="pct">'+pct+'%</span> &nbsp;<span style="font-size:0.9rem;color:#9a9a9a">'+correct+' / '+total+' cells</span></div>'+
-      '<div class="sub"><b>'+mapped+' of 6</b> 2026 arms fully correct &nbsp;·&nbsp; 2026 cells: '+c26+'/'+t26+'<br>'+verdict+
-      ' &nbsp;Green cells match the curator within tolerance (direction &plusmn;1&deg;, heights &plusmn;0.011&nbsp;m); red are off or blank.</div>';
-    res.classList.add('show'); ping();
+    var d=diagnose(rows);
+    d.misaligned.forEach(function(m){ m.p.inp.arm.classList.add('bad'); });
+    d.extra.forEach(function(p){ if(p.arm!=='') p.inp.arm.classList.add('bad'); });
+    renderCard(correct,total,c26,t26,d);
+    openModal(); ping();
   }
 
   Array.prototype.forEach.call(document.querySelectorAll('.addrow'),function(b){
     b.addEventListener('click',function(){ document.getElementById(b.dataset.add).appendChild(makeRow()); ping(); });
   });
   document.getElementById('submit').addEventListener('click',score);
+  document.getElementById('reveal').addEventListener('click',reveal);
   document.getElementById('reset').addEventListener('click',reset);
+  var modal=document.getElementById('modal');
+  modal.addEventListener('click',function(e){ if(e.target===modal) closeModal(); });
+  document.getElementById('modalx').addEventListener('click',closeModal);
 
   // sheets + photos
   var sheets=[['images/sheet_2023.png','2023 field sheet'],['images/sheet_2026.png','2026 field sheet']];
@@ -238,10 +301,14 @@
 
   var lb=document.getElementById('lb'), lbimg=document.getElementById('lbimg');
   function msg(o){ try{ parent.postMessage(o,'*'); }catch(e){} }
-  function openLb(src){ lbimg.src=src; lb.classList.add('show'); msg({lbOpen:true}); }
-  function closeLb(){ lb.classList.remove('show'); lbimg.src=''; msg({lbOpen:false}); }
+  function openLb(src){ lbimg.src=src; lb.classList.add('show'); setFull(true); }
+  function closeLb(){ lb.classList.remove('show'); lbimg.src=''; setFull(false); }
   lb.addEventListener('click',closeLb);
-  document.addEventListener('keydown',function(e){ if(e.key==='Escape' && lb.classList.contains('show')) closeLb(); });
+  document.addEventListener('keydown',function(e){
+    if(e.key!=='Escape') return;
+    if(lb.classList.contains('show')) closeLb();
+    else if(document.getElementById('modal').classList.contains('show')) closeModal();
+  });
 
   // report content height to the parent so the embed iframe fits snugly
   function ping(){ try{ parent.postMessage({lbHeight:document.body.scrollHeight+8}, '*'); }catch(e){} }
