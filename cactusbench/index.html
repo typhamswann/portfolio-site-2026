@@ -157,6 +157,12 @@
         /* height is set by JS to the player's reported content height (auto-fit) */
       }
       .play-embed iframe { width: 100%; height: 660px; border: 0; display: block; }
+      /* while the play app's image lightbox is open, let the iframe cover the
+         real viewport so the lightbox isn't letterboxed inside the tall embed */
+      .play-embed iframe.play-fullscreen {
+        position: fixed !important; inset: 0 !important;
+        width: 100% !important; height: 100% !important; z-index: 9999 !important;
+      }
       .play-poster {
         width: 100%; height: 100%;
         display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -502,7 +508,7 @@
         <section id="play" class="prose">
             <h2>Play the benchmark</h2>
             <p>
-                Try it yourself &mdash; this is a real task from the set (Saguaro 15&ndash;66): read the two years&apos; field sheets and photos, then produce the cleaned cross-year arm table. The 2023 arm numbers are pre-filled as the canonical labels; your job is to map each 2026 arm to its match and submit. It&apos;s straightforward, but the arms aren&apos;t recorded in the same order both years.
+                Try it yourself &mdash; this is a real task from the set (Saguaro 15&ndash;66): read the two years&apos; field sheets and photos, then build the cleaned cross-year arm table, matching each arm across years under a single canonical number.
             </p>
             <div class="play-embed" id="play-embed" data-src="play/?v=1"></div>
         </section>
@@ -834,13 +840,19 @@
         [lb, lb2, xh, rs, ff].forEach(function(c){ if (c) c.classList.add('shown'); });
       }
 
-      // Play embed: size the iframe to the player's reported content height.
+      // Play embed: size the iframe to the player's reported content height, and
+      // let it go fullscreen while its image lightbox is open (so the lightbox
+      // fills the real viewport instead of letterboxing inside the tall iframe).
       window.addEventListener('message', function (ev) {
-        var h = ev.data && ev.data.lbHeight;
-        if (typeof h === 'number' && h > 200 && h < 4000) {
-          var f = document.getElementById('play-frame');
-          if (f) f.style.height = h + 'px';
+        if (!ev.data) return;
+        var f = document.getElementById('play-frame');
+        if (!f) return;
+        if (typeof ev.data.lbOpen === 'boolean') {
+          f.classList.toggle('play-fullscreen', ev.data.lbOpen);
+          return;
         }
+        var h = ev.data.lbHeight;
+        if (typeof h === 'number' && h > 200 && h < 4000) f.style.height = h + 'px';
       });
       // Lazy-load the play app when its section nears the viewport. Uses an
       // IntersectionObserver plus a scroll-proximity fallback (and an immediate

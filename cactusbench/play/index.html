@@ -69,11 +69,11 @@
   .result .sub b{color:#fff;}
 
   /* lightbox */
-  .lb{position:fixed;inset:0;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;
-      z-index:50;cursor:zoom-out;padding:24px;}
+  .lb{position:fixed;inset:0;background:rgba(0,0,0,.96);display:none;align-items:center;justify-content:center;
+      z-index:50;cursor:zoom-out;padding:12px;}
   .lb.show{display:flex;}
   .lb img{max-width:100%;max-height:100%;border-radius:6px;box-shadow:0 8px 40px rgba(0,0,0,.6);}
-  .lb .x{position:absolute;top:16px;right:22px;color:#fff;font-size:1.6rem;font-family:var(--sans);}
+  .lb .x{position:absolute;top:10px;right:14px;color:#fff;font-size:1.6rem;font-family:var(--sans);line-height:1;}
 </style>
 </head>
 <body>
@@ -237,8 +237,11 @@
   fillThumbs('photos',photos,'photo');
 
   var lb=document.getElementById('lb'), lbimg=document.getElementById('lbimg');
-  function openLb(src){ lbimg.src=src; lb.classList.add('show'); }
-  lb.addEventListener('click',function(){ lb.classList.remove('show'); lbimg.src=''; });
+  function msg(o){ try{ parent.postMessage(o,'*'); }catch(e){} }
+  function openLb(src){ lbimg.src=src; lb.classList.add('show'); msg({lbOpen:true}); }
+  function closeLb(){ lb.classList.remove('show'); lbimg.src=''; msg({lbOpen:false}); }
+  lb.addEventListener('click',closeLb);
+  document.addEventListener('keydown',function(e){ if(e.key==='Escape' && lb.classList.contains('show')) closeLb(); });
 
   // report content height to the parent so the embed iframe fits snugly
   function ping(){ try{ parent.postMessage({lbHeight:document.body.scrollHeight+8}, '*'); }catch(e){} }
