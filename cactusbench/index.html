@@ -502,9 +502,9 @@
         <section id="play" class="prose">
             <h2>Play the benchmark</h2>
             <p>
-                Try it yourself &mdash; this is the same task the models were given: read the two years&apos; field sheets and photos, then produce the cleaned cross-year arm table.
+                Try it yourself &mdash; this is a real task from the set (Saguaro 15&ndash;66): read the two years&apos; field sheets and photos, then produce the cleaned cross-year arm table. The 2023 arm numbers are pre-filled as the canonical labels; your job is to map each 2026 arm to its match and submit. It&apos;s straightforward, but the arms aren&apos;t recorded in the same order both years.
             </p>
-            <!-- TODO: interactive play embed -->
+            <div class="play-embed" id="play-embed" data-src="play/?v=1"></div>
         </section>
 
         <section id="methodology" class="prose">
@@ -833,6 +833,45 @@
       } else {
         [lb, lb2, xh, rs, ff].forEach(function(c){ if (c) c.classList.add('shown'); });
       }
+
+      // Play embed: size the iframe to the player's reported content height.
+      window.addEventListener('message', function (ev) {
+        var h = ev.data && ev.data.lbHeight;
+        if (typeof h === 'number' && h > 200 && h < 4000) {
+          var f = document.getElementById('play-frame');
+          if (f) f.style.height = h + 'px';
+        }
+      });
+      // Lazy-load the play app when its section nears the viewport. Uses an
+      // IntersectionObserver plus a scroll-proximity fallback (and an immediate
+      // check) so it loads reliably regardless of IO quirks.
+      (function () {
+        var wrap = document.getElementById('play-embed');
+        if (!wrap) return;
+        var src = wrap.getAttribute('data-src');
+        var loaded = false;
+        function load() {
+          if (loaded) return; loaded = true;
+          window.removeEventListener('scroll', onScroll);
+          var f = document.createElement('iframe');
+          f.id = 'play-frame'; f.title = 'CactusBench — play a task';
+          f.src = src; f.setAttribute('loading', 'lazy');
+          wrap.appendChild(f);
+        }
+        function near() {
+          var r = wrap.getBoundingClientRect();
+          return r.top < (window.innerHeight + 400) && r.bottom > -400;
+        }
+        function onScroll() { if (near()) load(); }
+        if ('IntersectionObserver' in window) {
+          var io3 = new IntersectionObserver(function (entries) {
+            entries.forEach(function (e) { if (e.isIntersecting) { load(); io3.disconnect(); } });
+          }, { rootMargin: '300px' });
+          io3.observe(wrap);
+        }
+        window.addEventListener('scroll', onScroll, { passive: true });
+        if (near()) load();
+      })();
 
       // Scroll-spy: highlight the nav link for the section currently in view.
       (function(){

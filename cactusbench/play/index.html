@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CactusBench — play a task</title>
+<style>
+  :root{
+    --bg:#0d0d0d; --panel:#141414; --fg:#f0f0f0; --muted:#8a8a8a; --rule:#262626;
+    --accent:#65d697; --bad:#e5736b; --ok:#65d697;
+    --mono:'JetBrains Mono','SF Mono',Menlo,monospace;
+    --sans:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--sans);}
+  .wrap{padding:18px 20px 26px;}
+  .lead{font-size:0.9rem;line-height:1.6;color:#cfcfcf;margin:0 0 6px;font-weight:300;}
+  .tip{font-size:0.8rem;line-height:1.55;color:var(--muted);margin:0 0 18px;}
+  .tip b{color:#d8d8d8;font-weight:500;}
+  h3{font-family:var(--mono);font-size:0.66rem;letter-spacing:0.16em;text-transform:uppercase;
+     color:var(--muted);margin:20px 0 9px;font-weight:500;}
+
+  /* reference: sheets + photos */
+  .thumbs{display:flex;flex-wrap:wrap;gap:10px;}
+  .thumb{cursor:zoom-in;border:1px solid var(--rule);border-radius:6px;overflow:hidden;
+         background:#fff;position:relative;transition:border-color .15s;}
+  .thumb:hover{border-color:#555;}
+  .thumb.sheet img{height:128px;width:auto;display:block;}
+  .thumb.photo img{height:96px;width:auto;display:block;}
+  .thumb .cap{position:absolute;left:0;bottom:0;right:0;font-family:var(--mono);font-size:0.58rem;
+       letter-spacing:.04em;color:#fff;background:rgba(0,0,0,.66);padding:3px 6px;}
+
+  /* table */
+  .tablewrap{overflow-x:auto;margin-top:6px;border:1px solid var(--rule);border-radius:8px;}
+  table{border-collapse:collapse;width:100%;font-size:0.8rem;min-width:560px;}
+  thead th{font-family:var(--mono);font-size:0.6rem;letter-spacing:.06em;text-transform:uppercase;
+       color:var(--muted);font-weight:500;text-align:left;padding:9px 8px;border-bottom:1px solid var(--rule);
+       background:var(--panel);position:sticky;top:0;}
+  tbody td{padding:3px 5px;border-bottom:1px solid #1c1c1c;}
+  tbody tr.y26{background:rgba(101,214,151,0.035);}
+  input,select{width:100%;background:#101010;border:1px solid #2a2a2a;border-radius:4px;
+       color:#f0f0f0;font-family:var(--mono);font-size:0.78rem;padding:6px 6px;outline:none;}
+  input:focus,select:focus{border-color:var(--accent);}
+  input.num{width:64px;}
+  td.armc input{width:48px;}
+  td.yearc select{width:74px;}
+  input.ok{border-color:var(--ok);background:rgba(101,214,151,0.12);}
+  input.bad{border-color:var(--bad);background:rgba(229,115,107,0.12);}
+  .del{background:none;border:0;color:#666;cursor:pointer;font-size:1rem;padding:2px 6px;}
+  .del:hover{color:var(--bad);}
+  .yrtag{font-family:var(--mono);font-size:0.6rem;color:var(--muted);}
+
+  .toolbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-top:14px;}
+  button.btn{font-family:var(--sans);font-size:0.82rem;border-radius:6px;padding:8px 14px;cursor:pointer;
+       border:1px solid var(--rule);background:#1a1a1a;color:#e8e8e8;transition:background .15s,border-color .15s;}
+  button.btn:hover{border-color:#555;}
+  button.btn.primary{background:var(--accent);color:#072414;border-color:var(--accent);font-weight:600;}
+  button.btn.primary:hover{background:#7ce0a8;}
+  .addrow{font-family:var(--mono);font-size:0.72rem;color:var(--accent);background:none;border:0;
+       cursor:pointer;padding:8px 2px;}
+  .addrow:hover{text-decoration:underline;}
+
+  .result{margin-top:16px;border:1px solid var(--rule);border-radius:8px;padding:14px 16px;display:none;
+       background:var(--panel);}
+  .result.show{display:block;}
+  .result .big{font-size:1.5rem;font-weight:600;font-family:var(--mono);}
+  .result .big .pct{color:var(--accent);}
+  .result .sub{font-size:0.82rem;color:#cfcfcf;margin-top:6px;line-height:1.6;}
+  .result .sub b{color:#fff;}
+
+  /* lightbox */
+  .lb{position:fixed;inset:0;background:rgba(0,0,0,.9);display:none;align-items:center;justify-content:center;
+      z-index:50;cursor:zoom-out;padding:24px;}
+  .lb.show{display:flex;}
+  .lb img{max-width:100%;max-height:100%;border-radius:6px;box-shadow:0 8px 40px rgba(0,0,0,.6);}
+  .lb .x{position:absolute;top:16px;right:22px;color:#fff;font-size:1.6rem;font-family:var(--sans);}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <p class="lead">Curate Saguaro <b>15&ndash;66</b>: two volunteers measured it in 2023 and 2026. Read both field sheets and the photos, then produce one cleaned table &mdash; each arm matched across the two years under a single canonical number.</p>
+  <p class="tip"><b>The 2023 sheet&apos;s arm numbers are the canonical numbers.</b> They&apos;re pre-filled below. Your job: read the 2026 sheet, match each of its arms to the 2023 arm it is (by compass direction and size &mdash; arms grow, they rarely move far), and enter it under that same canonical arm number. Then submit to score against the curator&apos;s answer.</p>
+
+  <h3>Field sheets — click to enlarge</h3>
+  <div class="thumbs" id="sheets"></div>
+
+  <h3>Photos — click to enlarge</h3>
+  <div class="thumbs" id="photos"></div>
+
+  <h3>Your cleaned table</h3>
+  <div class="tablewrap">
+    <table>
+      <thead><tr>
+        <th>Year</th><th>Arm&nbsp;#</th><th>Dir&deg;</th><th>A</th><th>B</th><th>C</th><th>D</th><th>E</th><th></th>
+      </tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+  <button class="addrow" id="add">+ Add row</button>
+
+  <div class="toolbar">
+    <button class="btn primary" id="submit">Submit &amp; score</button>
+    <button class="btn" id="reset">Reset</button>
+  </div>
+
+  <div class="result" id="result"></div>
+</div>
+
+<div class="lb" id="lb"><span class="x">&times;</span><img id="lbimg" alt=""></div>
+
+<script>
+(function(){
+  'use strict';
+  var FIELDS = ['d','A','B','C','D','E'];
+  var TOL = { d:1.0, A:0.011, B:0.011, C:0.011, D:0.011, E:0.011 };
+
+  // Curator ground truth (canonical). 2023 arm numbers are canonical; 2026 arms re-keyed.
+  var TRUTH = [
+    {y:2023,arm:1,d:359,A:3.21,B:0.98,C:3.99,D:0.99,E:0.6},
+    {y:2023,arm:2,d:52, A:3.5, B:1.0, C:5.75,D:1.04,E:0.7},
+    {y:2023,arm:3,d:79, A:3.27,B:1.01,C:3.93,D:1.03,E:0.6},
+    {y:2023,arm:4,d:137,A:3.11,B:0.98,C:5.65,D:1.0, E:0.9},
+    {y:2023,arm:5,d:192,A:3.86,B:0.96,C:5.53,D:0.86,E:0.7},
+    {y:2023,arm:6,d:279,A:2.78,B:0.9, C:5.15,D:0.85,E:0.9},
+    {y:2026,arm:1,d:355,A:3.14,B:0.9, C:4.11,D:0.93,E:0.6},
+    {y:2026,arm:2,d:55, A:3.48,B:0.99,C:5.97,D:1.02,E:0.73},
+    {y:2026,arm:3,d:100,A:3.25,B:1.0, C:4.05,D:1.0, E:0.53},
+    {y:2026,arm:4,d:170,A:3.1, B:0.97,C:5.81,D:0.95,E:0.9},
+    {y:2026,arm:5,d:190,A:3.82,B:0.89,C:5.75,D:0.98,E:0.65},
+    {y:2026,arm:6,d:288,A:2.76,B:0.85,C:5.41,D:0.88,E:0.75}
+  ];
+  // Pre-filled rows: the 2023 canonical rows are given; six blank 2026 rows to map.
+  var SEED = TRUTH.slice(0,6).map(function(t){return {y:2023,arm:t.arm,d:t.d,A:t.A,B:t.B,C:t.C,D:t.D,E:t.E};});
+  for (var i=0;i<6;i++) SEED.push({y:2026,arm:'',d:'',A:'',B:'',C:'',D:'',E:''});
+
+  var rowsEl = document.getElementById('rows');
+
+  function cell(cls, inner){ var td=document.createElement('td'); if(cls)td.className=cls; td.innerHTML=inner; return td; }
+  function makeRow(r){
+    var tr=document.createElement('tr');
+    if(String(r.y)==='2026') tr.className='y26';
+    var yc=cell('yearc','<select data-f="year"><option value="2023">2023</option><option value="2026">2026</option></select>');
+    yc.querySelector('select').value=String(r.y);
+    tr.appendChild(yc);
+    tr.appendChild(cell('armc','<input data-f="arm" inputmode="numeric" value="'+r.arm+'">'));
+    FIELDS.forEach(function(f){
+      tr.appendChild(cell('','<input class="num" data-f="'+f+'" inputmode="decimal" value="'+r[f]+'">'));
+    });
+    var dc=cell('','<button class="del" title="remove row">&times;</button>');
+    dc.querySelector('.del').addEventListener('click',function(){ tr.remove(); ping(); });
+    tr.appendChild(dc);
+    tr.querySelectorAll('select').forEach(function(s){ s.addEventListener('change',function(){
+      tr.className = (s.value==='2026')?'y26':''; }); });
+    return tr;
+  }
+  function render(seed){ rowsEl.innerHTML=''; seed.forEach(function(r){ rowsEl.appendChild(makeRow(r)); }); ping(); }
+
+  function num(v){ if(v===''||v==null) return null; var n=parseFloat(v); return isNaN(n)?null:n; }
+  function close(f,v,t){
+    var n=num(v); if(n===null) return false;
+    if(f==='d'){ var dd=Math.abs(((n-t)%360+360)%360); dd=Math.min(dd,360-dd); return dd<=TOL.d; }
+    return Math.abs(n-t)<=TOL[f];
+  }
+
+  function collect(){
+    return Array.prototype.map.call(rowsEl.querySelectorAll('tr'),function(tr){
+      var o={tr:tr,inp:{}};
+      tr.querySelectorAll('[data-f]').forEach(function(el){ o.inp[el.dataset.f]=el; });
+      o.year=o.inp.year.value; o.arm=(o.inp.arm.value||'').trim();
+      return o;
+    });
+  }
+
+  function score(){
+    var rows=collect();
+    rows.forEach(function(p){ Object.keys(p.inp).forEach(function(k){ p.inp[k].classList.remove('ok','bad'); }); });
+    var key={}; rows.forEach(function(p){ if(p.arm!=='') key[p.year+'-'+p.arm]=p; });
+    var correct=0,total=0, c26=0,t26=0, mapped=0;
+    TRUTH.forEach(function(t){
+      var p=key[t.y+'-'+t.arm];
+      var rowOk = t.y===2026 ? true : true; var allOk=true;
+      FIELDS.forEach(function(f){
+        total++; if(t.y===2026) t26++;
+        var ok = p ? close(f,p.inp[f].value,t[f]) : false;
+        if(ok){ correct++; if(t.y===2026) c26++; } else allOk=false;
+        if(p){ p.inp[f].classList.add(ok?'ok':'bad'); }
+      });
+      if(t.y===2026 && p && allOk) mapped++;
+    });
+    // flag rows whose (year,arm) is not a real arm
+    rows.forEach(function(p){
+      if(p.arm!=='' && !TRUTH.some(function(t){return String(t.y)===p.year && String(t.arm)===p.arm;})){
+        p.inp.arm.classList.add('bad');
+      }
+    });
+    var pct=Math.round(correct/total*100);
+    var res=document.getElementById('result');
+    var verdict = mapped===6 ? 'Perfect mapping — every 2026 arm matched and measured.'
+                : mapped>=4 ? 'Close. A couple of 2026 arms are mis-matched or off-tolerance.'
+                : 'The 2026 arms aren&apos;t lining up yet — match each to its 2023 twin by direction and size.';
+    res.innerHTML = '<div class="big"><span class="pct">'+pct+'%</span> &nbsp;<span style="font-size:0.9rem;color:#9a9a9a">'+correct+' / '+total+' cells</span></div>'+
+      '<div class="sub"><b>'+mapped+' of 6</b> 2026 arms fully correct &nbsp;·&nbsp; 2026 cells: '+c26+'/'+t26+'<br>'+verdict+
+      ' &nbsp;Green cells match the curator within tolerance (direction &plusmn;1&deg;, heights &plusmn;0.011&nbsp;m); red are off or blank.</div>';
+    res.classList.add('show'); ping();
+  }
+
+  document.getElementById('add').addEventListener('click',function(){ rowsEl.appendChild(makeRow({y:2026,arm:'',d:'',A:'',B:'',C:'',D:'',E:''})); ping(); });
+  document.getElementById('submit').addEventListener('click',score);
+  document.getElementById('reset').addEventListener('click',function(){ document.getElementById('result').classList.remove('show'); render(SEED); });
+
+  // sheets + photos
+  var sheets=[['images/sheet_2023.png','2023 field sheet'],['images/sheet_2026.png','2026 field sheet']];
+  var photos=[];
+  ['2023','2026'].forEach(function(y){ for(var n=1;n<=4;n++){ var s='0'+n; photos.push(['images/photo_'+y+'_'+s+'.jpg', y+' · '+n]); } });
+  function fillThumbs(elId, list, cls){
+    var box=document.getElementById(elId);
+    list.forEach(function(it){
+      var d=document.createElement('div'); d.className='thumb '+cls;
+      d.innerHTML='<img src="'+it[0]+'" alt="'+it[1]+'"><span class="cap">'+it[1]+'</span>';
+      d.addEventListener('click',function(){ openLb(it[0]); });
+      box.appendChild(d);
+    });
+  }
+  fillThumbs('sheets',sheets,'sheet');
+  fillThumbs('photos',photos,'photo');
+
+  var lb=document.getElementById('lb'), lbimg=document.getElementById('lbimg');
+  function openLb(src){ lbimg.src=src; lb.classList.add('show'); }
+  lb.addEventListener('click',function(){ lb.classList.remove('show'); lbimg.src=''; });
+
+  // report content height to the parent so the embed iframe fits snugly
+  function ping(){ try{ parent.postMessage({lbHeight:document.body.scrollHeight+8}, '*'); }catch(e){} }
+  window.addEventListener('load',ping); window.addEventListener('resize',ping);
+  document.querySelectorAll('img').forEach(function(im){ im.addEventListener('load',ping); });
+
+  render(SEED);
+})();
+</script>
+</body>
+</html>
