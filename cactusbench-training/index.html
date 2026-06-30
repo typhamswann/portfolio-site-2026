@@ -88,6 +88,27 @@
       .mini-val { font-family: 'JetBrains Mono', monospace; font-size: 0.74rem; color: #f0f0f0; }
       .mini-axis { grid-column: 2; display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: #5c5c5c; margin-top: 4px; border-top: 1px solid #1a1a1a; padding-top: 4px; }
 
+      /* ---------- VERTICAL BAR CHARTS (perception accuracy / errors) ---------- */
+      .perc-figs { display: flex; gap: 40px; max-width: 720px; flex-wrap: wrap; margin: 22px 0 8px; }
+      .perc-figs .chart { flex: 1 1 280px; margin: 0; }
+      .perc-figs h4 {
+        font-family: 'JetBrains Mono', monospace; font-size: 0.64rem; letter-spacing: 0.08em;
+        text-transform: uppercase; color: #b0b0b0; font-weight: 500; margin: 0 0 18px; text-align: center;
+      }
+      .vplot { display: flex; justify-content: center; gap: 50px; align-items: flex-end; height: 150px; }
+      .vbar {
+        position: relative; width: 58px; height: 0; border-radius: 5px 5px 0 0;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.07);
+        transition: height 1.05s cubic-bezier(0.22, 1, 0.36, 1);
+      }
+      .chart.shown .vbar { height: var(--h); }
+      .vval {
+        position: absolute; bottom: 100%; left: -12px; right: -12px; text-align: center;
+        margin-bottom: 7px; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: #f0f0f0;
+      }
+      .vlabs { display: flex; justify-content: center; gap: 50px; margin-top: 10px; }
+      .vlabs span { width: 58px; text-align: center; font-size: 0.78rem; color: #cfcfcf; }
+
       /* ---------- ANNOTATED PROMPT TRANSCRIPT (highlighted text, not a diagram) ---------- */
       .promptfig { max-width: 720px; margin: 20px 0 6px; }
       .ptx {
@@ -257,10 +278,10 @@
             <p>
                 The first stage of the post-training process involved improving the model's visual perception, where most of the errors on the evaluation originated from, via RLVR on a separate transcription task. The dataset was 90 tasks assembled by taking the existing sheets and ground truth and asking the model to only transcribe the data sheet (no arm matching or error correction like in the original task). This was in a simple transcription prompt instead of within the agentic harness and trained via GRPO, with per-cell accuracy used as the reward. A total of 200 steps with eight rollouts per task were run with tasks with low variance rollouts filtered out.
             </p>
-            <figure id="chart-perc-acc" class="chart" aria-label="Perception-task accuracy, base vs RL"></figure>
-            <p class="caption">Accuracy on the isolated transcription task (held-out sheets), Qwen3.5-4B. RLVR lifts per-cell perception from 0.67 to 0.99.</p>
-            <figure id="chart-perc-err" class="chart" aria-label="Agentic-task errors by category, base vs RL"></figure>
-            <p class="caption">Held-out errors on the full agentic task, per pass, split by category: <span style="color:#7ba8d8">perception</span> (misread cells) and <span style="color:#d9a763">arm-matching</span> (cross-year numbering). Despite the large isolated-perception gain, the in-loop errors barely move &mdash; the reading skill doesn't transfer into the agentic format. (Qwen3.5-4B, the RL'd model analyzed here.)</p>
+            <div class="perc-figs">
+                <figure id="chart-perc-acc" class="chart" aria-label="Perception-task accuracy, base vs RL"></figure>
+                <figure id="chart-perc-err" class="chart" aria-label="Perception errors on the agentic task, base vs RL"></figure>
+            </div>
             <p>
                 Training vastly improved the model's visual perception on the isolated transcription task but didn't yield gains on overall performance on the agentic task. This was somewhat expected given the differences in the harness and added complexity of the multi-turn rollouts of CactusBench tasks. A closer analysis on another RL'd model on the tasks gives greater insight into how perception performance gains were lost as the task and harness were incrementally transformed into the full agentic version. This analysis ultimately motivated the subsequent SFT rollout in order to best elicit the model's improved perception capabilities from the RL run.
             </p>
@@ -394,16 +415,23 @@
              '<div class="mini-axis"><span>0</span><span>' + (axisLabel || max) + '</span></div><span></span></div>';
         return h + '</div>';
       }
+      function renderVBars(el, title, rows, max, color, fmt){
+        var bars = rows.map(function(d){
+          var h = (d.v / max * 100).toFixed(1) + '%';
+          return '<div class="vbar" style="--h:' + h + ';background:' + color + '">' +
+                 '<span class="vval">' + fmt(d.v) + '</span></div>';
+        }).join('');
+        var labs = rows.map(function(d){ return '<span>' + esc(d.n) + '</span>'; }).join('');
+        el.innerHTML = '<h4>' + esc(title) + '</h4><div class="vplot">' + bars + '</div>' +
+                       '<div class="vlabs">' + labs + '</div>';
+      }
       function renderPercAcc(el){
-        el.innerHTML = miniPanel('Perception accuracy — isolated transcription',
-          [ {n:'base', v:0.667}, {n:'+ RLVR', v:0.994} ], 1.0, '#5b8fd6',
-          function(v){ return v.toFixed(2); }, '1.0');
+        renderVBars(el, 'Perception accuracy · isolated task',
+          [ {n:'base', v:0.667}, {n:'+ RLVR', v:0.994} ], 1.0, '#52a98a', function(v){ return v.toFixed(2); });
       }
       function renderPercErr(el){
-        el.innerHTML = '<div class="chart-pair">' +
-          miniPanel('Perception errors / pass', [ {n:'base', v:80}, {n:'+ RLVR', v:72} ], 90, '#5b8fd6', function(v){ return Math.round(v); }) +
-          miniPanel('Arm-matching errors / pass', [ {n:'base', v:3.0}, {n:'+ RLVR', v:2.7} ], 4, '#d9933f', function(v){ return v.toFixed(1); }) +
-          '</div>';
+        renderVBars(el, 'Perception errors · agentic task',
+          [ {n:'base', v:80}, {n:'+ RLVR', v:72} ], 90, '#c46a52', function(v){ return Math.round(v); });
       }
 
       var lb  = document.getElementById('chart-lb');
