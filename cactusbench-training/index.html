@@ -28,7 +28,7 @@
       .doc-outline a.active { color: #f2f2f2; }
       .doc-outline a.active::before { width: 30px; background: #f2f2f2; }
       main section[id] { scroll-margin-top: 24px; }
-      @media (max-width: 1180px) { .doc-outline { display: none; } }
+      @media (max-width: 1320px) { .doc-outline { display: none; } }
 
       /* ---------- GRAPH / FIGURE PLACEHOLDERS (graphs added next) ---------- */
       .chart-placeholder {
@@ -43,6 +43,79 @@
         width: 100%; max-width: 860px; margin: 36px auto 0; min-height: 340px;
       }
 
+      /* ---------- TITLE WIDTH ---------- */
+      .hero h1 { max-width: 34ch; margin: 0 auto; }
+
+      /* ---------- APPROACH DIAGRAM ---------- */
+      .approach { max-width: 720px; margin: 22px 0 6px; }
+      .approach-flow {
+        display: flex; align-items: stretch; gap: 10px; flex-wrap: nowrap;
+      }
+      .anode {
+        flex: 1 1 0; min-width: 0; background: #111; border: 1px solid #242424;
+        border-radius: 8px; padding: 13px 13px 12px; display: flex; flex-direction: column; gap: 4px;
+      }
+      .anode.stage { border-color: rgba(192,132,252,0.45); background: rgba(192,132,252,0.06); }
+      .anode.final { border-color: #2c372d; background: rgba(101,214,151,0.05); }
+      .anode-eyebrow {
+        font-family: 'JetBrains Mono', monospace; font-size: 0.56rem; letter-spacing: 0.12em;
+        text-transform: uppercase; color: #8a8a8a;
+      }
+      .anode.stage .anode-eyebrow { color: #c084fc; }
+      .anode.final .anode-eyebrow { color: #65d697; }
+      .anode-title { font-size: 0.92rem; color: #f2f2f2; font-weight: 400; line-height: 1.15; }
+      .anode-sub { font-size: 0.7rem; color: #9a9a9a; line-height: 1.45; }
+      .aarrow { align-self: center; color: #555; font-size: 1.1rem; flex: 0 0 auto; }
+      @media (max-width: 680px) {
+        .approach-flow { flex-direction: column; }
+        .aarrow { transform: rotate(90deg); }
+      }
+
+      /* ---------- DUAL-CHART ROW (perception vs agentic) ---------- */
+      .chart-pair { display: flex; gap: 36px; max-width: 720px; flex-wrap: wrap; margin: 8px 0 4px; }
+      .chart-pair .chart-mini { flex: 1 1 300px; min-width: 280px; }
+      .chart-mini h4 {
+        font-family: 'JetBrains Mono', monospace; font-size: 0.66rem; letter-spacing: 0.06em;
+        text-transform: uppercase; color: #b8b8b8; font-weight: 500; margin: 0 0 12px;
+      }
+      .mini-row { display: grid; grid-template-columns: 58px 1fr 54px; align-items: center; column-gap: 10px; height: 40px; }
+      .mini-name { font-size: 0.78rem; color: #cfcfcf; text-align: right; }
+      .mini-track { position: relative; height: 18px; background: rgba(255,255,255,0.035); border-radius: 3px; }
+      .mini-fill { height: 100%; width: 0; border-radius: 3px; transition: width 1.05s cubic-bezier(0.22,1,0.36,1); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06); }
+      .chart.shown .mini-fill { width: var(--w); }
+      .mini-val { font-family: 'JetBrains Mono', monospace; font-size: 0.74rem; color: #f0f0f0; }
+      .mini-axis { grid-column: 2; display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: #5c5c5c; margin-top: 4px; border-top: 1px solid #1a1a1a; padding-top: 4px; }
+
+      /* ---------- ANNOTATED PROMPT TEMPLATE ---------- */
+      .promptfig { max-width: 720px; margin: 20px 0 6px; }
+      .pt {
+        border: 1px solid #242424; border-radius: 10px; overflow: hidden;
+        background: #0d0d0d; font-size: 0.82rem;
+      }
+      .pt-msg { display: grid; grid-template-columns: 78px 1fr; gap: 14px; padding: 13px 16px; border-top: 1px solid #181818; }
+      .pt-msg:first-child { border-top: 0; }
+      .pt-role {
+        font-family: 'JetBrains Mono', monospace; font-size: 0.58rem; letter-spacing: 0.1em;
+        text-transform: uppercase; color: #707070; padding-top: 4px;
+      }
+      .pt-role.tool { color: #6f93b0; }
+      .pt-body { color: #cbcbcb; line-height: 1.6; min-width: 0; }
+      .pt-body code {
+        font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #a8b6c6;
+        background: rgba(255,255,255,0.045); padding: 2px 7px; border-radius: 5px;
+      }
+      .pt-add {
+        display: block; background: rgba(192,132,252,0.10); border-left: 2px solid #c084fc;
+        color: #e7d6ff; padding: 7px 11px; border-radius: 0 6px 6px 0; margin: 6px 0;
+        font-family: 'JetBrains Mono', monospace; font-size: 0.74rem; line-height: 1.55;
+      }
+      .pt-tag {
+        display: block; font-family: 'JetBrains Mono', monospace; font-size: 0.57rem;
+        letter-spacing: 0.05em; color: #c084fc; margin-top: 6px; text-transform: uppercase;
+      }
+      .pt-add.note { background: rgba(101,214,151,0.09); border-left-color: #65d697; color: #d6f5e3; }
+      .pt-add.note .pt-tag { color: #65d697; }
+
       /* ---------- DATA-VIZ CHARTS (matched to the benchmark pages) ---------- */
       .chart {
         max-width: 720px;
@@ -52,10 +125,10 @@
       .hero .chart { width: min(720px, 100%); margin: 36px auto 0; text-align: left; }
       .chart-row {
         display: grid;
-        grid-template-columns: 186px 1fr 150px;
+        grid-template-columns: 200px 1fr 64px;
         align-items: center;
         column-gap: 14px;
-        height: 38px;
+        height: 40px;
       }
       .chart-name {
         display: flex; align-items: center; justify-content: flex-end;
@@ -90,7 +163,15 @@
         color: #f0f0f0; white-space: nowrap;
       }
       .chart-val .unit { color: #7a7a7a; }
-      .chart-val .tag { color: #c084fc; font-size: 0.66rem; letter-spacing: 0.04em; }
+      .chart-val.hi { color: #f5e9ff; font-weight: 600; }
+      .chart-row.hi .chart-nametext { color: #f5f5f5; font-weight: 500; }
+      /* stage pill — replaces the stacked sublabel */
+      .chart-pill {
+        font-family: 'JetBrains Mono', monospace; font-size: 0.56rem; letter-spacing: 0.04em;
+        padding: 2px 7px; border-radius: 999px; white-space: nowrap; flex-shrink: 0;
+        background: rgba(255,255,255,0.06); color: #9a9a9a; border: 1px solid transparent;
+      }
+      .chart-pill.hi { background: rgba(192,132,252,0.16); color: #d6b3ff; border-color: rgba(192,132,252,0.4); }
       .chart-err {
         position: absolute; top: 50%; height: 9px; transform: translateY(-50%);
         border-left: 1.5px solid rgba(255,255,255,0.85);
@@ -125,12 +206,13 @@
 
         <div class="chart-legend">
             <span><i class="chart-swatch" style="background:#c084fc"></i>Qwen3.6-27B (this work)</span>
+                <span><i class="chart-swatch" style="background:#565b66"></i>frontier</span>
         </div>
         <figure id="chart-lb" class="chart" aria-label="Held-out accuracy by model"></figure>
     </header>
 
     <nav id="section-nav" class="doc-outline" aria-label="Document outline">
-        <a href="#tasks">Scientific Data Tasks</a>
+        <a href="#tasks">Tasks</a>
         <a href="#methods">Methods</a>
         <a href="#results">Results</a>
     </nav>
@@ -154,6 +236,28 @@
             <p>
                 Due to the shape and complexity of the task, naive fine-tuning and RL efforts failed to improve performance. CactusBench tasks are limited by both perception (in this case, the ability to read what a field biologist wrote down) and visual reasoning (the ability to match data across years based on measurements). In practice, training these together would degrade performance, so instead an approach was taken to isolate each capability by training in two stages:
             </p>
+            <figure class="approach" aria-label="Two-stage post-training approach">
+                <div class="approach-flow">
+                    <div class="anode base">
+                        <span class="anode-eyebrow">Start</span>
+                        <span class="anode-title">Qwen3.6-27B</span>
+                        <span class="anode-sub">open base model</span>
+                    </div>
+                    <span class="aarrow" aria-hidden="true">&rarr;</span>
+                    <div class="anode stage">
+                        <span class="anode-eyebrow">Stage 1 · RLVR</span>
+                        <span class="anode-title">Perception</span>
+                        <span class="anode-sub">isolated transcription, per-cell reward (GRPO)</span>
+                    </div>
+                    <span class="aarrow" aria-hidden="true">&rarr;</span>
+                    <div class="anode stage">
+                        <span class="anode-eyebrow">Stage 2 · SFT</span>
+                        <span class="anode-title">Reasoning &amp; format</span>
+                        <span class="anode-sub">verified agentic trajectories: transcribe&#8209;then&#8209;match</span>
+                    </div>
+                </div>
+                <figcaption>Each capability is trained in isolation: RLVR sharpens perception on a pure transcription task, then SFT installs the in-loop transcribe-then-reason behavior that elicits it on the agentic task.</figcaption>
+            </figure>
             <p>
                 To target perception, Qwen3.6-27B was trained with RLVR on a separately constructed task involving just reading and transcribing measurement sheets. Then, to elicit this perception boost within the task and improve reasoning, the RL'd model was fine-tuned on a custom-built dataset of real output trajectories sampled from a deterministically assembled base with corrections to reasoning and answers by a frontier model. Together, this produced a model that was better at both visual perception and visual reasoning within the agentic workflow on CactusBench tasks.
             </p>
@@ -173,9 +277,51 @@
             <p>
                 To carry out these goals, a custom-built dataset was created that demonstrated the desired behaviors. First, a base prompt was built containing the system prompt and a template built from typical rollout behavior of the first few actions where the two datasheets were viewed. A response was appended with the ground truth directly after each tool-call to view each datasheet. Additionally, a line was appended to the system prompt telling it to explicitly reason about the arm mapping.
             </p>
-            <div class="chart-placeholder" role="img" aria-label="Figure placeholder">
-                [ Annotated prompt template with the appended transcriptions highlighted and annotated ]
-            </div>
+            <figure class="promptfig" aria-label="Annotated SFT prompt template">
+                <div class="pt">
+                    <div class="pt-msg">
+                        <span class="pt-role">system</span>
+                        <div class="pt-body">
+                            You are curating saguaro field data. Inspect the two datasheets and photos, then produce the cleaned cross-year arm table&hellip;
+                            <mark class="pt-add">After viewing both sheets, reason explicitly about how each year&rsquo;s arm numbers map to the canonical numbers, then write the final table.
+                                <span class="pt-tag">&uarr; line appended to the system prompt</span>
+                            </mark>
+                        </div>
+                    </div>
+                    <div class="pt-msg">
+                        <span class="pt-role tool">assistant</span>
+                        <div class="pt-body"><code>view_image("datasheets/sheet_A.png")</code></div>
+                    </div>
+                    <div class="pt-msg">
+                        <span class="pt-role">assistant</span>
+                        <div class="pt-body">
+                            <mark class="pt-add">Sheet A (2024) &mdash; arm 1: dir 174, A 2.43, B 0.98, C 5.50, D 0.97, E 1.05 · arm 2: dir 263, A 2.45 &hellip; · arm 3: dir 350 &hellip;
+                                <span class="pt-tag">&uarr; ground-truth transcription appended right after each view</span>
+                            </mark>
+                            <code>view_image("datasheets/sheet_B.png")</code>
+                        </div>
+                    </div>
+                    <div class="pt-msg">
+                        <span class="pt-role">assistant</span>
+                        <div class="pt-body">
+                            <mark class="pt-add">Sheet B (2026) &mdash; arm 1: dir 184, A 2.40, B 0.98, C 5.70, D 0.99, E 1.05 · arm 2: dir 257 &hellip; · arm 3: dir 341 &hellip;
+                                <span class="pt-tag">&uarr; appended transcription</span>
+                            </mark>
+                            Matching by bearing: 2024 arm 1 (174&deg;) &harr; 2026 arm 1 (184&deg;); arm 2 (263&deg;)&harr;(257&deg;); arm 3 (350&deg;)&harr;(341&deg;). Canonical numbers carry over; no new arms.
+                            <code>write_submission([&hellip; corrected canonical table &hellip;])</code>
+                        </div>
+                    </div>
+                    <div class="pt-msg">
+                        <span class="pt-role">grade</span>
+                        <div class="pt-body">
+                            <mark class="pt-add note">Organic rollouts that score 1.0 are kept verbatim; imperfect ones are repaired by GPT-5.5 (responses + reasoning rewritten to match ground truth) before being added to the SFT set.
+                                <span class="pt-tag">&uarr; how each trajectory enters the 90-example set</span>
+                            </mark>
+                        </div>
+                    </div>
+                </div>
+                <figcaption>SFT target construction: a deterministic prefix views each sheet, the correct per-arm transcription is appended right after each view, and an explicit cross-year matching step precedes <code>write_submission</code>. Highlighted spans are the injected/appended content.</figcaption>
+            </figure>
             <p>
                 The model was then run within the normal agentic harness from this base across multiple rollouts. If the task had a successful rollout, it was saved as-is to the fine-tuning set. If it had errors, GPT-5.5 was provided the full rollout and ground truth and was prompted to respond with a corrected rollout with modified responses and reasoning traces to add to the set. The model was then trained on the 90-task set across three epochs.
             </p>
@@ -190,9 +336,10 @@
             <h2>Results</h2>
             <div class="chart-legend">
                 <span><i class="chart-swatch" style="background:#c084fc"></i>Qwen3.6-27B (this work)</span>
+                <span><i class="chart-swatch" style="background:#565b66"></i>frontier</span>
             </div>
             <figure id="chart-lb2" class="chart" aria-label="Held-out accuracy by model"></figure>
-            <p class="caption">Mean per-cell table accuracy on the held-out set (6 tasks &times; 3 rollouts; notes excluded). The post-trained open 27B (RLVR + SFT) lands second, ahead of Gemini 3.1 Pro and both Claude Opus models, behind only GPT-5.5. Small-sample set &mdash; differences within the top cluster are not statistically separated.</p>
+            <p class="caption">Mean per-cell table accuracy on the held-out set (6 tasks &times; 3 rollouts; notes excluded). The post-trained open 27B (RLVR + SFT) lands second, ahead of Gemini 3.1 Pro and both Claude Opus models, behind only GPT-5.5. X-axis starts at 0.90 to make the tight top-cluster differences legible. Small-sample set &mdash; differences within the top cluster are not statistically separated.</p>
             <p>
                 The RLVR + SFT model performed better than both the base Qwen3.6-27B and a number of frontier models on the holdout set (six tasks, three rollouts each). Analysis of the error types across the models show that the SFT run lowered both perception errors and arm matching (reasoning) errors significantly, even though it was only <em>targeting</em> reasoning. Essentially, the format change was required to unlock the gains in perception gained from reinforcement learning.
             </p>
@@ -221,23 +368,23 @@
     (function () {
       'use strict';
       var C = {
-        claude: '#cc785c',  // anthropic coral
-        gpt:    '#10a37f',  // openai green
-        gemini: '#4285f4',  // google blue
-        ours:   '#c084fc',  // this work — Qwen3.6-27B
+        frontier: '#565b66', // frontier baselines — muted, identified by their logo
+        base:     '#6b6478', // Qwen3.6-27B base (dim)
+        rl:       '#a673db', // + RLVR
+        sft:      '#c084fc', // + RLVR + SFT (this work, headline)
       };
 
       // Held-out leaderboard: mean per-cell table accuracy on the 6 held-out tasks
       // (3 rollouts each; notes excluded). The three Qwen3.6-27B rows are this work.
       var LB = [
-        { name:'GPT-5.5',        v:0.970, c:C.gpt    },
-        { name:'Qwen3.6-27B', sub:'+ RLVR + SFT', v:0.966, c:C.ours },
-        { name:'Gemini 3.1 Pro', v:0.953, c:C.gemini },
-        { name:'Qwen3.6-27B', sub:'+ RLVR',       v:0.941, c:C.ours },
-        { name:'Claude Opus 4.7', v:0.939, c:C.claude },
-        { name:'Qwen3.6-27B', sub:'base',         v:0.939, c:C.ours },
-        { name:'Gemini 3.5 Flash', v:0.929, c:C.gemini },
-        { name:'Claude Opus 4.8',  v:0.929, c:C.claude },
+        { name:'GPT-5.5',          v:0.970, c:C.frontier },
+        { name:'Qwen3.6-27B', stage:'RLVR + SFT', pillHi:true, hi:true, v:0.966, c:C.sft },
+        { name:'Gemini 3.1 Pro',   v:0.953, c:C.frontier },
+        { name:'Qwen3.6-27B', stage:'RLVR', pillHi:true, v:0.941, c:C.rl },
+        { name:'Claude Opus 4.7',  v:0.939, c:C.frontier },
+        { name:'Qwen3.6-27B', stage:'base', v:0.939, c:C.base },
+        { name:'Gemini 3.5 Flash', v:0.929, c:C.frontier },
+        { name:'Claude Opus 4.8',  v:0.929, c:C.frontier },
       ];
 
       function esc(s){ var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
@@ -256,24 +403,25 @@
       }
       function nameCell(d){
         var logo = logoFor(d.name);
-        var sub = d.sub ? '<span class="sub">' + esc(d.sub) + '</span>' : '';
+        var pill = d.stage ? '<span class="chart-pill' + (d.pillHi ? ' hi' : '') + '">' + esc(d.stage) + '</span>' : '';
         return '<div class="chart-name">' +
-          '<span class="chart-nametext">' + esc(d.name) + sub + '</span>' +
+          '<span class="chart-nametext">' + esc(d.name) + '</span>' + pill +
           (logo ? '<span class="chart-logo">' + logo + '</span>' : '') +
           '</div>';
       }
 
+      // Zoomed domain so the tight top-cluster differences are visible (axis starts at 0.90).
       function renderAcc(el){
-        var max = 1.0, html = '';
+        var DMIN = 0.90, DMAX = 1.0, span = DMAX - DMIN, html = '';
         LB.forEach(function(d){
-          var w = (d.v / max * 100).toFixed(1) + '%';
-          html += '<div class="chart-row">' + nameCell(d) +
+          var w = (Math.max(0, d.v - DMIN) / span * 100).toFixed(1) + '%';
+          html += '<div class="chart-row' + (d.hi ? ' hi' : '') + '">' + nameCell(d) +
             '<div class="chart-track"><div class="chart-fill" style="--w:' + w + ';background:' + d.c + '"></div></div>' +
-            '<div class="chart-val">' + d.v.toFixed(3) + '</div>' +
+            '<div class="chart-val' + (d.hi ? ' hi' : '') + '">' + d.v.toFixed(3) + '</div>' +
             '</div>';
         });
         html += '<div class="chart-row" style="height:auto"><div></div>' +
-                '<div class="chart-axis"><span>0</span><span>0.5</span><span>1.0 · perfect</span></div><div></div></div>';
+                '<div class="chart-axis"><span>0.90</span><span>0.95</span><span>1.00</span></div><div></div></div>';
         el.innerHTML = html;
       }
 
