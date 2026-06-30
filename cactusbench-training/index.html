@@ -55,6 +55,7 @@
 
       /* ---------- TITLE WIDTH ---------- */
       .hero h1 { max-width: 39ch; margin: 0 auto; }
+      .byline { color: #8a8a8a; font-size: 0.8rem; letter-spacing: 0.03em; margin: 18px 0 0; font-family: 'JetBrains Mono', monospace; }
 
       /* ---------- APPROACH DIAGRAM ---------- */
       .approach { max-width: 720px; margin: 36px 0 32px; }
@@ -66,11 +67,9 @@
         border-radius: 8px; padding: 16px 16px 15px; display: flex; flex-direction: column; gap: 5px;
       }
       .anode.stage { border-color: #2c2c2c; background: #141414; }
-      /* two stages = two different capabilities, each its own intuitive color */
-      .anode.perc   { border-left: 3px solid #5b8fd6; background: rgba(91,143,214,0.05); }  /* perception = vision/blue */
-      .anode.reason { border-left: 3px solid #d9933f; background: rgba(217,147,63,0.05); }  /* reasoning = amber */
-      .anode.perc   .anode-eyebrow { color: #7ba8d8; }
-      .anode.reason .anode-eyebrow { color: #d9a763; }
+      /* both training stages = "this work" -> single blue accent */
+      .anode.perc, .anode.reason { border-left: 3px solid #5b8fd6; background: rgba(91,143,214,0.05); }
+      .anode.perc .anode-eyebrow, .anode.reason .anode-eyebrow { color: #7ba8d8; }
       .anode-eyebrow {
         font-family: 'JetBrains Mono', monospace; font-size: 0.56rem; letter-spacing: 0.12em;
         text-transform: uppercase; color: #7d7d7d;
@@ -143,7 +142,7 @@
       .ptx b { color: #e2e2e2; font-weight: 600; }
       /* highlight over the appended/injected text */
       .ptx mark {
-        background: rgba(228,201,74,0.20); color: #f1e9c6; padding: 1px 4px; border-radius: 2px;
+        background: rgba(91,143,214,0.20); color: #dbe7f5; padding: 1px 4px; border-radius: 2px;
         box-decoration-break: clone; -webkit-box-decoration-break: clone;
       }
       /* margin annotation pointing at the highlight */
@@ -234,6 +233,7 @@
         <p class="eyebrow">VLM · RL · SFT · 2026</p>
         <h1>Post-training a 27B model to beat frontier models on multimodal scientific data tasks</h1>
         <p class="tagline">As an extension of the work on CactusBench, a benchmark measuring frontier models&apos; ability to carry out quality-assurance tasks on scientific data using complex visual reasoning, I post-trained a model to frontier performance with SFT and RLVR on top of a Qwen3.6-27B base.</p>
+        <p class="byline">Ty Pham-Swann &middot; June 2026</p>
 
         <div class="chart-legend">
             <span><i class="chart-swatch" style="background:#79aae0"></i>Qwen3.6-27B (this work)</span>
@@ -397,14 +397,14 @@
       // (3 rollouts each; notes excluded). Frontier baselines uniform grey; the three
       // Qwen3.6-27B rows (this work) in green, brightening through training.
       var LB = [
-        { name:'GPT-5.5',          v:0.970, c:C.frontier },
-        { name:'SFT + RLVR', ours:true, hi:true, v:0.966, c:C.sft },
-        { name:'Gemini 3.1 Pro',   v:0.953, c:C.frontier },
-        { name:'RLVR only',  ours:true, v:0.941, c:C.rl },
-        { name:'Claude Opus 4.7',  v:0.939, c:C.frontier },
-        { name:'base',       ours:true, v:0.939, c:C.base },
-        { name:'Gemini 3.5 Flash', v:0.929, c:C.frontier },
-        { name:'Claude Opus 4.8',  v:0.929, c:C.frontier },
+        { name:'GPT-5.5',          v:0.970, ci:0.030, c:C.frontier },
+        { name:'SFT + RLVR', ours:true, hi:true, v:0.966, ci:0.040, c:C.sft },
+        { name:'Gemini 3.1 Pro',   v:0.953, ci:0.043, c:C.frontier },
+        { name:'RLVR only',  ours:true, v:0.941, ci:0.044, c:C.rl },
+        { name:'Claude Opus 4.7',  v:0.939, ci:0.032, c:C.frontier },
+        { name:'base',       ours:true, v:0.939, ci:0.050, c:C.base },
+        { name:'Gemini 3.5 Flash', v:0.929, ci:0.035, c:C.frontier },
+        { name:'Claude Opus 4.8',  v:0.929, ci:0.039, c:C.frontier },
       ];
 
       function esc(s){ var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
@@ -430,18 +430,25 @@
           '</div>';
       }
 
-      // Zoomed domain so the tight top-cluster differences are visible (axis starts at 0.90).
+      // Axis starts at 0.85 (labeled) and every bar carries its 95% CI, so the
+      // overlapping whiskers show the top models are statistically tied.
       function renderAcc(el){
-        var DMIN = 0.90, DMAX = 1.0, span = DMAX - DMIN, html = '';
+        var DMIN = 0.85, DMAX = 1.0, span = DMAX - DMIN, html = '';
         LB.forEach(function(d){
           var w = (Math.max(0, d.v - DMIN) / span * 100).toFixed(1) + '%';
+          var err = '';
+          if (d.ci) {
+            var lo = Math.max(0, (d.v - d.ci - DMIN)) / span * 100;
+            var hi = Math.min(span, (d.v + d.ci - DMIN)) / span * 100;
+            err = '<div class="chart-err" style="left:' + lo.toFixed(1) + '%;width:' + (hi - lo).toFixed(1) + '%"></div>';
+          }
           html += '<div class="chart-row' + (d.hi ? ' hi' : '') + '">' + nameCell(d) +
-            '<div class="chart-track"><div class="chart-fill" style="--w:' + w + ';background:' + d.c + '"></div></div>' +
+            '<div class="chart-track"><div class="chart-fill" style="--w:' + w + ';background:' + d.c + '"></div>' + err + '</div>' +
             '<div class="chart-val' + (d.hi ? ' hi' : '') + '">' + d.v.toFixed(3) + '</div>' +
             '</div>';
         });
         html += '<div class="chart-row" style="height:auto"><div></div>' +
-                '<div class="chart-axis"><span>0.90</span><span>0.95</span><span>1.00</span></div><div></div></div>';
+                '<div class="chart-axis"><span>0.85</span><span>0.90</span><span>0.95</span><span>1.00</span></div><div></div></div>';
         el.innerHTML = html;
       }
 
@@ -459,10 +466,10 @@
              '<div class="mini-axis"><span>0</span><span>' + (axisLabel || max) + '</span></div><span></span></div>';
         return h + '</div>';
       }
-      function renderVBars(el, title, rows, max, color, fmt){
+      function renderVBars(el, title, rows, max, fmt){
         var bars = rows.map(function(d){
           var h = (d.v / max * 100).toFixed(1) + '%';
-          return '<div class="vbar" style="--h:' + h + ';background:' + color + '">' +
+          return '<div class="vbar" style="--h:' + h + ';background:' + d.c + '">' +
                  '<span class="vval">' + fmt(d.v) + '</span></div>';
         }).join('');
         var labs = rows.map(function(d){ return '<span>' + esc(d.n) + '</span>'; }).join('');
@@ -471,11 +478,11 @@
       }
       function renderPercAcc(el){
         renderVBars(el, 'Perception accuracy · isolated task',
-          [ {n:'base', v:0.667}, {n:'RLVR only', v:0.994} ], 1.0, '#52a98a', function(v){ return v.toFixed(2); });
+          [ {n:'base', v:0.667, c:C.base}, {n:'RLVR only', v:0.994, c:C.sft} ], 1.0, function(v){ return v.toFixed(2); });
       }
       function renderPercErr(el){
         renderVBars(el, 'Perception errors · agentic task',
-          [ {n:'base', v:80}, {n:'RLVR only', v:72} ], 90, '#c46a52', function(v){ return Math.round(v); });
+          [ {n:'base', v:80, c:C.base}, {n:'RLVR only', v:72, c:C.sft} ], 90, function(v){ return Math.round(v); });
       }
 
       var lb  = document.getElementById('chart-lb');
