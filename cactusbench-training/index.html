@@ -55,7 +55,7 @@
         flex: 1 1 0; min-width: 0; background: #101010; border: 1px solid #2a2a2a;
         border-radius: 8px; padding: 16px 16px 15px; display: flex; flex-direction: column; gap: 5px;
       }
-      .anode.stage { border-color: #2c2c2c; border-left: 3px solid #6f9cc9; background: #141414; }
+      .anode.stage { border-color: #2c2c2c; border-left: 3px solid #d9a441; background: #141414; }
       .anode-eyebrow {
         font-family: 'JetBrains Mono', monospace; font-size: 0.56rem; letter-spacing: 0.12em;
         text-transform: uppercase; color: #7d7d7d;
@@ -98,7 +98,7 @@
       .ptx .tool { display: block; color: #9fb6c8; margin: 3px 0; }
       /* highlight over the appended/injected text */
       .ptx mark {
-        background: rgba(111,156,201,0.22); color: #dce9f5; padding: 1px 4px; border-radius: 2px;
+        background: rgba(217,164,65,0.20); color: #f0e2c4; padding: 1px 4px; border-radius: 2px;
         box-decoration-break: clone; -webkit-box-decoration-break: clone;
       }
       /* margin annotation pointing at the highlight */
@@ -156,8 +156,8 @@
       }
       .chart-val .unit { color: #7a7a7a; }
       .chart-val.hi { color: #ffffff; font-weight: 600; }
-      .chart-nametext.ours { color: #a6c2dd; }
-      .chart-row.hi .chart-nametext { color: #d8e6f4; font-weight: 600; }
+      .chart-nametext.ours { color: #d8bd83; }
+      .chart-row.hi .chart-nametext { color: #f0d79a; font-weight: 600; }
       .chart-err {
         position: absolute; top: 50%; height: 9px; transform: translateY(-50%);
         border-left: 1.5px solid rgba(255,255,255,0.85);
@@ -191,8 +191,7 @@
         <p class="tagline">Post-training a 27B model to beat frontier models on multimodal scientific data tasks.</p>
 
         <div class="chart-legend">
-            <span><i class="chart-swatch" style="background:#7aa8d8"></i>Qwen3.6-27B (this work)</span>
-                <span><i class="chart-swatch" style="background:#4f5460"></i>frontier</span>
+            <span><i class="chart-swatch" style="background:#e3b35a"></i>Qwen3.6-27B (this work)</span>
         </div>
         <figure id="chart-lb" class="chart" aria-label="Held-out accuracy by model"></figure>
     </header>
@@ -280,8 +279,7 @@
         <section id="results" class="prose">
             <h2>Results</h2>
             <div class="chart-legend">
-                <span><i class="chart-swatch" style="background:#7aa8d8"></i>Qwen3.6-27B (this work)</span>
-                <span><i class="chart-swatch" style="background:#4f5460"></i>frontier</span>
+                <span><i class="chart-swatch" style="background:#e3b35a"></i>Qwen3.6-27B (this work)</span>
             </div>
             <figure id="chart-lb2" class="chart" aria-label="Held-out accuracy by model"></figure>
             <p class="caption">Mean per-cell table accuracy on the held-out set (6 tasks &times; 3 rollouts; notes excluded). The post-trained open 27B (RLVR + SFT) lands second, ahead of Gemini 3.1 Pro and both Claude Opus models, behind only GPT-5.5. X-axis starts at 0.90 to make the tight top-cluster differences legible. Small-sample set &mdash; differences within the top cluster are not statistically separated.</p>
@@ -313,23 +311,26 @@
     (function () {
       'use strict';
       var C = {
-        frontier: '#4f5460', // frontier baselines — neutral grey, recede; identified by logo
-        base:     '#646b73', // Qwen3.6-27B base (neutral, untrained)
-        rl:       '#5d86b5', // + RLVR
-        sft:      '#7aa8d8', // + RLVR + SFT (this work, headline — accent blue)
+        gpt:    '#10a37f', // OpenAI green
+        gemini: '#4285f4', // Google blue
+        claude: '#cc785c', // Anthropic coral
+        base:   '#6a7078', // Qwen base — neutral grey (untrained starting point)
+        rl:     '#c79a4e', // Qwen + RLVR — bronze-gold (this work)
+        sft:    '#e3b35a', // Qwen + RLVR + SFT — gold (this work, headline)
       };
 
       // Held-out leaderboard: mean per-cell table accuracy on the 6 held-out tasks
-      // (3 rollouts each; notes excluded). The three Qwen3.6-27B rows are this work.
+      // (3 rollouts each; notes excluded). Frontier in vendor brand colors; the three
+      // Qwen3.6-27B rows (this work) in gold.
       var LB = [
-        { name:'GPT-5.5',          v:0.970, c:C.frontier },
+        { name:'GPT-5.5',          v:0.970, c:C.gpt    },
         { name:'RLVR + SFT', ours:true, hi:true, v:0.966, c:C.sft },
-        { name:'Gemini 3.1 Pro',   v:0.953, c:C.frontier },
+        { name:'Gemini 3.1 Pro',   v:0.953, c:C.gemini },
         { name:'RLVR',       ours:true, v:0.941, c:C.rl },
-        { name:'Claude Opus 4.7',  v:0.939, c:C.frontier },
+        { name:'Claude Opus 4.7',  v:0.939, c:C.claude },
         { name:'base',       ours:true, v:0.939, c:C.base },
-        { name:'Gemini 3.5 Flash', v:0.929, c:C.frontier },
-        { name:'Claude Opus 4.8',  v:0.929, c:C.frontier },
+        { name:'Gemini 3.5 Flash', v:0.929, c:C.gemini },
+        { name:'Claude Opus 4.8',  v:0.929, c:C.claude },
       ];
 
       function esc(s){ var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
