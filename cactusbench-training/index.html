@@ -86,35 +86,30 @@
       .mini-val { font-family: 'JetBrains Mono', monospace; font-size: 0.74rem; color: #f0f0f0; }
       .mini-axis { grid-column: 2; display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: #5c5c5c; margin-top: 4px; border-top: 1px solid #1a1a1a; padding-top: 4px; }
 
-      /* ---------- ANNOTATED PROMPT TEMPLATE ---------- */
+      /* ---------- ANNOTATED PROMPT TRANSCRIPT (highlighted text, not a diagram) ---------- */
       .promptfig { max-width: 720px; margin: 20px 0 6px; }
-      .pt {
-        border: 1px solid #242424; border-radius: 10px; overflow: hidden;
-        background: #0d0d0d; font-size: 0.82rem;
+      .ptx {
+        background: #0d0d0d; border: 1px solid #242424; border-radius: 10px;
+        padding: 20px 22px; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;
+        line-height: 1.95; color: #c2c2c2;
       }
-      .pt-msg { display: grid; grid-template-columns: 78px 1fr; gap: 14px; padding: 13px 16px; border-top: 1px solid #181818; }
-      .pt-msg:first-child { border-top: 0; }
-      .pt-role {
-        font-family: 'JetBrains Mono', monospace; font-size: 0.58rem; letter-spacing: 0.1em;
-        text-transform: uppercase; color: #707070; padding-top: 4px;
+      .ptx .role {
+        display: block; color: #6a6a6a; font-size: 0.6rem; letter-spacing: 0.14em;
+        margin: 18px 0 4px;
       }
-      .pt-role.tool { color: #6f93b0; }
-      .pt-body { color: #cbcbcb; line-height: 1.6; min-width: 0; }
-      .pt-body code {
-        font-family: 'JetBrains Mono', monospace; font-size: 0.75rem; color: #a8b6c6;
-        background: rgba(255,255,255,0.045); padding: 2px 7px; border-radius: 5px;
+      .ptx .role:first-child { margin-top: 0; }
+      .ptx .tool { display: block; color: #9fb6c8; margin: 3px 0; }
+      /* highlighter over the appended/injected text */
+      .ptx mark {
+        background: rgba(192,132,252,0.24); color: #f1e7ff; padding: 1px 3px; border-radius: 2px;
+        box-decoration-break: clone; -webkit-box-decoration-break: clone;
       }
-      .pt-add {
-        display: block; background: rgba(192,132,252,0.10); border-left: 2px solid #c084fc;
-        color: #e7d6ff; padding: 7px 11px; border-radius: 0 6px 6px 0; margin: 6px 0;
-        font-family: 'JetBrains Mono', monospace; font-size: 0.74rem; line-height: 1.55;
+      /* margin annotation pointing at the highlight */
+      .ptx .ann {
+        display: block; color: #c79bf2; font-size: 0.66rem; letter-spacing: 0.02em;
+        margin: 4px 0 2px; padding-left: 16px; position: relative; font-style: italic;
       }
-      .pt-tag {
-        display: block; font-family: 'JetBrains Mono', monospace; font-size: 0.57rem;
-        letter-spacing: 0.05em; color: #c084fc; margin-top: 6px; text-transform: uppercase;
-      }
-      .pt-add.note { background: rgba(101,214,151,0.09); border-left-color: #65d697; color: #d6f5e3; }
-      .pt-add.note .pt-tag { color: #65d697; }
+      .ptx .ann::before { content: '\21B3'; position: absolute; left: 0; font-style: normal; }
 
       /* ---------- DATA-VIZ CHARTS (matched to the benchmark pages) ---------- */
       .chart {
@@ -164,7 +159,8 @@
       }
       .chart-val .unit { color: #7a7a7a; }
       .chart-val.hi { color: #f5e9ff; font-weight: 600; }
-      .chart-row.hi .chart-nametext { color: #f5f5f5; font-weight: 500; }
+      .chart-nametext.ours { color: #c8a8f0; }
+      .chart-row.hi .chart-nametext { color: #d6b3ff; font-weight: 600; }
       /* stage pill — replaces the stacked sublabel */
       .chart-pill {
         font-family: 'JetBrains Mono', monospace; font-size: 0.56rem; letter-spacing: 0.04em;
@@ -277,50 +273,9 @@
             <p>
                 To carry out these goals, a custom-built dataset was created that demonstrated the desired behaviors. First, a base prompt was built containing the system prompt and a template built from typical rollout behavior of the first few actions where the two datasheets were viewed. A response was appended with the ground truth directly after each tool-call to view each datasheet. Additionally, a line was appended to the system prompt telling it to explicitly reason about the arm mapping.
             </p>
-            <figure class="promptfig" aria-label="Annotated SFT prompt template">
-                <div class="pt">
-                    <div class="pt-msg">
-                        <span class="pt-role">system</span>
-                        <div class="pt-body">
-                            You are curating saguaro field data. Inspect the two datasheets and photos, then produce the cleaned cross-year arm table&hellip;
-                            <mark class="pt-add">After viewing both sheets, reason explicitly about how each year&rsquo;s arm numbers map to the canonical numbers, then write the final table.
-                                <span class="pt-tag">&uarr; line appended to the system prompt</span>
-                            </mark>
-                        </div>
-                    </div>
-                    <div class="pt-msg">
-                        <span class="pt-role tool">assistant</span>
-                        <div class="pt-body"><code>view_image("datasheets/sheet_A.png")</code></div>
-                    </div>
-                    <div class="pt-msg">
-                        <span class="pt-role">assistant</span>
-                        <div class="pt-body">
-                            <mark class="pt-add">Sheet A (2024) &mdash; arm 1: dir 174, A 2.43, B 0.98, C 5.50, D 0.97, E 1.05 · arm 2: dir 263, A 2.45 &hellip; · arm 3: dir 350 &hellip;
-                                <span class="pt-tag">&uarr; ground-truth transcription appended right after each view</span>
-                            </mark>
-                            <code>view_image("datasheets/sheet_B.png")</code>
-                        </div>
-                    </div>
-                    <div class="pt-msg">
-                        <span class="pt-role">assistant</span>
-                        <div class="pt-body">
-                            <mark class="pt-add">Sheet B (2026) &mdash; arm 1: dir 184, A 2.40, B 0.98, C 5.70, D 0.99, E 1.05 · arm 2: dir 257 &hellip; · arm 3: dir 341 &hellip;
-                                <span class="pt-tag">&uarr; appended transcription</span>
-                            </mark>
-                            Matching by bearing: 2024 arm 1 (174&deg;) &harr; 2026 arm 1 (184&deg;); arm 2 (263&deg;)&harr;(257&deg;); arm 3 (350&deg;)&harr;(341&deg;). Canonical numbers carry over; no new arms.
-                            <code>write_submission([&hellip; corrected canonical table &hellip;])</code>
-                        </div>
-                    </div>
-                    <div class="pt-msg">
-                        <span class="pt-role">grade</span>
-                        <div class="pt-body">
-                            <mark class="pt-add note">Organic rollouts that score 1.0 are kept verbatim; imperfect ones are repaired by GPT-5.5 (responses + reasoning rewritten to match ground truth) before being added to the SFT set.
-                                <span class="pt-tag">&uarr; how each trajectory enters the 90-example set</span>
-                            </mark>
-                        </div>
-                    </div>
-                </div>
-                <figcaption>SFT target construction: a deterministic prefix views each sheet, the correct per-arm transcription is appended right after each view, and an explicit cross-year matching step precedes <code>write_submission</code>. Highlighted spans are the injected/appended content.</figcaption>
+            <figure class="promptfig" aria-label="Annotated SFT prompt transcript">
+                <div class="ptx"><span class="role">SYSTEM</span>You are curating saguaro field data. Inspect the two datasheets and photos, then produce the cleaned cross-year arm table. <mark>After viewing both sheets, reason explicitly about how each year&rsquo;s arm numbers map to the canonical numbers, then write the final table.</mark><span class="ann">line appended to the system prompt &mdash; instructs an explicit cross-year matching step</span><span class="role">ASSISTANT</span><span class="tool">view_image("datasheets/sheet_A.png")</span><span class="role">ASSISTANT</span><mark>Sheet A (2024) &mdash; arm 1: dir 174, A 2.43, B 0.98, C 5.50, D 0.97, E 1.05 &middot; arm 2: dir 263, A 2.45 &hellip; &middot; arm 3: dir 350 &hellip;</mark><span class="ann">ground-truth transcription appended right after the view</span><span class="tool">view_image("datasheets/sheet_B.png")</span><span class="role">ASSISTANT</span><mark>Sheet B (2026) &mdash; arm 1: dir 184, A 2.40, B 0.98, C 5.70, D 0.99, E 1.05 &middot; arm 2: dir 257 &hellip; &middot; arm 3: dir 341 &hellip;</mark><span class="ann">appended transcription</span>Matching by bearing: 2024 arm 1 (174&deg;) &harr; 2026 arm 1 (184&deg;); arm 2 (263&deg;)&harr;(257&deg;); arm 3 (350&deg;)&harr;(341&deg;). Canonical numbers carry over.<span class="tool">write_submission([ &hellip; corrected canonical table &hellip; ])</span></div>
+                <figcaption>One SFT target: highlighted spans are injected into a real rollout &mdash; a steering line on the system prompt, and the correct per-arm transcription appended right after each <code>view_image</code>. The model learns to transcribe-then-match under the real prompt.</figcaption>
             </figure>
             <p>
                 The model was then run within the normal agentic harness from this base across multiple rollouts. If the task had a successful rollout, it was saved as-is to the fine-tuning set. If it had errors, GPT-5.5 was provided the full rollout and ground truth and was prompted to respond with a corrected rollout with modified responses and reasoning traces to add to the set. The model was then trained on the 90-task set across three epochs.
@@ -378,11 +333,11 @@
       // (3 rollouts each; notes excluded). The three Qwen3.6-27B rows are this work.
       var LB = [
         { name:'GPT-5.5',          v:0.970, c:C.frontier },
-        { name:'Qwen3.6-27B', stage:'RLVR + SFT', pillHi:true, hi:true, v:0.966, c:C.sft },
+        { name:'RLVR + SFT', ours:true, hi:true, v:0.966, c:C.sft },
         { name:'Gemini 3.1 Pro',   v:0.953, c:C.frontier },
-        { name:'Qwen3.6-27B', stage:'RLVR', pillHi:true, v:0.941, c:C.rl },
+        { name:'RLVR',       ours:true, v:0.941, c:C.rl },
         { name:'Claude Opus 4.7',  v:0.939, c:C.frontier },
-        { name:'Qwen3.6-27B', stage:'base', v:0.939, c:C.base },
+        { name:'base',       ours:true, v:0.939, c:C.base },
         { name:'Gemini 3.5 Flash', v:0.929, c:C.frontier },
         { name:'Claude Opus 4.8',  v:0.929, c:C.frontier },
       ];
@@ -402,10 +357,10 @@
         return '';  // Qwen / open: name only
       }
       function nameCell(d){
+        if (d.ours) return '<div class="chart-name"><span class="chart-nametext ours">' + esc(d.name) + '</span></div>';
         var logo = logoFor(d.name);
-        var pill = d.stage ? '<span class="chart-pill' + (d.pillHi ? ' hi' : '') + '">' + esc(d.stage) + '</span>' : '';
         return '<div class="chart-name">' +
-          '<span class="chart-nametext">' + esc(d.name) + '</span>' + pill +
+          '<span class="chart-nametext">' + esc(d.name) + '</span>' +
           (logo ? '<span class="chart-logo">' + logo + '</span>' : '') +
           '</div>';
       }
