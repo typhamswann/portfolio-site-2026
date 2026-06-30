@@ -80,8 +80,8 @@
         font-family: 'JetBrains Mono', monospace; font-size: 0.66rem; letter-spacing: 0.06em;
         text-transform: uppercase; color: #b8b8b8; font-weight: 500; margin: 0 0 12px;
       }
-      .mini-row { display: grid; grid-template-columns: 58px 1fr 54px; align-items: center; column-gap: 10px; height: 40px; }
-      .mini-name { font-size: 0.78rem; color: #cfcfcf; text-align: right; }
+      .mini-row { display: grid; grid-template-columns: 104px 1fr 40px; align-items: center; column-gap: 10px; height: 38px; }
+      .mini-name { font-size: 0.78rem; color: #cfcfcf; text-align: right; white-space: nowrap; }
       .mini-track { position: relative; height: 18px; background: rgba(255,255,255,0.035); border-radius: 3px; }
       .mini-fill { height: 100%; width: 0; border-radius: 3px; transition: width 1.05s cubic-bezier(0.22,1,0.36,1); box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06); }
       .chart.shown .mini-fill { width: var(--w); }
@@ -161,8 +161,8 @@
       }
       .chart-val .unit { color: #7a7a7a; }
       .chart-val.hi { color: #ffffff; font-weight: 600; }
-      .chart-nametext.ours { color: #93cfb1; }
-      .chart-row.hi .chart-nametext { color: #bdead2; font-weight: 600; }
+      .chart-nametext.ours { color: #a6c2dd; }
+      .chart-row.hi .chart-nametext { color: #d8e6f4; font-weight: 600; }
       .chart-err {
         position: absolute; top: 50%; height: 9px; transform: translateY(-50%);
         border-left: 1.5px solid rgba(255,255,255,0.85);
@@ -196,7 +196,7 @@
         <p class="tagline">Post-training a 27B model to beat frontier models on multimodal scientific data tasks.</p>
 
         <div class="chart-legend">
-            <span><i class="chart-swatch" style="background:#61bf92"></i>Qwen3.6-27B (this work)</span>
+            <span><i class="chart-swatch" style="background:#79aae0"></i>Qwen3.6-27B (this work)</span>
                 <span><i class="chart-swatch" style="background:#555a62"></i>frontier</span>
         </div>
         <figure id="chart-lb" class="chart" aria-label="Held-out accuracy by model"></figure>
@@ -257,6 +257,10 @@
             <p>
                 The first stage of the post-training process involved improving the model's visual perception, where most of the errors on the evaluation originated from, via RLVR on a separate transcription task. The dataset was 90 tasks assembled by taking the existing sheets and ground truth and asking the model to only transcribe the data sheet (no arm matching or error correction like in the original task). This was in a simple transcription prompt instead of within the agentic harness and trained via GRPO, with per-cell accuracy used as the reward. A total of 200 steps with eight rollouts per task were run with tasks with low variance rollouts filtered out.
             </p>
+            <figure id="chart-perc-acc" class="chart" aria-label="Perception-task accuracy, base vs RL"></figure>
+            <p class="caption">Accuracy on the isolated transcription task (held-out sheets), Qwen3.5-4B. RLVR lifts per-cell perception from 0.67 to 0.99.</p>
+            <figure id="chart-perc-err" class="chart" aria-label="Agentic-task errors by category, base vs RL"></figure>
+            <p class="caption">Held-out errors on the full agentic task, per pass, split by category: <span style="color:#7ba8d8">perception</span> (misread cells) and <span style="color:#d9a763">arm-matching</span> (cross-year numbering). Despite the large isolated-perception gain, the in-loop errors barely move &mdash; the reading skill doesn't transfer into the agentic format. (Qwen3.5-4B, the RL'd model analyzed here.)</p>
             <p>
                 Training vastly improved the model's visual perception on the isolated transcription task but didn't yield gains on overall performance on the agentic task. This was somewhat expected given the differences in the harness and added complexity of the multi-turn rollouts of CactusBench tasks. A closer analysis on another RL'd model on the tasks gives greater insight into how perception performance gains were lost as the task and harness were incrementally transformed into the full agentic version. This analysis ultimately motivated the subsequent SFT rollout in order to best elicit the model's improved perception capabilities from the RL run.
             </p>
@@ -285,7 +289,7 @@
         <section id="results" class="prose">
             <h2>Results</h2>
             <div class="chart-legend">
-                <span><i class="chart-swatch" style="background:#61bf92"></i>Qwen3.6-27B (this work)</span>
+                <span><i class="chart-swatch" style="background:#79aae0"></i>Qwen3.6-27B (this work)</span>
                 <span><i class="chart-swatch" style="background:#555a62"></i>frontier</span>
             </div>
             <figure id="chart-lb2" class="chart" aria-label="Held-out accuracy by model"></figure>
@@ -319,9 +323,9 @@
       'use strict';
       var C = {
         frontier: '#555a62', // all frontier baselines — uniform grey, recede; logos identify them
-        base:     '#46705c', // Qwen base — dim green (this work, untrained)
-        rl:       '#4f9d76', // + RLVR (this work)
-        sft:      '#61bf92', // + RLVR + SFT (this work, headline)
+        base:     '#4f7099', // Qwen base — dim blue (this work, untrained)
+        rl:       '#5e8cc0', // + RLVR (this work)
+        sft:      '#79aae0', // + RLVR + SFT (this work, headline)
       };
 
       // Held-out leaderboard: mean per-cell table accuracy on the 6 held-out tasks
@@ -376,18 +380,48 @@
         el.innerHTML = html;
       }
 
+      // Perception transfer analysis (Qwen3.5-4B): RLVR vastly improves the ISOLATED
+      // transcription task, but in-loop agentic errors barely move (the gain doesn't transfer).
+      function miniPanel(title, rows, max, color, fmt, axisLabel){
+        var h = '<div class="chart-mini"><h4>' + esc(title) + '</h4>';
+        rows.forEach(function(d){
+          var w = (d.v / max * 100).toFixed(1) + '%';
+          h += '<div class="mini-row"><span class="mini-name">' + esc(d.n) + '</span>' +
+            '<div class="mini-track"><div class="mini-fill" style="--w:' + w + ';background:' + color + '"></div></div>' +
+            '<span class="mini-val">' + fmt(d.v) + '</span></div>';
+        });
+        h += '<div class="mini-row" style="height:auto"><span></span>' +
+             '<div class="mini-axis"><span>0</span><span>' + (axisLabel || max) + '</span></div><span></span></div>';
+        return h + '</div>';
+      }
+      function renderPercAcc(el){
+        el.innerHTML = miniPanel('Perception accuracy — isolated transcription',
+          [ {n:'base', v:0.667}, {n:'+ RLVR', v:0.994} ], 1.0, '#5b8fd6',
+          function(v){ return v.toFixed(2); }, '1.0');
+      }
+      function renderPercErr(el){
+        el.innerHTML = '<div class="chart-pair">' +
+          miniPanel('Perception errors / pass', [ {n:'base', v:80}, {n:'+ RLVR', v:72} ], 90, '#5b8fd6', function(v){ return Math.round(v); }) +
+          miniPanel('Arm-matching errors / pass', [ {n:'base', v:3.0}, {n:'+ RLVR', v:2.7} ], 4, '#d9933f', function(v){ return v.toFixed(1); }) +
+          '</div>';
+      }
+
       var lb  = document.getElementById('chart-lb');
       var lb2 = document.getElementById('chart-lb2');
+      var pAcc = document.getElementById('chart-perc-acc');
+      var pErr = document.getElementById('chart-perc-err');
       if (lb)  renderAcc(lb);
       if (lb2) renderAcc(lb2);
+      if (pAcc) renderPercAcc(pAcc);
+      if (pErr) renderPercErr(pErr);
 
       if ('IntersectionObserver' in window) {
         var io = new IntersectionObserver(function(entries){
           entries.forEach(function(e){ if (e.isIntersecting){ e.target.classList.add('shown'); io.unobserve(e.target); } });
         }, { threshold: 0.25 });
-        [lb, lb2].forEach(function(c){ if (c) io.observe(c); });
+        [lb, lb2, pAcc, pErr].forEach(function(c){ if (c) io.observe(c); });
       } else {
-        [lb, lb2].forEach(function(c){ if (c) c.classList.add('shown'); });
+        [lb, lb2, pAcc, pErr].forEach(function(c){ if (c) c.classList.add('shown'); });
       }
 
       // Scroll-spy for the outline rail.
