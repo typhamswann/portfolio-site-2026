@@ -398,9 +398,9 @@
       // Qwen3.6-27B rows (this work) in green, brightening through training.
       var LB = [
         { name:'GPT-5.5',          v:0.970, c:C.frontier },
-        { name:'RLVR + SFT', ours:true, hi:true, v:0.966, c:C.sft },
+        { name:'SFT + RLVR', ours:true, hi:true, v:0.966, c:C.sft },
         { name:'Gemini 3.1 Pro',   v:0.953, c:C.frontier },
-        { name:'RLVR',       ours:true, v:0.941, c:C.rl },
+        { name:'RLVR only',  ours:true, v:0.941, c:C.rl },
         { name:'Claude Opus 4.7',  v:0.939, c:C.frontier },
         { name:'base',       ours:true, v:0.939, c:C.base },
         { name:'Gemini 3.5 Flash', v:0.929, c:C.frontier },
@@ -471,11 +471,11 @@
       }
       function renderPercAcc(el){
         renderVBars(el, 'Perception accuracy · isolated task',
-          [ {n:'base', v:0.667}, {n:'+ RLVR', v:0.994} ], 1.0, '#52a98a', function(v){ return v.toFixed(2); });
+          [ {n:'base', v:0.667}, {n:'RLVR only', v:0.994} ], 1.0, '#52a98a', function(v){ return v.toFixed(2); });
       }
       function renderPercErr(el){
         renderVBars(el, 'Perception errors · agentic task',
-          [ {n:'base', v:80}, {n:'+ RLVR', v:72} ], 90, '#c46a52', function(v){ return Math.round(v); });
+          [ {n:'base', v:80}, {n:'RLVR only', v:72} ], 90, '#c46a52', function(v){ return Math.round(v); });
       }
 
       var lb  = document.getElementById('chart-lb');
