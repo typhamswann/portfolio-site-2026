@@ -47,25 +47,22 @@
       .hero h1 { max-width: 34ch; margin: 0 auto; }
 
       /* ---------- APPROACH DIAGRAM ---------- */
-      .approach { max-width: 720px; margin: 22px 0 6px; }
+      .approach { max-width: 720px; margin: 36px 0 32px; }
       .approach-flow {
-        display: flex; align-items: stretch; gap: 10px; flex-wrap: nowrap;
+        display: flex; align-items: stretch; gap: 12px; flex-wrap: nowrap;
       }
       .anode {
-        flex: 1 1 0; min-width: 0; background: #111; border: 1px solid #242424;
-        border-radius: 8px; padding: 13px 13px 12px; display: flex; flex-direction: column; gap: 4px;
+        flex: 1 1 0; min-width: 0; background: #101010; border: 1px solid #2a2a2a;
+        border-radius: 8px; padding: 16px 16px 15px; display: flex; flex-direction: column; gap: 5px;
       }
-      .anode.stage { border-color: rgba(192,132,252,0.45); background: rgba(192,132,252,0.06); }
-      .anode.final { border-color: #2c372d; background: rgba(101,214,151,0.05); }
+      .anode.stage { border-color: #383838; background: #151515; }
       .anode-eyebrow {
         font-family: 'JetBrains Mono', monospace; font-size: 0.56rem; letter-spacing: 0.12em;
-        text-transform: uppercase; color: #8a8a8a;
+        text-transform: uppercase; color: #7d7d7d;
       }
-      .anode.stage .anode-eyebrow { color: #c084fc; }
-      .anode.final .anode-eyebrow { color: #65d697; }
-      .anode-title { font-size: 0.92rem; color: #f2f2f2; font-weight: 400; line-height: 1.15; }
-      .anode-sub { font-size: 0.7rem; color: #9a9a9a; line-height: 1.45; }
-      .aarrow { align-self: center; color: #555; font-size: 1.1rem; flex: 0 0 auto; }
+      .anode-title { font-size: 0.94rem; color: #f1f1f1; font-weight: 400; line-height: 1.2; }
+      .anode-sub { font-size: 0.7rem; color: #969696; line-height: 1.45; }
+      .aarrow { align-self: center; color: #4d4d4d; font-size: 1.05rem; flex: 0 0 auto; }
       @media (max-width: 680px) {
         .approach-flow { flex-direction: column; }
         .aarrow { transform: rotate(90deg); }
@@ -99,17 +96,17 @@
       }
       .ptx .role:first-child { margin-top: 0; }
       .ptx .tool { display: block; color: #9fb6c8; margin: 3px 0; }
-      /* highlighter over the appended/injected text */
+      /* highlight over the appended/injected text */
       .ptx mark {
-        background: rgba(192,132,252,0.24); color: #f1e7ff; padding: 1px 3px; border-radius: 2px;
+        background: rgba(255,255,255,0.12); color: #f4f4f4; padding: 1px 4px; border-radius: 2px;
         box-decoration-break: clone; -webkit-box-decoration-break: clone;
       }
       /* margin annotation pointing at the highlight */
       .ptx .ann {
-        display: block; color: #c79bf2; font-size: 0.66rem; letter-spacing: 0.02em;
+        display: block; color: #8a8a8a; font-size: 0.66rem; letter-spacing: 0.02em;
         margin: 4px 0 2px; padding-left: 16px; position: relative; font-style: italic;
       }
-      .ptx .ann::before { content: '\21B3'; position: absolute; left: 0; font-style: normal; }
+      .ptx .ann::before { content: '\21B3'; position: absolute; left: 0; font-style: normal; color: #6a6a6a; }
 
       /* ---------- DATA-VIZ CHARTS (matched to the benchmark pages) ---------- */
       .chart {
@@ -158,16 +155,9 @@
         color: #f0f0f0; white-space: nowrap;
       }
       .chart-val .unit { color: #7a7a7a; }
-      .chart-val.hi { color: #f5e9ff; font-weight: 600; }
-      .chart-nametext.ours { color: #c8a8f0; }
-      .chart-row.hi .chart-nametext { color: #d6b3ff; font-weight: 600; }
-      /* stage pill — replaces the stacked sublabel */
-      .chart-pill {
-        font-family: 'JetBrains Mono', monospace; font-size: 0.56rem; letter-spacing: 0.04em;
-        padding: 2px 7px; border-radius: 999px; white-space: nowrap; flex-shrink: 0;
-        background: rgba(255,255,255,0.06); color: #9a9a9a; border: 1px solid transparent;
-      }
-      .chart-pill.hi { background: rgba(192,132,252,0.16); color: #d6b3ff; border-color: rgba(192,132,252,0.4); }
+      .chart-val.hi { color: #ffffff; font-weight: 600; }
+      .chart-nametext.ours { color: #e6e6e6; }
+      .chart-row.hi .chart-nametext { color: #ffffff; font-weight: 600; }
       .chart-err {
         position: absolute; top: 50%; height: 9px; transform: translateY(-50%);
         border-left: 1.5px solid rgba(255,255,255,0.85);
@@ -201,8 +191,8 @@
         <p class="tagline">Post-training a 27B model to beat frontier models on multimodal scientific data tasks.</p>
 
         <div class="chart-legend">
-            <span><i class="chart-swatch" style="background:#c084fc"></i>Qwen3.6-27B (this work)</span>
-                <span><i class="chart-swatch" style="background:#565b66"></i>frontier</span>
+            <span><i class="chart-swatch" style="background:#e6e8ec"></i>Qwen3.6-27B (this work)</span>
+                <span><i class="chart-swatch" style="background:#4f5460"></i>frontier</span>
         </div>
         <figure id="chart-lb" class="chart" aria-label="Held-out accuracy by model"></figure>
     </header>
@@ -290,8 +280,8 @@
         <section id="results" class="prose">
             <h2>Results</h2>
             <div class="chart-legend">
-                <span><i class="chart-swatch" style="background:#c084fc"></i>Qwen3.6-27B (this work)</span>
-                <span><i class="chart-swatch" style="background:#565b66"></i>frontier</span>
+                <span><i class="chart-swatch" style="background:#e6e8ec"></i>Qwen3.6-27B (this work)</span>
+                <span><i class="chart-swatch" style="background:#4f5460"></i>frontier</span>
             </div>
             <figure id="chart-lb2" class="chart" aria-label="Held-out accuracy by model"></figure>
             <p class="caption">Mean per-cell table accuracy on the held-out set (6 tasks &times; 3 rollouts; notes excluded). The post-trained open 27B (RLVR + SFT) lands second, ahead of Gemini 3.1 Pro and both Claude Opus models, behind only GPT-5.5. X-axis starts at 0.90 to make the tight top-cluster differences legible. Small-sample set &mdash; differences within the top cluster are not statistically separated.</p>
@@ -323,10 +313,10 @@
     (function () {
       'use strict';
       var C = {
-        frontier: '#565b66', // frontier baselines — muted, identified by their logo
-        base:     '#6b6478', // Qwen3.6-27B base (dim)
-        rl:       '#a673db', // + RLVR
-        sft:      '#c084fc', // + RLVR + SFT (this work, headline)
+        frontier: '#4f5460', // frontier baselines — dark grey, recede; identified by logo
+        base:     '#9aa0ab', // Qwen3.6-27B base
+        rl:       '#c3c8d0', // + RLVR
+        sft:      '#f0f2f5', // + RLVR + SFT (this work, headline — near white)
       };
 
       // Held-out leaderboard: mean per-cell table accuracy on the 6 held-out tasks
