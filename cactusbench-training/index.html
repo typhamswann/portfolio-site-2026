@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Training a Small Model to Frontier Performance on CactusBench — Ty Pham-Swann</title>
+    <title>Post-training a 27B model to beat frontier models on scientific data tasks — Ty Pham-Swann</title>
     <meta name="description" content="Post-training a Qwen3.6-27B model to frontier performance on CactusBench multimodal scientific-data tasks with RLVR and SFT.">
     <link rel="stylesheet" type="text/css" href="styles.css?v=1">
     <style>
@@ -29,6 +29,16 @@
       .doc-outline a.active::before { width: 30px; background: #f2f2f2; }
       main section[id] { scroll-margin-top: 24px; }
       @media (max-width: 1320px) { .doc-outline { display: none; } }
+
+      /* ---------- TASK-LOOP PLAYER (runner badge + spinner) ---------- */
+      .runner-badge { position: absolute !important; right: 14px !important; bottom: 14px !important; display: inline-flex !important; align-items: center !important; gap: 8px !important; padding: 5px 11px 5px 5px !important; background: rgba(10,10,10,0.86) !important; border: 0 !important; border-radius: 5px !important; z-index: 5 !important; pointer-events: none !important; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); }
+      .runner-icon { width: 26px !important; height: 26px !important; flex-shrink: 0 !important; display: block !important; background: #ffffff !important; border: 0 !important; border-radius: 4px !important; overflow: hidden !important; color: #0a0a0a !important; }
+      .runner-icon img { width: 100% !important; height: 100% !important; object-fit: cover !important; display: block !important; filter: none !important; }
+      .runner-icon svg { width: 64% !important; height: 64% !important; margin: 18% !important; fill: currentColor !important; }
+      .runner-badge.runner-human  .runner-icon { color: #1e8b54 !important; }
+      .runner-badge.runner-gemini .runner-icon { color: #1a73e8 !important; }
+      .runner-name { font-size: 12.5px !important; font-weight: 500 !important; color: #f5f5f5 !important; letter-spacing: 0.02em !important; line-height: 1 !important; }
+      @keyframes lb-hero-spin { to { transform: rotate(360deg); } }
 
       /* ---------- GRAPH / FIGURE PLACEHOLDERS (graphs added next) ---------- */
       .chart-placeholder {
@@ -89,25 +99,32 @@
       .mini-axis { grid-column: 2; display: flex; justify-content: space-between; font-family: 'JetBrains Mono', monospace; font-size: 0.6rem; color: #5c5c5c; margin-top: 4px; border-top: 1px solid #1a1a1a; padding-top: 4px; }
 
       /* ---------- VERTICAL BAR CHARTS (perception accuracy / errors) ---------- */
-      .perc-figs { display: flex; gap: 40px; max-width: 720px; flex-wrap: wrap; margin: 22px 0 8px; }
-      .perc-figs .chart { flex: 1 1 280px; margin: 0; }
-      .perc-figs h4 {
-        font-family: 'JetBrains Mono', monospace; font-size: 0.64rem; letter-spacing: 0.08em;
-        text-transform: uppercase; color: #b0b0b0; font-weight: 500; margin: 0 0 18px; text-align: center;
+      .perc-figs { display: flex; gap: 28px; max-width: 720px; flex-wrap: wrap; margin: 28px 0 12px; }
+      .perc-figs .chart {
+        flex: 1 1 300px; margin: 0; background: #0d0d0d; border: 1px solid #222;
+        border-radius: 10px; padding: 20px 22px 18px;
       }
-      .vplot { display: flex; justify-content: center; gap: 50px; align-items: flex-end; height: 150px; }
+      .perc-figs h4 {
+        font-family: 'JetBrains Mono', monospace; font-size: 0.62rem; letter-spacing: 0.1em;
+        text-transform: uppercase; color: #9a9a9a; font-weight: 500; margin: 0 0 8px; text-align: center;
+      }
+      .vplot {
+        position: relative; display: flex; justify-content: center; align-items: flex-end;
+        gap: 64px; height: 168px; padding-top: 30px; box-sizing: border-box;
+        border-bottom: 1px solid #2a2a2a;
+      }
       .vbar {
-        position: relative; width: 58px; height: 0; border-radius: 5px 5px 0 0;
-        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.07);
+        position: relative; width: 62px; height: 0; border-radius: 4px 4px 0 0;
         transition: height 1.05s cubic-bezier(0.22, 1, 0.36, 1);
       }
       .chart.shown .vbar { height: var(--h); }
       .vval {
-        position: absolute; bottom: 100%; left: -12px; right: -12px; text-align: center;
-        margin-bottom: 7px; font-family: 'JetBrains Mono', monospace; font-size: 0.78rem; color: #f0f0f0;
+        position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%);
+        margin-bottom: 8px; font-family: 'JetBrains Mono', monospace; font-size: 0.82rem;
+        font-weight: 500; color: #ededed; white-space: nowrap;
       }
-      .vlabs { display: flex; justify-content: center; gap: 50px; margin-top: 10px; }
-      .vlabs span { width: 58px; text-align: center; font-size: 0.78rem; color: #cfcfcf; }
+      .vlabs { display: flex; justify-content: center; gap: 64px; margin-top: 11px; }
+      .vlabs span { width: 62px; text-align: center; font-size: 0.78rem; color: #b8b8b8; }
 
       /* ---------- ANNOTATED PROMPT TRANSCRIPT (highlighted text, not a diagram) ---------- */
       .promptfig { max-width: 720px; margin: 20px 0 6px; }
@@ -122,6 +139,8 @@
       }
       .ptx .role:first-child { margin-top: 0; }
       .ptx .tool { display: block; color: #9fb6c8; margin: 3px 0; }
+      .ptx .ret { display: block; color: #6f6f6f; margin: 2px 0; }
+      .ptx b { color: #e2e2e2; font-weight: 600; }
       /* highlight over the appended/injected text */
       .ptx mark {
         background: rgba(228,201,74,0.20); color: #f1e9c6; padding: 1px 4px; border-radius: 2px;
@@ -212,9 +231,9 @@
 </head>
 <body>
     <header class="hero">
-        <p class="eyebrow">VLM · Post-Training · RLVR + SFT · 2026</p>
-        <h1>Training a small models to frontier performance on CactusBench</h1>
-        <p class="tagline">Post-training a 27B model to beat frontier models on multimodal scientific data tasks.</p>
+        <p class="eyebrow">VLM · RL · SFT · 2026</p>
+        <h1>Post-training a 27B model to beat frontier models on multimodal scientific data tasks</h1>
+        <p class="tagline">As an extension of the work on CactusBench, a benchmark measuring frontier models&apos; ability to carry out quality-assurance tasks on scientific data using complex visual reasoning, I post-trained a model to frontier performance with SFT and RLVR on top of a Qwen3.6-27B base.</p>
 
         <div class="chart-legend">
             <span><i class="chart-swatch" style="background:#79aae0"></i>Qwen3.6-27B (this work)</span>
@@ -238,6 +257,31 @@
             <p>
                 Specifically, a model must accurately transcribe measurements from two handwritten datasheets, then reason about how the arms should be mapped across years using their measurements and identify any anomalous measurement errors and correct them.
             </p>
+
+            <div class="player-stage">
+                <div class="player-frame">
+                    <div id="stage-spinner" class="stage-spinner" aria-hidden="true"></div>
+                    <img id="stage-img" alt="task viewport">
+                    <div id="stage-thought" class="stage-thought empty" aria-live="polite"></div>
+                    <div id="stage-overlay" class="stage-overlay"></div>
+                    <div id="runner-badge" class="runner-badge">
+                        <span id="runner-icon" class="runner-icon" aria-hidden="true"></span>
+                        <span id="runner-name" class="runner-name"></span>
+                    </div>
+                </div>
+                <div class="player-controls">
+                    <button id="btn-prev" aria-label="Previous step">&lsaquo; Prev</button>
+                    <button id="btn-play" class="play" aria-label="Play / Pause">&#9654; Play</button>
+                    <button id="btn-next" aria-label="Next step">Next &rsaquo;</button>
+                    <input type="range" id="scrubber" class="scrubber" min="0" max="10" value="0" step="1" aria-label="Scrub through steps">
+                    <span id="step-count" class="step-count">0 / 10</span>
+                </div>
+                <div class="player-meta">
+                    <select id="rollout-select" aria-label="Select rollout"></select>
+                    <span id="dist-chip" class="chip subtle"></span>
+                </div>
+            </div>
+
             <p>
                 Read more about the benchmark <a href="https://typhamswann.com/cactusbench">here</a>.
             </p>
@@ -294,8 +338,8 @@
                 To carry out these goals, a custom-built dataset was created that demonstrated the desired behaviors. First, a base prompt was built containing the system prompt and a template built from typical rollout behavior of the first few actions where the two datasheets were viewed. A response was appended with the ground truth directly after each tool-call to view each datasheet. Additionally, a line was appended to the system prompt telling it to explicitly reason about the arm mapping.
             </p>
             <figure class="promptfig" aria-label="Annotated SFT prompt transcript">
-                <div class="ptx"><span class="role">SYSTEM</span>You are curating saguaro field data. Inspect the two datasheets and photos, then produce the cleaned cross-year arm table. <mark>After viewing both sheets, reason explicitly about how each year&rsquo;s arm numbers map to the canonical numbers, then write the final table.</mark><span class="ann">line appended to the system prompt &mdash; instructs an explicit cross-year matching step</span><span class="role">ASSISTANT</span><span class="tool">view_image("datasheets/sheet_A.png")</span><span class="role">ASSISTANT</span><mark>Sheet A (2024) &mdash; arm 1: dir 174, A 2.43, B 0.98, C 5.50, D 0.97, E 1.05 &middot; arm 2: dir 263, A 2.45 &hellip; &middot; arm 3: dir 350 &hellip;</mark><span class="ann">ground-truth transcription appended right after the view</span><span class="tool">view_image("datasheets/sheet_B.png")</span><span class="role">ASSISTANT</span><mark>Sheet B (2026) &mdash; arm 1: dir 184, A 2.40, B 0.98, C 5.70, D 0.99, E 1.05 &middot; arm 2: dir 257 &hellip; &middot; arm 3: dir 341 &hellip;</mark><span class="ann">appended transcription</span>Matching by bearing: 2024 arm 1 (174&deg;) &harr; 2026 arm 1 (184&deg;); arm 2 (263&deg;)&harr;(257&deg;); arm 3 (350&deg;)&harr;(341&deg;). Canonical numbers carry over.<span class="tool">write_submission([ &hellip; corrected canonical table &hellip; ])</span></div>
-                <figcaption>One SFT target: highlighted spans are injected into a real rollout &mdash; a steering line on the system prompt, and the correct per-arm transcription appended right after each <code>view_image</code>. The model learns to transcribe-then-match under the real prompt.</figcaption>
+                <div class="ptx"><span class="role">SYSTEM</span>You are an autonomous agent working inside a Unix workspace at /workspace/. You complete the task in the first user message by calling the provided tools. Issue exactly ONE tool call per turn. Inspect the datasheets and photos, then call write_submission once with the final cleaned table as a JSON array string.<mark> After you have viewed and transcribed both datasheets, reason explicitly about how each sheet&rsquo;s paper arm numbers map to the canonical numbers: the 2023 numbers are canonical; match each 2026 arm to the 2023 arm at the same bearing; any arm with no prior-year match is appended as new.</mark><span class="ann">steering line appended to the system prompt</span><span class="role">USER</span># Curate this saguaro &mdash; two biologists measured it (2023 and 2026). Produce one cleaned spreadsheet: arms matched across years, canonical arm numbers, every measurement re-keyed into the canonical schema&hellip;<span class="role">ASSISTANT</span><span class="tool">&lt;function=list_dir&gt; path: /workspace/datasheets</span><span class="ret">sheet_A.png&nbsp; sheet_B.png</span><span class="role">ASSISTANT</span><span class="tool">&lt;function=view_image&gt; path: /workspace/datasheets/sheet_A.png</span><span class="ret">Image /workspace/datasheets/sheet_A.png (1280&times;989): [image]</span><span class="role">ASSISTANT</span><mark>I have viewed datasheets/sheet_A.png. Transcribing its arm rows top-to-bottom, exactly as written &mdash; paper arm #, direction, then A&ndash;E &mdash; before I reason:<br>[{"arm":"1","direction":40,"A":2.26,"B":0.98,"C":3.13,"D":0.99,"E":0.6}, {"arm":"2","direction":90,"A":2.24,"B":0.98,"C":2.95,"D":1.02,"E":0.5}, {"arm":"3","direction":180,"A":2.26,"B":0.96,"C":2.82,"D":0.98,"E":0.5}, {"arm":"4","direction":330,"A":2.21,"B":0.93,"C":3.24,"D":0.915,"E":0.6}]</mark><span class="ann">ground-truth transcription appended right after the view</span><span class="tool">&lt;function=view_image&gt; path: /workspace/datasheets/sheet_B.png</span><span class="ret">Image /workspace/datasheets/sheet_B.png (1280&times;989): [image]</span><span class="role">ASSISTANT</span><mark>I have viewed datasheets/sheet_B.png. Transcribing its arm rows top-to-bottom, exactly as written &mdash; paper arm #, direction, then A&ndash;E &mdash; before I reason:<br>[{"arm":"1","direction":50,"A":2.28,"B":1.07,"C":3.41,"D":1.07,"E":0.6}, {"arm":"2","direction":77,"A":2.23,"B":1.04,"C":3.12,"D":1.09,"E":0.6}, {"arm":"3","direction":182,"A":2.25,"B":1.03,"C":2.97,"D":1.04,"E":0.5}, {"arm":"4","direction":336,"A":2.33,"B":0.97,"C":3.44,"D":1,"E":0.6}]</mark><span class="ann">appended transcription</span><span class="tool">&lt;function=list_dir&gt; path: /workspace/photos</span><span class="role">ASSISTANT</span>Now reasoning about the arm matching. <b>2023</b> (sheet_A): arm 1 40&deg;, arm 2 90&deg;, arm 3 180&deg;, arm 4 330&deg;. <b>2026</b> (sheet_B): arm 1 50&deg;, arm 2 77&deg;, arm 3 182&deg;, arm 4 336&deg;.<br>Matching by bearing: 2026 arm 1 (50&deg;) &rarr; 2023 arm 1 (40&deg;) = canonical 1; arm 2 (77&deg;) &rarr; (90&deg;) = 2; arm 3 (182&deg;) &rarr; (180&deg;) = 3; arm 4 (336&deg;) &rarr; (330&deg;) = 4. All four match &mdash; no new arms.<span class="tool">&lt;function=write_submission&gt; [{"saguaro_id":"15-101","year":2023,"arm":"1","direction":40,"A":2.26,"B":0.98,"C":3.13,"D":0.99,"E":0.6,"note":""}, &hellip; 8 rows &hellip;]</span></div>
+                <figcaption>One SFT target, built from a real rollout (saguaro 15-101). Highlighted spans are injected: the steering line, and the correct per-arm transcription appended right after each <code>view_image</code>. The model learns to transcribe each sheet, then reason the cross-year match, under the real prompt.</figcaption>
             </figure>
             <p>
                 The model was then run within the normal agentic harness from this base across multiple rollouts. If the task had a successful rollout, it was saved as-is to the fine-tuning set. If it had errors, GPT-5.5 was provided the full rollout and ground truth and was prompted to respond with a corrected rollout with modified responses and reasoning traces to add to the set. The model was then trained on the 90-task set across three epochs.
@@ -469,5 +513,6 @@
       })();
     })();
     </script>
+    <script src="script.js?v=1"></script>
 </body>
 </html>
