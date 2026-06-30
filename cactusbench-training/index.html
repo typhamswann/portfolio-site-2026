@@ -55,7 +55,12 @@
         flex: 1 1 0; min-width: 0; background: #101010; border: 1px solid #2a2a2a;
         border-radius: 8px; padding: 16px 16px 15px; display: flex; flex-direction: column; gap: 5px;
       }
-      .anode.stage { border-color: #2c2c2c; border-left: 3px solid #4f9d76; background: #141414; }
+      .anode.stage { border-color: #2c2c2c; background: #141414; }
+      /* two stages = two different capabilities, each its own intuitive color */
+      .anode.perc   { border-left: 3px solid #5b8fd6; background: rgba(91,143,214,0.05); }  /* perception = vision/blue */
+      .anode.reason { border-left: 3px solid #d9933f; background: rgba(217,147,63,0.05); }  /* reasoning = amber */
+      .anode.perc   .anode-eyebrow { color: #7ba8d8; }
+      .anode.reason .anode-eyebrow { color: #d9a763; }
       .anode-eyebrow {
         font-family: 'JetBrains Mono', monospace; font-size: 0.56rem; letter-spacing: 0.12em;
         text-transform: uppercase; color: #7d7d7d;
@@ -98,7 +103,7 @@
       .ptx .tool { display: block; color: #9fb6c8; margin: 3px 0; }
       /* highlight over the appended/injected text */
       .ptx mark {
-        background: rgba(79,157,118,0.20); color: #cfeadd; padding: 1px 4px; border-radius: 2px;
+        background: rgba(228,201,74,0.20); color: #f1e9c6; padding: 1px 4px; border-radius: 2px;
         box-decoration-break: clone; -webkit-box-decoration-break: clone;
       }
       /* margin annotation pointing at the highlight */
@@ -230,13 +235,13 @@
                         <span class="anode-sub">open base model</span>
                     </div>
                     <span class="aarrow" aria-hidden="true">&rarr;</span>
-                    <div class="anode stage">
+                    <div class="anode stage perc">
                         <span class="anode-eyebrow">Stage 1 · RLVR</span>
                         <span class="anode-title">Perception</span>
                         <span class="anode-sub">isolated transcription, per-cell reward (GRPO)</span>
                     </div>
                     <span class="aarrow" aria-hidden="true">&rarr;</span>
-                    <div class="anode stage">
+                    <div class="anode stage reason">
                         <span class="anode-eyebrow">Stage 2 · SFT</span>
                         <span class="anode-title">Reasoning &amp; format</span>
                         <span class="anode-sub">verified agentic trajectories: transcribe&#8209;then&#8209;match</span>
