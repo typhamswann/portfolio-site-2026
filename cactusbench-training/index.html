@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Training a Small Model to Frontier Performance on CactusBench — Ty Pham-Swann</title>
+    <meta name="description" content="Post-training a Qwen3.6-27B model to frontier performance on CactusBench multimodal scientific-data tasks with RLVR and SFT.">
+    <link rel="stylesheet" type="text/css" href="styles.css?v=1">
+    <style>
+      /* ---------- DOC OUTLINE RAIL (from the benchmark pages) ---------- */
+      .doc-outline {
+        position: fixed; left: 30px; top: 50%; transform: translateY(-50%);
+        z-index: 40; display: flex; flex-direction: column; gap: 11px;
+        max-height: 86vh; overflow-y: auto; scrollbar-width: none; padding: 4px 0;
+      }
+      .doc-outline::-webkit-scrollbar { display: none; }
+      .doc-outline a {
+        display: flex; align-items: center; gap: 10px;
+        font-family: 'JetBrains Mono', monospace; font-size: 0.66rem;
+        letter-spacing: 0.02em; color: #6b6b6b; text-decoration: none;
+        white-space: nowrap; transition: color 0.2s ease;
+      }
+      .doc-outline a::before {
+        content: ''; width: 16px; height: 1.5px; background: currentColor;
+        flex-shrink: 0; transition: width 0.2s ease, background 0.2s ease;
+      }
+      .doc-outline a:hover { color: #b8b8b8; }
+      .doc-outline a.active { color: #f2f2f2; }
+      .doc-outline a.active::before { width: 30px; background: #f2f2f2; }
+      main section[id] { scroll-margin-top: 24px; }
+      @media (max-width: 1180px) { .doc-outline { display: none; } }
+
+      /* ---------- GRAPH / FIGURE PLACEHOLDERS (graphs added next) ---------- */
+      .chart-placeholder {
+        max-width: 720px; margin: 8px 0 4px;
+        border: 1px dashed #2f2f2f; border-radius: 8px;
+        min-height: 300px; display: flex; align-items: center; justify-content: center;
+        text-align: center; padding: 24px; background: #0e0e0e;
+        color: #6b6b6b; font-family: 'JetBrains Mono', monospace;
+        font-size: 0.74rem; letter-spacing: 0.04em; line-height: 1.6;
+      }
+      .hero .chart-placeholder {
+        width: 100%; max-width: 860px; margin: 36px auto 0; min-height: 340px;
+      }
+
+      /* ---------- DATA-VIZ CHARTS (matched to the benchmark pages) ---------- */
+      .chart {
+        max-width: 720px;
+        margin: 8px 0 4px;
+        font-family: 'Inter', -apple-system, sans-serif;
+      }
+      .hero .chart { width: min(720px, 100%); margin: 36px auto 0; text-align: left; }
+      .chart-row {
+        display: grid;
+        grid-template-columns: 186px 1fr 150px;
+        align-items: center;
+        column-gap: 14px;
+        height: 38px;
+      }
+      .chart-name {
+        display: flex; align-items: center; justify-content: flex-end;
+        gap: 9px; overflow: hidden;
+      }
+      .chart-nametext {
+        font-size: 0.84rem; font-weight: 400; color: #dcdcdc; text-align: right;
+        line-height: 1.1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      }
+      .chart-nametext .sub {
+        display: block; font-size: 0.62rem; letter-spacing: 0.04em;
+        text-transform: uppercase; color: #6f6f6f; margin-top: 1px;
+      }
+      .chart-logo {
+        width: 17px; height: 17px; flex-shrink: 0; display: inline-flex;
+        align-items: center; justify-content: center; color: #ededed;
+      }
+      .chart-logo svg { width: 100%; height: 100%; fill: currentColor; }
+      .chart-logo img { width: 100%; height: 100%; object-fit: contain; filter: brightness(0) invert(1); }
+      .chart-track {
+        position: relative; height: 20px; background: rgba(255,255,255,0.035);
+        border-radius: 3px; overflow: visible;
+      }
+      .chart-fill {
+        height: 100%; width: 0; border-radius: 3px;
+        transition: width 1.05s cubic-bezier(0.22, 1, 0.36, 1);
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+      }
+      .chart.shown .chart-fill { width: var(--w); }
+      .chart-val {
+        font-family: 'JetBrains Mono', monospace; font-size: 0.78rem;
+        color: #f0f0f0; white-space: nowrap;
+      }
+      .chart-val .unit { color: #7a7a7a; }
+      .chart-val .tag { color: #c084fc; font-size: 0.66rem; letter-spacing: 0.04em; }
+      .chart-err {
+        position: absolute; top: 50%; height: 9px; transform: translateY(-50%);
+        border-left: 1.5px solid rgba(255,255,255,0.85);
+        border-right: 1.5px solid rgba(255,255,255,0.85);
+        z-index: 3; opacity: 0; transition: opacity 0.5s ease 1s;
+      }
+      .chart-err::before {
+        content: ''; position: absolute; top: 50%; left: 0; right: 0;
+        height: 1.5px; background: rgba(255,255,255,0.85); transform: translateY(-50%);
+      }
+      .chart.shown .chart-err { opacity: 1; }
+      .chart-axis {
+        grid-column: 2; display: flex; justify-content: space-between;
+        font-family: 'JetBrains Mono', monospace; font-size: 0.64rem;
+        color: #5c5c5c; margin-top: 6px; border-top: 1px solid #1a1a1a; padding-top: 5px;
+      }
+      .chart-legend {
+        display: flex; gap: 18px; justify-content: flex-end; align-items: center;
+        max-width: 720px; margin: 2px 0 14px;
+        font-family: 'JetBrains Mono', monospace; font-size: 0.64rem; color: #9a9a9a;
+      }
+      .hero .chart-legend { margin: 2px auto 14px; }
+      .chart-legend span { display: inline-flex; align-items: center; gap: 6px; }
+      .chart-swatch { width: 14px; height: 10px; border-radius: 2px; display: inline-block; }
+    </style>
+</head>
+<body>
+    <header class="hero">
+        <p class="eyebrow">VLM · Post-Training · RLVR + SFT · 2026</p>
+        <h1>Training a small models to frontier performance on CactusBench</h1>
+        <p class="tagline">Post-training a 27B model to beat frontier models on multimodal scientific data tasks.</p>
+
+        <div class="chart-legend">
+            <span><i class="chart-swatch" style="background:#c084fc"></i>Qwen3.6-27B (this work)</span>
+        </div>
+        <figure id="chart-lb" class="chart" aria-label="Held-out accuracy by model"></figure>
+    </header>
+
+    <nav id="section-nav" class="doc-outline" aria-label="Document outline">
+        <a href="#tasks">Scientific Data Tasks</a>
+        <a href="#methods">Methods</a>
+        <a href="#results">Results</a>
+    </nav>
+
+    <main>
+        <section id="tasks" class="prose">
+            <h2>Scientific Data Tasks</h2>
+            <p>
+                CactusBench is built to assess the ability of frontier models to complete complex quality-assurance tasks with a very high precision bar on real scientific data collected by biologists at Saguaro National Park. These tasks involve complex visual reasoning, accurate OCR of messy handwriting, analyzing field photographs, and identifying mistakes and anomalies in the data, in order to carry out the work of a biologist maintaining the real cactus dataset.
+            </p>
+            <p>
+                Specifically, a model must accurately transcribe measurements from two handwritten datasheets, then reason about how the arms should be mapped across years using their measurements and identify any anomalous measurement errors and correct them.
+            </p>
+            <p>
+                Read more about the benchmark <a href="https://typhamswann.com/cactusbench">here</a>.
+            </p>
+        </section>
+
+        <section id="methods" class="prose">
+            <h2>Methods</h2>
+            <p>
+                Due to the shape and complexity of the task, naive fine-tuning and RL efforts failed to improve performance. CactusBench tasks are limited by both perception (in this case, the ability to read what a field biologist wrote down) and visual reasoning (the ability to match data across years based on measurements). In practice, training these together would degrade performance, so instead an approach was taken to isolate each capability by training in two stages:
+            </p>
+            <p>
+                To target perception, Qwen3.6-27B was trained with RLVR on a separately constructed task involving just reading and transcribing measurement sheets. Then, to elicit this perception boost within the task and improve reasoning, the RL'd model was fine-tuned on a custom-built dataset of real output trajectories sampled from a deterministically assembled base with corrections to reasoning and answers by a frontier model. Together, this produced a model that was better at both visual perception and visual reasoning within the agentic workflow on CactusBench tasks.
+            </p>
+
+            <h3>Improving perception with RLVR</h3>
+            <p>
+                The first stage of the post-training process involved improving the model's visual perception, where most of the errors on the evaluation originated from, via RLVR on a separate transcription task. The dataset was 90 tasks assembled by taking the existing sheets and ground truth and asking the model to only transcribe the data sheet (no arm matching or error correction like in the original task). This was in a simple transcription prompt instead of within the agentic harness and trained via GRPO, with per-cell accuracy used as the reward. A total of 200 steps with eight rollouts per task were run with tasks with low variance rollouts filtered out.
+            </p>
+            <p>
+                Training vastly improved the model's visual perception on the isolated transcription task but didn't yield gains on overall performance on the agentic task. This was somewhat expected given the differences in the harness and added complexity of the multi-turn rollouts of CactusBench tasks. A closer analysis on another RL'd model on the tasks gives greater insight into how perception performance gains were lost as the task and harness were incrementally transformed into the full agentic version. This analysis ultimately motivated the subsequent SFT rollout in order to best elicit the model's improved perception capabilities from the RL run.
+            </p>
+
+            <h3>Supervised Fine-Tuning</h3>
+            <p>
+                From the above analysis, it seemed clear that separating perception from reasoning would aid in reducing transcription errors by allowing the model to transcribe early in the context window where the task was most similar to the pure transcription task it was trained on rather than throughout the rollout. This would also potentially allow reasoning to be more coherent by letting the model trust the initial transcript and focus on the arm matching task later in the context window of the agentic loop. As such, the goals of the supervised fine-tuning were to teach the model the behaviors of transcribing directly after viewing images of the sheets and then doing a separate explicit reasoning step to match arms between years and identify errors.
+            </p>
+            <p>
+                To carry out these goals, a custom-built dataset was created that demonstrated the desired behaviors. First, a base prompt was built containing the system prompt and a template built from typical rollout behavior of the first few actions where the two datasheets were viewed. A response was appended with the ground truth directly after each tool-call to view each datasheet. Additionally, a line was appended to the system prompt telling it to explicitly reason about the arm mapping.
+            </p>
+            <div class="chart-placeholder" role="img" aria-label="Figure placeholder">
+                [ Annotated prompt template with the appended transcriptions highlighted and annotated ]
+            </div>
+            <p>
+                The model was then run within the normal agentic harness from this base across multiple rollouts. If the task had a successful rollout, it was saved as-is to the fine-tuning set. If it had errors, GPT-5.5 was provided the full rollout and ground truth and was prompted to respond with a corrected rollout with modified responses and reasoning traces to add to the set. The model was then trained on the 90-task set across three epochs.
+            </p>
+
+            <h3>Harness</h3>
+            <p>
+                The harness used was a modified version of the standard CactusBench completion loop. It was specifically adapted to handle failures related to how the Qwen-3.6 family of models handles tool calling. Frontier baselines were established by running them in their respective native harnesses. For more information, read <a href="https://typhamswann.com/cactusbench">CactusBench</a>.
+            </p>
+        </section>
+
+        <section id="results" class="prose">
+            <h2>Results</h2>
+            <div class="chart-legend">
+                <span><i class="chart-swatch" style="background:#c084fc"></i>Qwen3.6-27B (this work)</span>
+            </div>
+            <figure id="chart-lb2" class="chart" aria-label="Held-out accuracy by model"></figure>
+            <p class="caption">Mean per-cell table accuracy on the held-out set (6 tasks &times; 3 rollouts; notes excluded). The post-trained open 27B (RLVR + SFT) lands second, ahead of Gemini 3.1 Pro and both Claude Opus models, behind only GPT-5.5. Small-sample set &mdash; differences within the top cluster are not statistically separated.</p>
+            <p>
+                The RLVR + SFT model performed better than both the base Qwen3.6-27B and a number of frontier models on the holdout set (six tasks, three rollouts each). Analysis of the error types across the models show that the SFT run lowered both perception errors and arm matching (reasoning) errors significantly, even though it was only <em>targeting</em> reasoning. Essentially, the format change was required to unlock the gains in perception gained from reinforcement learning.
+            </p>
+        </section>
+
+        <section class="links">
+            <a class="link-card" href="https://typhamswann.com/cactusbench">
+                <span class="link-eyebrow">Portfolio · benchmark</span>
+                <span class="link-title">CactusBench</span>
+                <span class="link-arrow">→</span>
+            </a>
+            <a class="link-card" href="mailto:phamswannty@gmail.com">
+                <span class="link-eyebrow">Contact</span>
+                <span class="link-title">phamswannty@gmail.com</span>
+                <span class="link-arrow">→</span>
+            </a>
+        </section>
+
+        <footer class="page-footer">
+            <p>© 2026 Ty Pham-Swann</p>
+        </footer>
+    </main>
+
+    <!-- Inline chart renderer + scroll-spy. Numbers are from the real held-out runs. -->
+    <script>
+    (function () {
+      'use strict';
+      var C = {
+        claude: '#cc785c',  // anthropic coral
+        gpt:    '#10a37f',  // openai green
+        gemini: '#4285f4',  // google blue
+        ours:   '#c084fc',  // this work — Qwen3.6-27B
+      };
+
+      // Held-out leaderboard: mean per-cell table accuracy on the 6 held-out tasks
+      // (3 rollouts each; notes excluded). The three Qwen3.6-27B rows are this work.
+      var LB = [
+        { name:'GPT-5.5',        v:0.970, c:C.gpt    },
+        { name:'Qwen3.6-27B', sub:'+ RLVR + SFT', v:0.966, c:C.ours },
+        { name:'Gemini 3.1 Pro', v:0.953, c:C.gemini },
+        { name:'Qwen3.6-27B', sub:'+ RLVR',       v:0.941, c:C.ours },
+        { name:'Claude Opus 4.7', v:0.939, c:C.claude },
+        { name:'Qwen3.6-27B', sub:'base',         v:0.939, c:C.ours },
+        { name:'Gemini 3.5 Flash', v:0.929, c:C.gemini },
+        { name:'Claude Opus 4.8',  v:0.929, c:C.claude },
+      ];
+
+      function esc(s){ var d=document.createElement('div'); d.textContent=s; return d.innerHTML; }
+
+      var LOGOS = {
+        claude: '<img src="images/anthropic.png?v=2" alt="" aria-hidden="true">',
+        gpt:    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M22.28 9.82a5.98 5.98 0 0 0-.52-4.9 6.05 6.05 0 0 0-6.51-2.9A6.07 6.07 0 0 0 4.98 4.18a5.98 5.98 0 0 0-4 2.9 6.05 6.05 0 0 0 .74 7.1 5.98 5.98 0 0 0 .52 4.91 6.05 6.05 0 0 0 6.51 2.9 5.98 5.98 0 0 0 4.5 2.01 6.05 6.05 0 0 0 5.78-4.21 5.98 5.98 0 0 0 4-2.9 6.05 6.05 0 0 0-.75-7.07Zm-9.02 12.61a4.48 4.48 0 0 1-2.88-1.04l.14-.08 4.78-2.76a.78.78 0 0 0 .4-.68v-6.74l2.02 1.17a.07.07 0 0 1 .04.05v5.58a4.5 4.5 0 0 1-4.5 4.5ZM3.6 18.3a4.47 4.47 0 0 1-.54-3.01l.14.08 4.79 2.77a.77.77 0 0 0 .78 0l5.84-3.37v2.33a.08.08 0 0 1-.03.06l-4.83 2.79a4.5 4.5 0 0 1-6.14-1.65ZM2.34 7.9a4.49 4.49 0 0 1 2.37-1.98v5.69a.77.77 0 0 0 .39.67l5.81 3.36-2.02 1.17a.08.08 0 0 1-.07 0L4 14.01A4.5 4.5 0 0 1 2.34 7.9Zm16.6 3.85L13.1 8.37l2.02-1.17a.08.08 0 0 1 .07 0l4.83 2.79a4.49 4.49 0 0 1-.68 8.1v-5.67a.79.79 0 0 0-.4-.67ZM20.94 8.7l-.14-.08-4.78-2.79a.78.78 0 0 0-.78 0L9.4 9.23V6.9a.07.07 0 0 1 .03-.06l4.83-2.79a4.5 4.5 0 0 1 6.68 4.66ZM8.3 12.86l-2.02-1.16a.08.08 0 0 1-.04-.06V6.07a4.5 4.5 0 0 1 7.38-3.45l-.14.08L8.7 5.46a.79.79 0 0 0-.39.68Zm1.1-2.37 2.6-1.5 2.61 1.5v3l-2.6 1.5-2.6-1.5Z"/></svg>',
+        gemini: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2c.4 5.4 4.2 9.2 9.6 9.6-5.4.4-9.2 4.2-9.6 9.6-.4-5.4-4.2-9.2-9.6-9.6C7.8 11.2 11.6 7.4 12 2Z"/></svg>',
+      };
+      function logoFor(name){
+        var n = name.toLowerCase();
+        if (n.indexOf('claude') >= 0) return LOGOS.claude;
+        if (n.indexOf('gpt') >= 0)    return LOGOS.gpt;
+        if (n.indexOf('gemini') >= 0) return LOGOS.gemini;
+        return '';  // Qwen / open: name only
+      }
+      function nameCell(d){
+        var logo = logoFor(d.name);
+        var sub = d.sub ? '<span class="sub">' + esc(d.sub) + '</span>' : '';
+        return '<div class="chart-name">' +
+          '<span class="chart-nametext">' + esc(d.name) + sub + '</span>' +
+          (logo ? '<span class="chart-logo">' + logo + '</span>' : '') +
+          '</div>';
+      }
+
+      function renderAcc(el){
+        var max = 1.0, html = '';
+        LB.forEach(function(d){
+          var w = (d.v / max * 100).toFixed(1) + '%';
+          html += '<div class="chart-row">' + nameCell(d) +
+            '<div class="chart-track"><div class="chart-fill" style="--w:' + w + ';background:' + d.c + '"></div></div>' +
+            '<div class="chart-val">' + d.v.toFixed(3) + '</div>' +
+            '</div>';
+        });
+        html += '<div class="chart-row" style="height:auto"><div></div>' +
+                '<div class="chart-axis"><span>0</span><span>0.5</span><span>1.0 · perfect</span></div><div></div></div>';
+        el.innerHTML = html;
+      }
+
+      var lb  = document.getElementById('chart-lb');
+      var lb2 = document.getElementById('chart-lb2');
+      if (lb)  renderAcc(lb);
+      if (lb2) renderAcc(lb2);
+
+      if ('IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function(entries){
+          entries.forEach(function(e){ if (e.isIntersecting){ e.target.classList.add('shown'); io.unobserve(e.target); } });
+        }, { threshold: 0.25 });
+        [lb, lb2].forEach(function(c){ if (c) io.observe(c); });
+      } else {
+        [lb, lb2].forEach(function(c){ if (c) c.classList.add('shown'); });
+      }
+
+      // Scroll-spy for the outline rail.
+      (function(){
+        var nav = document.getElementById('section-nav');
+        if (!nav) return;
+        var links = Array.prototype.slice.call(nav.querySelectorAll('a'));
+        var ids = links.map(function(a){ return a.getAttribute('href').slice(1); }).filter(function(id){ return document.getElementById(id); });
+        function onScroll(){
+          var pos = window.scrollY + 140, current = null;
+          ids.forEach(function(id){ var s = document.getElementById(id); if (s && s.offsetTop <= pos) current = id; });
+          links.forEach(function(a){ a.classList.toggle('active', a.getAttribute('href').slice(1) === current); });
+        }
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', onScroll);
+        onScroll();
+      })();
+    })();
+    </script>
+</body>
+</html>
