@@ -204,6 +204,7 @@
       .chart-row.hi .chart-nametext { color: #d8e6f4; font-weight: 600; }
       #chart-gap .chart-row { grid-template-columns: 210px 1fr 118px; }
       #chart-gap .gap-delta { color: #7c7c7c; font-size: 0.72rem; margin-left: 9px; }
+      .chart-title { font-family: 'JetBrains Mono', monospace; font-size: 0.64rem; letter-spacing: 0.08em; text-transform: uppercase; color: #9a9a9a; font-weight: 500; margin: 0 0 18px; }
       .chart-err {
         position: absolute; top: 50%; height: 9px; transform: translateY(-50%);
         border-left: 1.5px solid rgba(255,255,255,0.85);
@@ -498,7 +499,8 @@
         { n:'full agentic loop',       v:0.805 },
       ];
       function renderGap(el){
-        var DMIN = 0.70, DMAX = 1.0, span = DMAX - DMIN, html = '';
+        var DMIN = 0.70, DMAX = 1.0, span = DMAX - DMIN;
+        var html = '<h4 class="chart-title">Perception accuracy by prompt format · Qwen3.5-4B</h4>';
         GAP.forEach(function(d, i){
           var w = (Math.max(0, d.v - DMIN) / span * 100).toFixed(1) + '%';
           var delta = i > 0 ? '<span class="gap-delta">' + (d.v - GAP[i-1].v).toFixed(3) + '</span>' : '';
