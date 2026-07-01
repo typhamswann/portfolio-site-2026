@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ty Pham-Swann</title>
+    <meta name="description" content="Ty Pham-Swann — AI/ML research, benchmarks, and datasets.">
+    <style>
+      :root { --bg:#0a0a0a; --fg:#f5f5f5; --muted:#8a8a8a; --rule:#1f1f1f; }
+      * { box-sizing: border-box; }
+      body {
+        background: var(--bg); color: var(--fg);
+        font-family: 'Avenir', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        margin: 0; -webkit-font-smoothing: antialiased; line-height: 1.6;
+        min-height: 100vh; display: flex; align-items: center; justify-content: center;
+        padding: 48px 24px;
+      }
+      .wrap { width: 100%; max-width: 560px; }
+      h1 { font-weight: 300; letter-spacing: -0.01em; font-size: 2.3rem; margin: 0; }
+      .contact { margin: 10px 0 0; font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace; font-size: 0.82rem; color: var(--muted); }
+      .contact a { color: var(--muted); text-decoration: none; }
+      .contact a:hover { color: #cfcfcf; }
+      .label { font-family: 'JetBrains Mono', monospace; font-size: 0.66rem; letter-spacing: 0.18em; text-transform: uppercase; color: #6b6b6b; margin: 44px 0 6px; }
+      .pages { display: flex; flex-direction: column; }
+      .page { display: block; padding: 16px 0; border-top: 1px solid var(--rule); text-decoration: none; color: inherit; transition: border-color 0.2s ease; }
+      .pages .page:last-child { border-bottom: 1px solid var(--rule); }
+      .page:hover { border-top-color: #3a3a3a; }
+      .page:hover .p-title { color: #ffffff; }
+      .page:hover .p-title::after { transform: translateX(3px); opacity: 1; }
+      .p-title { font-size: 1.02rem; font-weight: 400; color: #ededed; transition: color 0.2s ease; }
+      .p-title::after { content: '→'; display: inline-block; margin-left: 8px; color: #6b6b6b; opacity: 0; transition: transform 0.2s ease, opacity 0.2s ease; }
+      .p-desc { font-size: 0.85rem; color: var(--muted); margin-top: 3px; font-weight: 300; }
+      footer { margin-top: 40px; font-size: 0.75rem; color: #4d4d4d; }
+    </style>
+</head>
+<body>
+    <main class="wrap">
+        <h1>Ty Pham-Swann</h1>
+        <p class="contact"><a href="mailto:phamswannty@gmail.com">phamswannty@gmail.com</a></p>
+
+        <p class="label">Pages</p>
+        <div class="pages">
+            <a class="page" href="cactusbench/">
+                <span class="p-title">CactusBench</span>
+                <div class="p-desc">Measuring frontier models&apos; ability to carry out quality-assurance tasks on real scientific data using complex visual reasoning.</div>
+            </a>
+            <a class="page" href="cactusbench-training/">
+                <span class="p-title">Post-training a 27B model to frontier performance</span>
+                <div class="p-desc">Post-training an open Qwen3.6-27B model to beat frontier models on CactusBench with SFT and RLVR.</div>
+            </a>
+            <a class="page" href="lostbench/">
+                <span class="p-title">LostBench</span>
+                <div class="p-desc">Measuring frontier models on long-horizon spatial reasoning tasks.</div>
+            </a>
+            <a class="page" href="saguaro/">
+                <span class="p-title">Saguaro Phenology</span>
+                <div class="p-desc">A seven-year, model-labeled dataset of saguaro bloom cycles, built with biologists at Saguaro National Park.</div>
+            </a>
+            <a class="page" href="rescultaya/">
+                <span class="p-title">Rescultaya</span>
+                <div class="p-desc">A metal-sculpture business I built and scaled in high school (2018&ndash;2021).</div>
+            </a>
+        </div>
+
+        <footer>© 2026 Ty Pham-Swann</footer>
+    </main>
+</body>
+</html>
