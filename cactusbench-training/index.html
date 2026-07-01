@@ -202,6 +202,8 @@
       .chart-val.hi { color: #ffffff; font-weight: 600; }
       .chart-nametext.ours { color: #a6c2dd; }
       .chart-row.hi .chart-nametext { color: #d8e6f4; font-weight: 600; }
+      #chart-gap .chart-row { grid-template-columns: 210px 1fr 118px; }
+      #chart-gap .gap-delta { color: #7c7c7c; font-size: 0.72rem; margin-left: 9px; }
       .chart-err {
         position: absolute; top: 50%; height: 9px; transform: translateY(-50%);
         border-left: 1.5px solid rgba(255,255,255,0.85);
@@ -334,6 +336,8 @@
             <p>
                 From the above analysis, it seemed clear that separating perception from reasoning would aid in reducing transcription errors by allowing the model to transcribe early in the context window where the task was most similar to the pure transcription task it was trained on rather than throughout the rollout. This would also potentially allow reasoning to be more coherent by letting the model trust the initial transcript and focus on the arm matching task later in the context window of the agentic loop. As such, the goals of the supervised fine-tuning were to teach the model the behaviors of transcribing directly after viewing images of the sheets and then doing a separate explicit reasoning step to match arms between years and identify errors.
             </p>
+            <figure id="chart-gap" class="chart" aria-label="Perception accuracy as the prompt steps from a clean sheet toward the full agentic format"></figure>
+            <p class="caption">Where the perception gain leaks away. The same RLVR&rsquo;d Qwen3.5-4B reads a clean single sheet at 0.994, but accuracy falls as each piece of the agentic format is added &mdash; and most of the loss comes from the tool/output format (&minus;0.060) and the multi-turn loop (&minus;0.113), not from reading itself. Isolating perception <em>inside</em> the real prompt is what the SFT sets out to fix.</p>
             <p>
                 To carry out these goals, a custom-built dataset was created that demonstrated the desired behaviors. First, a base prompt was built containing the system prompt and a template built from typical rollout behavior of the first few actions where the two datasheets were viewed. A response was appended with the ground truth directly after each tool-call to view each datasheet. Additionally, a line was appended to the system prompt telling it to explicitly reason about the arm mapping.
             </p>
@@ -485,22 +489,48 @@
           [ {n:'base', v:80, c:C.base}, {n:'RLVR only', v:72, c:C.sft} ], 90, function(v){ return Math.round(v); });
       }
 
+      // Transfer-gap decomposition (Qwen3.5-4B, single sheet stepped toward the agentic format).
+      var GAP = [
+        { n:'clean single sheet',      v:0.994 },
+        { n:'+ agent system prompt',   v:0.984 },
+        { n:'+ view_image framing',    v:0.978 },
+        { n:'+ tools & write_submission', v:0.918 },
+        { n:'full agentic loop',       v:0.805 },
+      ];
+      function renderGap(el){
+        var DMIN = 0.70, DMAX = 1.0, span = DMAX - DMIN, html = '';
+        GAP.forEach(function(d, i){
+          var w = (Math.max(0, d.v - DMIN) / span * 100).toFixed(1) + '%';
+          var delta = i > 0 ? '<span class="gap-delta">' + (d.v - GAP[i-1].v).toFixed(3) + '</span>' : '';
+          html += '<div class="chart-row">' +
+            '<div class="chart-name"><span class="chart-nametext">' + esc(d.n) + '</span></div>' +
+            '<div class="chart-track"><div class="chart-fill" style="--w:' + w + ';background:' + C.rl + '"></div></div>' +
+            '<div class="chart-val">' + d.v.toFixed(3) + delta + '</div>' +
+            '</div>';
+        });
+        html += '<div class="chart-row" style="height:auto"><div></div>' +
+                '<div class="chart-axis"><span>0.70</span><span>0.80</span><span>0.90</span><span>1.00</span></div><div></div></div>';
+        el.innerHTML = html;
+      }
+
       var lb  = document.getElementById('chart-lb');
       var lb2 = document.getElementById('chart-lb2');
       var pAcc = document.getElementById('chart-perc-acc');
       var pErr = document.getElementById('chart-perc-err');
+      var gap = document.getElementById('chart-gap');
       if (lb)  renderAcc(lb);
       if (lb2) renderAcc(lb2);
       if (pAcc) renderPercAcc(pAcc);
       if (pErr) renderPercErr(pErr);
+      if (gap) renderGap(gap);
 
       if ('IntersectionObserver' in window) {
         var io = new IntersectionObserver(function(entries){
           entries.forEach(function(e){ if (e.isIntersecting){ e.target.classList.add('shown'); io.unobserve(e.target); } });
         }, { threshold: 0.25 });
-        [lb, lb2, pAcc, pErr].forEach(function(c){ if (c) io.observe(c); });
+        [lb, lb2, pAcc, pErr, gap].forEach(function(c){ if (c) io.observe(c); });
       } else {
-        [lb, lb2, pAcc, pErr].forEach(function(c){ if (c) c.classList.add('shown'); });
+        [lb, lb2, pAcc, pErr, gap].forEach(function(c){ if (c) c.classList.add('shown'); });
       }
 
       // Scroll-spy for the outline rail.
